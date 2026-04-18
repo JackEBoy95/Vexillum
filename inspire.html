@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspiration & Gallery — Vexillum</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    html, body { overflow: auto; }
+
+    #site-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 32px;
+      height: 52px;
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    #site-nav .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.15s;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--text); }
+    .nav-spacer { flex: 1; }
+    .nav-cta {
+      padding: 7px 16px;
+      background: var(--gold);
+      color: #0f0e0c;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .nav-cta:hover { background: var(--gold-light); }
+
+    /* ---- Page sections ---- */
+    .page-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 56px 32px;
+    }
+    .section-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .section-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 36px;
+      max-width: 540px;
+      line-height: 1.6;
+    }
+    hr.section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ---- Flag grid ---- */
+    .flag-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .flag-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.15s, transform 0.15s;
+      cursor: pointer;
+    }
+    .flag-card:hover {
+      border-color: var(--gold-dim);
+      transform: translateY(-2px);
+    }
+    .flag-card-canvas {
+      width: 100%;
+      aspect-ratio: 3/2;
+      background: var(--bg-4);
+      display: block;
+    }
+    .flag-card-canvas svg {
+      width: 100%;
+      height: 100%;
+    }
+    .flag-card-info {
+      padding: 10px 12px;
+    }
+    .flag-card-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .flag-card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ---- Inspiration tabs ---- */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: color 0.15s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ---- Tips strip ---- */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .tip-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .tip-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .tip-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .tip-body {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ---- Gallery filters ---- */
+    .gallery-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .filter-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--border-light); color: var(--text); }
+    .filter-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,168,50,0.1); }
+
+    /* ---- Colour principle swatches ---- */
+    .colour-rules {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .colour-rule {
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .colour-rule-swatch {
+      height: 48px;
+      display: flex;
+    }
+    .colour-rule-swatch span {
+      flex: 1;
+    }
+    .colour-rule-label {
+      background: var(--bg-3);
+      padding: 8px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+    }
+    .colour-rule-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body style="overflow-y:auto; background:var(--bg);">
+
+<!-- Nav -->
+<nav id="site-nav">
+  <a href="index.html" class="logo">VEXILLUM</a>
+  <a href="index.html" class="nav-link">Editor</a>
+  <a href="inspire.html" class="nav-link active">Inspire</a>
+  <div class="nav-spacer"></div>
+  <a href="index.html" class="nav-cta">Open Editor</a>
+</nav>
+
+<!-- ============================================================
+     INSPIRATION SECTION
+     ============================================================ -->
+<section class="page-section">
+  <div class="section-label">Inspiration</div>
+  <h2 class="section-title">Real Flags. Real Principles.</h2>
+  <p class="section-subtitle">
+    The best flags in the world follow a handful of timeless rules. Study these,
+    and your designs will feel instinctively right.
+  </p>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="national">National Flags</button>
+    <button class="tab-btn" data-tab="historical">Historical</button>
+    <button class="tab-btn" data-tab="subnational">Regions & Cities</button>
+    <button class="tab-btn" data-tab="principles">Design Principles</button>
+  </div>
+
+  <!-- National Flags -->
+  <div class="tab-panel active" id="tab-national">
+    <div class="flag-grid" id="national-grid"></div>
+  </div>
+
+  <!-- Historical -->
+  <div class="tab-panel" id="tab-historical">
+    <div class="flag-grid" id="historical-grid"></div>
+  </div>
+
+  <!-- Subnational -->
+  <div class="tab-panel" id="tab-subnational">
+    <div class="flag-grid" id="subnational-grid"></div>
+  </div>
+
+  <!-- Principles -->
+  <div class="tab-panel" id="tab-principles">
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-num">01</div>
+        <div class="tip-title">Keep It Simple</div>
+        <div class="tip-body">A child should be able to draw it from memory. The best flags — Japan, Canada, Switzerland — work because of what they leave out.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">02</div>
+        <div class="tip-title">Use 2–3 Colours</div>
+        <div class="tip-body">Most great flags use two or three colours. More than four and the flag starts to look like a patchwork quilt at a distance.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">03</div>
+        <div class="tip-title">No Text or Seals</div>
+        <div class="tip-body">Text is unreadable at distance. State seals look muddy when printed on fabric. Use a bold symbol instead — it travels further.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">04</div>
+        <div class="tip-title">Meaningful Symbolism</div>
+        <div class="tip-body">Every colour and symbol should mean something. Red for courage, blue for sea or sky, white for peace or purity — the narrative matters.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">05</div>
+        <div class="tip-title">Be Distinctive</div>
+        <div class="tip-body">Your flag should be unmistakable among nations. Avoid generic tricolours unless the colours or emblem make it unique.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">06</div>
+        <div class="tip-title">Don't Duplicate</div>
+        <div class="tip-body">If it looks like another flag flipped or recoloured, start again. Distinct identity comes from a distinct visual idea, not incremental variation.</div>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin:40px 0 16px;color:var(--text);">Classic Colour Combinations</h3>
+    <div class="colour-rules">
+      <div class="colour-rule">
+        <div class="colour-rule-swatch"><span style="background:#c0392b"></span><span style="background:#ffffff"></span><span style="background:#2c3e50"></span></div>
+        <div class="colour-rule-label"><div class="colour-rule-name">Tricolour Classic</div>Red · White · Navy</div>
+      </div>
+      <div class="colour-rule">
+        <div class="colour-rule-swatch"><span style="background:#2e7d32"></span><span style="background:#fdd835"></span><span style="background:#c62828"></span></div>
+        <div class="colour-rule-label"><div class="colour-rule-name">Pan-African</div>Green · Gold · Red</div>
+      </div>
+      <div class="colour-rule">
+        <div class="colour-rule-swatch"><span style="background:#1565c0"></span><span style="background:#ffffff"></span></div>
+        <div class="colour-rule-label"><div class="colour-rule-name">Nordic Clean</div>Blue · White</div>
+      </div>
+      <div class="colour-rule">
+        <div class="colour-rule-swatch"><span style="background:#b71c1c"></span><span style="background:#ffffff"></span><span style="background:#1a237e"></span></div>
+        <div class="colour-rule-label"><div class="colour-rule-name">Heraldic</div>Crimson · White · Navy</div>
+      </div>
+      <div class="colour-rule">
+        <div class="colour-rule-swatch"><span style="background:#1b5e20"></span><span style="background:#ffffff"></span><span style="background:#1b5e20"></span></div>
+        <div class="colour-rule-label"><div class="colour-rule-name">Nature</div>Forest · White · Forest</div>
+      </div>
+      <div class="colour-rule">
+        <div class="colour-rule-swatch"><span style="background:#212121"></span><span style="background:#d4a832"></span><span style="background:#c62828"></span></div>
+        <div class="colour-rule-label"><div class="colour-rule-name">Bold & Dark</div>Black · Gold · Red</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ============================================================
+     COMMUNITY GALLERY
+     ============================================================ -->
+<section class="page-section">
+  <div class="section-label">Gallery</div>
+  <h2 class="section-title">Made With Vexillum</h2>
+  <p class="section-subtitle">
+    Flags created by the community. World-builders, vexillology fans, game developers —
+    each one tells a story.
+  </p>
+
+  <div class="gallery-filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="fictional">Fictional Nations</button>
+    <button class="filter-btn" data-filter="clubs">Clubs & Teams</button>
+    <button class="filter-btn" data-filter="fantasy">Fantasy & RPG</button>
+    <button class="filter-btn" data-filter="redesign">Redesigns</button>
+  </div>
+
+  <div class="flag-grid" id="gallery-grid"></div>
+
+  <div style="text-align:center;margin-top:40px;">
+    <a href="index.html" class="nav-cta" style="display:inline-block;padding:12px 28px;font-size:14px;">
+      Create Your Flag →
+    </a>
+    <p style="color:var(--text-dim);font-size:12px;margin-top:12px;">
+      Export your design and share it — community gallery coming in a future update.
+    </p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="border-top:1px solid var(--border);padding:24px 32px;display:flex;align-items:center;gap:16px;background:var(--bg-2);">
+  <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--gold);">VEXILLUM</span>
+  <span style="color:var(--text-dim);font-size:12px;">Icons by <a href="https://game-icons.net" style="color:var(--text-muted);text-decoration:none;" target="_blank">game-icons.net</a> (CC BY 3.0)</span>
+  <div style="flex:1"></div>
+  <a href="index.html" style="color:var(--text-muted);font-size:12px;text-decoration:none;">Open Editor</a>
+</footer>
+
+<script src="js/icon-data.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/renderer.js"></script>
+<script>
+// ============================================================
+// Inspiration page — renders SVG flag examples inline
+// ============================================================
+
+// Helper: build a design object and render it into a div
+function renderExampleFlag(container, design) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${CANVAS_W} ${CANVAS_H}`);
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  svg.style.cssText = 'width:100%;height:100%;display:block;';
+
+  // White base (so transparent overlays look right)
+  const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  base.setAttribute('width', CANVAS_W); base.setAttribute('height', CANVAS_H);
+  base.setAttribute('fill', '#ffffff');
+  svg.appendChild(base);
+
+  design.layers.forEach(layer => {
+    if (!layer.visible) return;
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.innerHTML = renderLayer(layer);
+    svg.appendChild(g);
+  });
+  container.appendChild(svg);
+}
+
+function makeFlag(name, meta, layers, filter) {
+  const card = document.createElement('div');
+  card.className = 'flag-card';
+  card.dataset.filter = filter || 'all';
+
+  const canvasDiv = document.createElement('div');
+  canvasDiv.className = 'flag-card-canvas';
+  renderExampleFlag(canvasDiv, { layers, emblems: [] });
+
+  const info = document.createElement('div');
+  info.className = 'flag-card-info';
+  info.innerHTML = `<div class="flag-card-name">${name}</div><div class="flag-card-meta">${meta}</div>`;
+
+  card.addEventListener('click', () => window.location.href = 'index.html');
+
+  card.appendChild(canvasDiv);
+  card.appendChild(info);
+  return card;
+}
+
+// ---- National flag examples (recreated in SVG) ----
+const NATIONAL_FLAGS = [
+  {
+    name: 'Tricolour', meta: 'Classic three equal vertical bands',
+    filter: 'all',
+    layers: [{id:'1',type:'vstripes',visible:true,bands:[{color:'#003189',weight:1},{color:'#ffffff',weight:1},{color:'#e1001a',weight:1}]}]
+  },
+  {
+    name: 'Horizontal Tricolour', meta: 'Three equal horizontal bands',
+    filter: 'all',
+    layers: [{id:'1',type:'hstripes',visible:true,bands:[{color:'#009246',weight:1},{color:'#ffffff',weight:1},{color:'#ce2b37',weight:1}]}]
+  },
+  {
+    name: 'Nordic Cross', meta: 'Cross offset to the left — classic Scandinavian',
+    filter: 'all',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#006aa7',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'nordic',color:'#fecc02',opacity:100,params:{thickness:40,offset:35}}
+    ]
+  },
+  {
+    name: 'Cross on Solid', meta: 'Bold centred cross over a single colour',
+    filter: 'all',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#d52b1e',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'cross',color:'#ffffff',opacity:100,params:{thickness:60}}
+    ]
+  },
+  {
+    name: 'Saltire', meta: 'Diagonal cross on a solid field',
+    filter: 'all',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#003078',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'saltire',color:'#ffffff',opacity:100,params:{thickness:50}}
+    ]
+  },
+  {
+    name: 'Chevron on Tricolour', meta: 'Triangle hoist over horizontal stripes',
+    filter: 'all',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#00966e',weight:1},{color:'#ffffff',weight:1},{color:'#d30000',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'triangle',color:'#000000',opacity:100,params:{depth:45,side:0}}
+    ]
+  },
+  {
+    name: 'Bicolour + Canton', meta: 'Two-tone field with top-left block',
+    filter: 'all',
+    layers: [
+      {id:'1',type:'vstripes',visible:true,bands:[{color:'#d21034',weight:1},{color:'#ffffff',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'canton',color:'#003580',opacity:100,params:{width:40,height:50}}
+    ]
+  },
+  {
+    name: 'Horizontal Band', meta: 'V stripes with a central H band — layered design',
+    filter: 'all',
+    layers: [
+      {id:'1',type:'vstripes',visible:true,bands:[{color:'#009a44',weight:1},{color:'#000000',weight:1},{color:'#ce1126',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'hband',color:'#ffffff',opacity:100,params:{position:40,thickness:20}}
+    ]
+  },
+];
+
+const HISTORICAL_FLAGS = [
+  {
+    name: 'Pan-African', meta: 'Gold, green and red horizontal stripes',
+    filter: 'historical',
+    layers: [{id:'1',type:'hstripes',visible:true,bands:[{color:'#009a44',weight:1},{color:'#fcd116',weight:1},{color:'#ce1126',weight:1}]}]
+  },
+  {
+    name: 'Naval Ensign Style', meta: 'Dark navy with white saltire',
+    filter: 'historical',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#012169',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'saltire',color:'#ffffff',opacity:100,params:{thickness:60}},
+      {id:'3',type:'overlay',visible:true,shape:'saltire',color:'#c8102e',opacity:100,params:{thickness:20}},
+      {id:'4',type:'overlay',visible:true,shape:'cross',color:'#c8102e',opacity:100,params:{thickness:30}},
+    ]
+  },
+  {
+    name: 'Quartered', meta: 'Four-quadrant heraldic design',
+    filter: 'historical',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#c8102e',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'quarter',color:'#003580',opacity:100,params:{position:0}},
+      {id:'3',type:'overlay',visible:true,shape:'quarter',color:'#003580',opacity:100,params:{position:3}},
+      {id:'4',type:'overlay',visible:true,shape:'cross',color:'#ffd700',opacity:100,params:{thickness:16}},
+    ]
+  },
+  {
+    name: 'Pals & Stripes', meta: 'Vertical bands with a central diagonal',
+    filter: 'historical',
+    layers: [
+      {id:'1',type:'vstripes',visible:true,bands:[{color:'#dc143c',weight:1},{color:'#ffffff',weight:1},{color:'#dc143c',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'diagonal',color:'#003580',opacity:100,params:{side:0}},
+    ]
+  },
+];
+
+const SUBNATIONAL_FLAGS = [
+  {
+    name: 'City Flag', meta: 'Simple two-tone with thick horizontal band',
+    filter: 'subnational',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#003580',weight:2},{color:'#ffffff',weight:1},{color:'#003580',weight:2}]},
+    ]
+  },
+  {
+    name: 'Regional Standard', meta: 'Diagonal split field',
+    filter: 'subnational',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#8b0000',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'diagonal',color:'#ffd700',opacity:100,params:{side:2}},
+    ]
+  },
+  {
+    name: 'State Banner', meta: 'Five horizontal stripes alternating',
+    filter: 'subnational',
+    layers: [{id:'1',type:'hstripes',visible:true,bands:[
+      {color:'#c8102e',weight:1},{color:'#ffffff',weight:1},{color:'#c8102e',weight:1},
+      {color:'#ffffff',weight:1},{color:'#c8102e',weight:1}
+    ]}]
+  },
+  {
+    name: 'Canton Design', meta: 'Tricolour with upper-left canton',
+    filter: 'subnational',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#ce1126',weight:1},{color:'#ffffff',weight:1},{color:'#009a44',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'canton',color:'#003580',opacity:100,params:{width:35,height:50}},
+    ]
+  },
+];
+
+// Gallery examples (community-style)
+const GALLERY_FLAGS = [
+  {
+    name: 'Kingdom of Aethoria', meta: 'Fictional · World-building',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#1a237e',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'nordic',color:'#d4a832',opacity:100,params:{thickness:36,offset:36}},
+      {id:'3',type:'overlay',visible:true,shape:'nordic',color:'#ffffff',opacity:100,params:{thickness:14,offset:36}},
+    ]
+  },
+  {
+    name: 'Red Mountain Clan', meta: 'Fictional · RPG',
+    filter: 'fantasy',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#b71c1c',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'triangle',color:'#212121',opacity:100,params:{depth:50,side:0}},
+      {id:'3',type:'overlay',visible:true,shape:'hband',color:'#ffd54f',opacity:100,params:{position:42,thickness:16}},
+    ]
+  },
+  {
+    name: 'Silverport FC', meta: 'Club · Football',
+    filter: 'clubs',
+    layers: [
+      {id:'1',type:'vstripes',visible:true,bands:[{color:'#c0c0c0',weight:1},{color:'#1565c0',weight:1},{color:'#c0c0c0',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'chevron',color:'#0d47a1',opacity:100,params:{depth:35,thickness:20}},
+    ]
+  },
+  {
+    name: 'Free City of Valdrun', meta: 'Fictional · World-building',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#004d00',weight:1},{color:'#ffffff',weight:1},{color:'#004d00',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'vband',color:'#8b0000',opacity:100,params:{position:43,thickness:14}},
+    ]
+  },
+  {
+    name: 'House Dawnbreaker', meta: 'Fictional · Fantasy',
+    filter: 'fantasy',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#212121',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'saltire',color:'#d4a832',opacity:100,params:{thickness:40}},
+      {id:'3',type:'overlay',visible:true,shape:'saltire',color:'#212121',opacity:100,params:{thickness:18}},
+      {id:'4',type:'overlay',visible:true,shape:'cross',color:'#d4a832',opacity:100,params:{thickness:22}},
+    ]
+  },
+  {
+    name: 'Coastal Guard', meta: 'Club · Maritime',
+    filter: 'clubs',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#ffffff',weight:1},{color:'#01579b',weight:1},{color:'#ffffff',weight:1},{color:'#01579b',weight:1},{color:'#ffffff',weight:1}]},
+    ]
+  },
+  {
+    name: 'Ironhold Redesign', meta: 'Redesign · Heraldic',
+    filter: 'redesign',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#4a148c',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'chevron',color:'#ffd600',opacity:100,params:{depth:45,thickness:30}},
+      {id:'3',type:'overlay',visible:true,shape:'chevron',color:'#4a148c',opacity:100,params:{depth:45,thickness:16}},
+    ]
+  },
+  {
+    name: 'Desert Empire', meta: 'Fictional · World-building',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#e65100',weight:1},{color:'#ffd54f',weight:1},{color:'#e65100',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'triangle',color:'#212121',opacity:100,params:{depth:40,side:0}},
+    ]
+  },
+];
+
+// ---- Render all grids ----
+function populateGrid(gridId, flags) {
+  const grid = document.getElementById(gridId);
+  flags.forEach(f => grid.appendChild(makeFlag(f.name, f.meta, f.layers, f.filter)));
+}
+
+populateGrid('national-grid', NATIONAL_FLAGS);
+populateGrid('historical-grid', HISTORICAL_FLAGS);
+populateGrid('subnational-grid', SUBNATIONAL_FLAGS);
+populateGrid('gallery-grid', GALLERY_FLAGS);
+
+// ---- Tab switching ----
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---- Gallery filter ----
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('#gallery-grid .flag-card').forEach(card => {
+      card.style.display = (filter === 'all' || card.dataset.filter === filter) ? '' : 'none';
+    });
+  });
+});
+</script>
+</body>
+</html>
