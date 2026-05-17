@@ -10,6 +10,13 @@ let dragOffsetX = 0, dragOffsetY = 0;
 let dragLayerId = null;
 let dragLayerOriginY = 0;
 
+// ---- Global colour picker state ----
+let _activePopover = null;
+function _closeAllPopovers() {
+  if (_activePopover) { _activePopover.classList.add('hidden'); _activePopover = null; }
+}
+document.addEventListener('click', _closeAllPopovers);
+
 function newDesign() {
   return {
     id: uuid(),
@@ -160,6 +167,106 @@ function buildLayerBody(layer) {
   return frag;
 }
 
+// ---- Colour picker component ----
+// Returns a swatch button that opens a palette popover. No async, no fetch.
+function buildColorPicker(initialValue, onChangeCallback) {
+  const wrap = document.createElement('div');
+  wrap.className = 'cp-wrap';
+
+  const swatch = document.createElement('button');
+  swatch.className = 'cp-swatch';
+  swatch.style.background = initialValue;
+  swatch.type = 'button';
+  swatch.title = 'Choose colour';
+
+  // Build popover (appended to body so it escapes overflow clips)
+  const popover = document.createElement('div');
+  popover.className = 'cp-popover hidden';
+
+  const chips = document.createElement('div');
+  chips.className = 'cp-chips';
+
+  function buildChips() {
+    chips.innerHTML = '';
+    const palette = getActivePalette();
+    palette.colors.forEach(col => {
+      const chip = document.createElement('button');
+      chip.className = 'cp-chip';
+      chip.style.background = col.hex;
+      chip.title = col.name;
+      chip.dataset.hex = col.hex;
+      chip.type = 'button';
+      if (col.hex.toLowerCase() === swatch.style.background.toLowerCase()) {
+        chip.classList.add('selected');
+      }
+      chip.addEventListener('click', e => {
+        e.stopPropagation();
+        swatch.style.background = col.hex;
+        nativeSwatch.style.background = col.hex;
+        native.value = col.hex;
+        chips.querySelectorAll('.cp-chip').forEach(c => c.classList.toggle('selected', c.dataset.hex === col.hex));
+        onChangeCallback(col.hex);
+        _closeAllPopovers();
+      });
+      chips.appendChild(chip);
+    });
+  }
+  buildChips();
+
+  // Custom colour row
+  const customRow = document.createElement('div');
+  customRow.className = 'cp-custom-row';
+  const customLabel = document.createElement('span');
+  customLabel.className = 'cp-custom-label';
+  customLabel.textContent = 'Custom colour';
+  const nativeWrap = document.createElement('div');
+  nativeWrap.className = 'cp-native-wrap';
+  const nativeSwatch = document.createElement('div');
+  nativeSwatch.className = 'cp-native-swatch';
+  nativeSwatch.style.background = initialValue;
+  const native = document.createElement('input');
+  native.type = 'color';
+  native.className = 'cp-native';
+  native.value = initialValue;
+  native.addEventListener('input', e => {
+    swatch.style.background = e.target.value;
+    nativeSwatch.style.background = e.target.value;
+    chips.querySelectorAll('.cp-chip').forEach(c => c.classList.remove('selected'));
+    onChangeCallback(e.target.value);
+  });
+  native.addEventListener('click', e => e.stopPropagation());
+  nativeWrap.appendChild(nativeSwatch);
+  nativeWrap.appendChild(native);
+  customRow.appendChild(customLabel);
+  customRow.appendChild(nativeWrap);
+
+  popover.appendChild(chips);
+  popover.appendChild(customRow);
+  document.body.appendChild(popover);
+
+  swatch.addEventListener('click', e => {
+    e.stopPropagation();
+    if (_activePopover === popover) { _closeAllPopovers(); return; }
+    _closeAllPopovers();
+    // Refresh chips in case palette changed
+    buildChips();
+    // Position near swatch
+    const r = swatch.getBoundingClientRect();
+    let left = r.left;
+    let top  = r.bottom + 6;
+    // Keep on screen
+    if (left + 210 > window.innerWidth)  left = window.innerWidth - 218;
+    if (top + 200  > window.innerHeight) top  = r.top - 206;
+    popover.style.left = left + 'px';
+    popover.style.top  = top  + 'px';
+    popover.classList.remove('hidden');
+    _activePopover = popover;
+  });
+
+  wrap.appendChild(swatch);
+  return wrap; // caller appends wrap to DOM
+}
+
 // ---- Stripes body ----
 function buildStripesBody(layer) {
   const wrap = document.createElement('div');
@@ -172,11 +279,7 @@ function buildStripesBody(layer) {
       const row = document.createElement('div');
       row.className = 'band-row';
 
-      const colorInput = document.createElement('input');
-      colorInput.type = 'color';
-      colorInput.value = band.color;
-      colorInput.title = 'Band colour';
-      colorInput.addEventListener('input', e => { band.color = e.target.value; onChange(); });
+      const colorWrap = buildColorPicker(band.color, val => { band.color = val; onChange(); });
 
       const weightInput = document.createElement('input');
       weightInput.type = 'range';
@@ -196,7 +299,7 @@ function buildStripesBody(layer) {
         onChange();
       });
 
-      row.appendChild(colorInput);
+      row.appendChild(colorWrap);
       row.appendChild(weightInput);
       row.appendChild(removeBtn);
       bandsList.appendChild(row);
@@ -245,11 +348,8 @@ function buildOverlayBody(layer) {
   const colorRow = document.createElement('div');
   colorRow.className = 'control-row';
   colorRow.innerHTML = `<span class="control-label">Colour</span>`;
-  const colorInput = document.createElement('input');
-  colorInput.type = 'color';
-  colorInput.value = layer.color || '#ffffff';
-  colorInput.addEventListener('input', e => { layer.color = e.target.value; onChange(); });
-  colorRow.appendChild(colorInput);
+  const colorWrap = buildColorPicker(layer.color || '#ffffff', val => { layer.color = val; onChange(); });
+  colorRow.appendChild(colorWrap);
   wrap.appendChild(colorRow);
 
   // Opacity
@@ -438,7 +538,7 @@ function loadIconGrid(category) {
       cell.dataset.slug = icon.slug;
 
       if (svgStr) {
-        const coloured = colourIcon(svgStr, '#e8e4dc', 'transparent');
+        const coloured = colourIcon(svgStr, '#1C1C1C', 'transparent');
         const wrap = document.createElement('div');
         wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
         wrap.innerHTML = coloured;
@@ -638,8 +738,27 @@ function bindHeaderButtons() {
   document.getElementById('btn-export-png').addEventListener('click', exportPng);
   document.getElementById('btn-export-svg').addEventListener('click', exportSvg);
 
+  bindPaletteSelector();
   bindEmblemControls();
   bindSaveModal();
+}
+
+function bindPaletteSelector() {
+  const sel = document.getElementById('palette-select');
+  if (!sel) return;
+  // Populate options
+  PALETTES.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+  sel.value = activePaletteIdx;
+  sel.addEventListener('change', e => {
+    setActivePalette(+e.target.value);
+    // Rebuild layer list so any expanded pickers refresh
+    renderLayerList();
+  });
 }
 
 // ============================================================

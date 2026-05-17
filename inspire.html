@@ -6,7 +6,7 @@
   <title>Inspiration & Gallery — Vexillum</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    html, body { overflow: auto; }
+    html, body { overflow: auto; background: var(--off-white); }
 
     #site-nav {
       display: flex;
@@ -14,8 +14,8 @@
       gap: 20px;
       padding: 0 32px;
       height: 52px;
-      background: var(--bg-2);
-      border-bottom: 1px solid var(--border);
+      background: var(--yellow);
+      border-bottom: 2px solid var(--near-black);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -24,28 +24,33 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 22px;
       letter-spacing: 2px;
-      color: var(--gold);
+      color: var(--near-black);
       text-decoration: none;
     }
     .nav-link {
-      color: var(--text-muted);
+      color: var(--near-black);
       text-decoration: none;
       font-size: 13px;
-      transition: color 0.15s;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: background 0.12s;
     }
-    .nav-link:hover, .nav-link.active { color: var(--text); }
+    .nav-link:hover, .nav-link.active { background: var(--yellow-dark); }
     .nav-spacer { flex: 1; }
     .nav-cta {
       padding: 7px 16px;
-      background: var(--gold);
-      color: #0f0e0c;
+      background: var(--near-black);
+      color: var(--yellow);
+      border: 2px solid var(--near-black);
       border-radius: 6px;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 13px;
       text-decoration: none;
-      transition: background 0.15s;
+      transition: all 0.12s;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
     }
-    .nav-cta:hover { background: var(--gold-light); }
+    .nav-cta:hover { background: var(--dark); }
 
     /* ---- Page sections ---- */
     .page-section {
@@ -57,26 +62,27 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 11px;
       letter-spacing: 3px;
-      color: var(--gold);
+      color: var(--mid);
       margin-bottom: 8px;
+      text-transform: uppercase;
     }
     .section-title {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 36px;
+      font-size: 40px;
       letter-spacing: 1px;
-      color: var(--text);
+      color: var(--near-black);
       margin-bottom: 8px;
     }
     .section-subtitle {
-      color: var(--text-muted);
-      font-size: 14px;
+      color: var(--mid);
+      font-size: 15px;
       margin-bottom: 36px;
       max-width: 540px;
-      line-height: 1.6;
+      line-height: 1.65;
     }
     hr.section-divider {
       border: none;
-      border-top: 1px solid var(--border);
+      border-top: 2px solid var(--near-black);
     }
 
     /* ---- Flag grid ---- */
@@ -86,21 +92,22 @@
       gap: 16px;
     }
     .flag-card {
-      background: var(--bg-2);
-      border: 1px solid var(--border);
+      background: var(--white);
+      border: 2px solid var(--near-black);
       border-radius: 8px;
       overflow: hidden;
-      transition: border-color 0.15s, transform 0.15s;
+      transition: transform 0.12s, box-shadow 0.12s;
       cursor: pointer;
+      box-shadow: 3px 3px 0 var(--near-black);
     }
     .flag-card:hover {
-      border-color: var(--gold-dim);
-      transform: translateY(-2px);
+      transform: translate(-2px,-2px);
+      box-shadow: 5px 5px 0 var(--near-black);
     }
     .flag-card-canvas {
       width: 100%;
       aspect-ratio: 3/2;
-      background: var(--bg-4);
+      background: var(--light);
       display: block;
     }
     .flag-card-canvas svg {
@@ -126,23 +133,24 @@
       display: flex;
       gap: 4px;
       margin-bottom: 28px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--near-black);
       padding-bottom: 0;
     }
     .tab-btn {
       padding: 8px 16px;
       background: none;
       border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      color: var(--mid);
       font-family: 'DM Sans', sans-serif;
       font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      transition: color 0.15s;
-      margin-bottom: -1px;
+      transition: color 0.12s;
+      margin-bottom: -2px;
     }
-    .tab-btn:hover { color: var(--text); }
-    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-btn:hover { color: var(--near-black); }
+    .tab-btn.active { color: var(--near-black); border-bottom-color: var(--near-black); font-weight: 700; }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
@@ -154,27 +162,28 @@
       gap: 16px;
     }
     .tip-card {
-      background: var(--bg-2);
-      border: 1px solid var(--border);
+      background: var(--yellow);
+      border: 2px solid var(--near-black);
       border-radius: 8px;
       padding: 16px;
+      box-shadow: 3px 3px 0 var(--near-black);
     }
     .tip-num {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px;
-      color: var(--gold);
+      font-size: 32px;
+      color: var(--near-black);
       line-height: 1;
       margin-bottom: 8px;
     }
     .tip-title {
       font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
+      font-weight: 700;
+      color: var(--near-black);
       margin-bottom: 6px;
     }
     .tip-body {
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--dark);
       line-height: 1.6;
     }
 
@@ -188,16 +197,18 @@
     .filter-btn {
       padding: 5px 14px;
       border-radius: 20px;
-      border: 1px solid var(--border);
-      background: none;
-      color: var(--text-muted);
+      border: 2px solid var(--near-black);
+      background: var(--white);
+      color: var(--near-black);
       font-size: 12px;
+      font-weight: 600;
       font-family: 'DM Sans', sans-serif;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.12s;
+      box-shadow: 2px 2px 0 var(--near-black);
     }
-    .filter-btn:hover { border-color: var(--border-light); color: var(--text); }
-    .filter-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,168,50,0.1); }
+    .filter-btn:hover  { background: var(--yellow); }
+    .filter-btn.active { background: var(--near-black); color: var(--yellow); box-shadow: none; }
 
     /* ---- Colour principle swatches ---- */
     .colour-rules {
@@ -209,32 +220,29 @@
     .colour-rule {
       border-radius: 6px;
       overflow: hidden;
+      border: 2px solid var(--near-black);
+      box-shadow: 2px 2px 0 var(--near-black);
     }
     .colour-rule-swatch {
       height: 48px;
       display: flex;
     }
-    .colour-rule-swatch span {
-      flex: 1;
-    }
+    .colour-rule-swatch span { flex: 1; }
     .colour-rule-label {
-      background: var(--bg-3);
+      background: var(--white);
       padding: 8px 10px;
       font-size: 11px;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 6px 6px;
+      color: var(--mid);
     }
     .colour-rule-name {
       font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
+      font-weight: 600;
+      color: var(--near-black);
       margin-bottom: 2px;
     }
   </style>
 </head>
-<body style="overflow-y:auto; background:var(--bg);">
+<body style="overflow-y:auto; background:var(--off-white);">
 
 <!-- Nav -->
 <nav id="site-nav">
@@ -377,15 +385,16 @@
 </section>
 
 <!-- Footer -->
-<footer style="border-top:1px solid var(--border);padding:24px 32px;display:flex;align-items:center;gap:16px;background:var(--bg-2);">
-  <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--gold);">VEXILLUM</span>
-  <span style="color:var(--text-dim);font-size:12px;">Icons by <a href="https://game-icons.net" style="color:var(--text-muted);text-decoration:none;" target="_blank">game-icons.net</a> (CC BY 3.0)</span>
+<footer style="border-top:2px solid var(--near-black);padding:24px 32px;display:flex;align-items:center;gap:16px;background:var(--yellow);">
+  <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--near-black);">VEXILLUM</span>
+  <span style="color:var(--near-black);font-size:12px;opacity:0.7;">Icons by <a href="https://game-icons.net" style="color:var(--near-black);text-decoration:none;font-weight:600;" target="_blank">game-icons.net</a> (CC BY 3.0)</span>
   <div style="flex:1"></div>
-  <a href="index.html" style="color:var(--text-muted);font-size:12px;text-decoration:none;">Open Editor</a>
+  <a href="index.html" style="color:var(--near-black);font-size:12px;text-decoration:none;font-weight:600;">Open Editor →</a>
 </footer>
 
 <script src="js/icon-data.js"></script>
 <script src="js/icons.js"></script>
+<script src="js/palettes.js"></script>
 <script src="js/renderer.js"></script>
 <script>
 // ============================================================
