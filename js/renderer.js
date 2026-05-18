@@ -248,6 +248,24 @@ function renderEmblemEl(svgEl, emblem, selected) {
   g.setAttribute('transform',
     `translate(${px},${py}) rotate(${emblem.rotate || 0}) scale(${sx},${sy})`);
 
+  // Text emblem — render as SVG text
+  if (emblem.type === 'text') {
+    _renderTextContent(g, emblem, sz);
+    // Hitbox (rough estimate)
+    const estW = Math.max(sz, (emblem.text || '').length * sz * 0.55);
+    const hitbox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    hitbox.setAttribute('x', -estW/2); hitbox.setAttribute('y', -sz/2);
+    hitbox.setAttribute('width', estW); hitbox.setAttribute('height', sz);
+    hitbox.setAttribute('fill', 'transparent');
+    hitbox.setAttribute('stroke', selected ? '#d4a832' : 'transparent');
+    hitbox.setAttribute('stroke-width', '2');
+    hitbox.setAttribute('stroke-dasharray', selected ? '4 2' : 'none');
+    hitbox.classList.add('emblem-hitbox');
+    g.appendChild(hitbox);
+    svgEl.appendChild(g);
+    return;
+  }
+
   // Background rect
   if (emblem.bg && emblem.bg !== 'transparent') {
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -261,8 +279,12 @@ function renderEmblemEl(svgEl, emblem, selected) {
   if (emblem._svgContent) {
     // For heraldic emblems, apply colour remap before injecting
     let svgSrc = emblem._svgContent;
-    if (emblem.heraldic && emblem.heraldColours) {
+    if (emblem.heraldic && emblem.heraldColours && Object.keys(emblem.heraldColours).length > 0) {
       svgSrc = _applyHeraldicColourMap(svgSrc, emblem.heraldColours);
+    } else if (emblem.heraldic && emblem.fillOverride) {
+      // Override all fills for icons with no extractable tinctures
+      svgSrc = svgSrc.replace(/fill\s*:\s*#[0-9a-fA-F]{3,8}/gi, `fill:${emblem.fillOverride}`);
+      svgSrc = svgSrc.replace(/fill="[^"]*"/g, `fill="${emblem.fillOverride}"`);
     }
 
     const div = document.createElement('div');
@@ -322,4 +344,60 @@ function makeThumbnail(design) {
     svg.appendChild(g);
   });
   return svg;
+}
+
+// ---- Text emblem rendering ----
+function _renderTextContent(g, emblem, sz) {
+  const fontSize = Math.max(8, sz * 0.7);
+  const font     = emblem.fontFamily || 'Bebas Neue';
+  const fill     = emblem.fg || '#ffffff';
+  const arc      = emblem.textArc || 0;
+
+  if (arc === 0) {
+    // Straight text
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'central');
+    text.setAttribute('font-family', font);
+    text.setAttribute('font-size', fontSize);
+    text.setAttribute('fill', fill);
+    text.setAttribute('font-weight', '700');
+    text.textContent = emblem.text || '';
+    g.appendChild(text);
+  } else {
+    // Curved text using textPath
+    const r = Math.max(20, Math.abs(400 / arc));
+    const pathId = `tp_${emblem.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+    // Ensure defs exist on the SVG
+    const svgEl = g.ownerSVGElement;
+    let defs = svgEl?.querySelector('defs');
+    if (!defs && svgEl) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svgEl.insertBefore(defs, svgEl.firstChild);
+    }
+    if (defs) {
+      defs.querySelector(`#${pathId}`)?.remove();
+      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      pathEl.setAttribute('id', pathId);
+      // arc > 0 = text curves up (smiling arc), arc < 0 = text curves down
+      const sweep = arc > 0 ? 1 : 0;
+      pathEl.setAttribute('d', `M ${-r},0 A ${r},${r} 0 0 ${sweep} ${r},0`);
+      defs.appendChild(pathEl);
+    }
+
+    const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textEl.setAttribute('fill', fill);
+    textEl.setAttribute('font-family', font);
+    textEl.setAttribute('font-size', fontSize);
+    textEl.setAttribute('font-weight', '700');
+
+    const tPath = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+    tPath.setAttribute('href', `#${pathId}`);
+    tPath.setAttribute('startOffset', '50%');
+    tPath.setAttribute('text-anchor', 'middle');
+    tPath.textContent = emblem.text || '';
+    textEl.appendChild(tPath);
+    g.appendChild(textEl);
+  }
 }

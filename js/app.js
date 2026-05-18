@@ -183,6 +183,14 @@ function buildEmblemRow(emblem) {
     else renderAll();
   });
 
+  // Drag handle (insert at beginning)
+  const dragHandle = document.createElement('span');
+  dragHandle.className = 'layer-drag';
+  dragHandle.title = 'Drag to reorder';
+  dragHandle.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg>`;
+  dragHandle.addEventListener('mousedown', e => startEmblemRowDrag(e, emblem.id));
+
+  row.appendChild(dragHandle);
   row.appendChild(preview);
   row.appendChild(lbl);
   row.appendChild(visBtn);
@@ -584,6 +592,39 @@ function onLayerDragEnd() {
   document.removeEventListener('mouseup', onLayerDragEnd);
 }
 
+// ---- Emblem row drag-to-reorder ----
+let _dragEmblemId = null;
+let _dragEmblemY  = 0;
+
+function startEmblemRowDrag(e, emblemId) {
+  _dragEmblemId = emblemId;
+  _dragEmblemY  = e.clientY;
+  document.addEventListener('mousemove', _onEmblemRowMove);
+  document.addEventListener('mouseup',   _onEmblemRowEnd);
+  e.preventDefault();
+  e.stopPropagation();
+}
+function _onEmblemRowMove(e) {
+  if (!_dragEmblemId) return;
+  const dy = e.clientY - _dragEmblemY;
+  if (Math.abs(dy) < 18) return;
+  const dir = dy > 0 ? 1 : -1;
+  _dragEmblemY = e.clientY;
+  const arrIdx = design.emblems.findIndex(em => em.id === _dragEmblemId);
+  if (arrIdx === -1) return;
+  // UI shows in REVERSE: drag down (dir=+1) = move toward lower z = earlier in array
+  const newIdx = arrIdx - dir;
+  if (newIdx < 0 || newIdx >= design.emblems.length) return;
+  const [removed] = design.emblems.splice(arrIdx, 1);
+  design.emblems.splice(newIdx, 0, removed);
+  renderAll();
+}
+function _onEmblemRowEnd() {
+  _dragEmblemId = null;
+  document.removeEventListener('mousemove', _onEmblemRowMove);
+  document.removeEventListener('mouseup',   _onEmblemRowEnd);
+}
+
 // ============================================================
 // ICON PANEL
 // ============================================================
@@ -600,6 +641,37 @@ function bindIconPanel() {
     iconSearchQuery = e.target.value.trim().toLowerCase();
     loadHeraldGrid(activeHeraldCat);
   });
+
+  // Text add button
+  const textAddBtn = document.getElementById('text-add-btn');
+  const textInput  = document.getElementById('text-content');
+  if (textAddBtn && textInput) {
+    const doAddText = () => {
+      const font = document.getElementById('text-font')?.value || 'Bebas Neue';
+      placeTextEmblem(textInput.value, font, 50, 50);
+      textInput.value = '';
+    };
+    textAddBtn.addEventListener('click', doAddText);
+    textInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAddText(); });
+  }
+
+  // SVG import
+  const importBtn   = document.getElementById('svg-import-btn');
+  const importInput = document.getElementById('svg-import-input');
+  if (importBtn && importInput) {
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => addCustomIcon(file.name, ev.target.result);
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
+
+  // Load any previously imported custom icons
+  renderCustomIconSection();
 }
 
 function buildHeraldCats() {
@@ -813,6 +885,20 @@ function bindCanvasEvents() {
       placeHeraldicEmblem(icon.slug, icon.label, icon.category, x, y);
       return;
     }
+    const customData = e.dataTransfer.getData('application/vexillum-custom');
+    if (customData) {
+      const icon = JSON.parse(customData);
+      const emblem = {
+        id: uuid(), slug: `custom:${icon.id}`, label: icon.name, category: 'Custom',
+        x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)),
+        size: 20, rotate: 0, flipX: false, flipY: false,
+        fg: '#ffffff', bg: 'transparent', _svgContent: icon.svg,
+      };
+      design.emblems.push(emblem);
+      selectEmblem(emblem.id);
+      renderAll();
+      return;
+    }
     const iconData = e.dataTransfer.getData('application/vexillum-icon');
     if (iconData) {
       placeEmblem(JSON.parse(iconData), x, y);
@@ -855,13 +941,15 @@ function placeEmblem(icon, x, y) {
 // Extract up to 4 unique non-black fill colours from an SVG string
 function extractHeraldicColours(svgStr) {
   const seen = new Set();
-  const re = /fill:([#][0-9a-fA-F]{3,6})/g;
+  const re = /fill\s*:\s*(#[0-9a-fA-F]{3,8})/gi;
   let m;
+  const EXCLUDE = new Set(['#000000','#000','#1c1c1c','#ffffff','#fff','#eeeeee','#eee','#f0f0f0','#fefefe','#fdfdfd']);
   while ((m = re.exec(svgStr)) !== null) {
-    const c = m[1].toLowerCase();
-    if (c !== '#000000' && c !== '#000' && c !== '#1c1c1c') seen.add(c);
+    let c = m[1].toLowerCase();
+    if (c.length === 4) c = '#' + c[1]+c[1]+c[2]+c[2]+c[3]+c[3];
+    if (!EXCLUDE.has(c)) seen.add(c);
   }
-  return [...seen].slice(0, 4);
+  return [...seen].slice(0, 5);
 }
 
 // Apply a colour remap {originalHex: newHex} to an SVG string
@@ -906,6 +994,129 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
   design.emblems.push(emblem);
   selectEmblem(emblem.id);
   renderAll();
+}
+
+function placeTextEmblem(text, fontFamily, x, y) {
+  if (!text.trim()) return;
+  const emblem = {
+    id: uuid(),
+    type: 'text',
+    text: text.trim(),
+    fontFamily: fontFamily || 'Bebas Neue',
+    label: `"${text.trim().slice(0, 12)}"`,
+    category: 'Text',
+    x: Math.max(0, Math.min(100, x)),
+    y: Math.max(0, Math.min(100, y)),
+    size: 18,
+    rotate: 0,
+    flipX: false,
+    flipY: false,
+    fg: '#ffffff',
+    bg: 'transparent',
+    textArc: 0,
+    _svgContent: null,
+  };
+  design.emblems.push(emblem);
+  selectEmblem(emblem.id);
+  renderAll();
+}
+
+// ---- Custom SVG import ----
+const CUSTOM_ICONS_KEY = 'vexillum_custom_icons';
+
+function getCustomIcons() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_ICONS_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveCustomIcons(icons) {
+  localStorage.setItem(CUSTOM_ICONS_KEY, JSON.stringify(icons));
+}
+
+function addCustomIcon(name, svgStr) {
+  // Clean up the SVG: strip Inkscape/Sodipodi metadata, keep just the SVG element
+  const div = document.createElement('div');
+  div.innerHTML = svgStr;
+  const svg = div.querySelector('svg');
+  if (!svg) { showToast('Invalid SVG file', 'error'); return; }
+  // Remove inkscape/sodipodi namespace elements
+  svg.querySelectorAll('sodipodi\\:namedview, defs metadata').forEach(el => el.remove());
+  const cleanSvg = svg.outerHTML;
+
+  const icons = getCustomIcons();
+  const icon = { id: uuid(), name: name.replace(/\.svg$/i, ''), svg: cleanSvg, addedAt: Date.now() };
+  icons.unshift(icon);
+  if (icons.length > 30) icons.pop();
+  saveCustomIcons(icons);
+  showToast(`"${icon.name}" imported`, 'success');
+  renderCustomIconSection();
+}
+
+function renderCustomIconSection() {
+  const existing = document.getElementById('custom-icon-section');
+  if (existing) existing.remove();
+  const icons = getCustomIcons();
+  if (!icons.length) return;
+
+  const section = document.createElement('div');
+  section.id = 'custom-icon-section';
+  section.style.cssText = 'padding:0 8px 6px;border-bottom:1px solid rgba(28,28,28,0.2);margin-bottom:4px;';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:10px;font-weight:700;opacity:0.5;text-transform:uppercase;letter-spacing:0.08em;padding:4px 2px 4px;';
+  title.textContent = 'Custom';
+  section.appendChild(title);
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:5px;';
+
+  icons.forEach(icon => {
+    const cell = document.createElement('div');
+    cell.className = 'icon-cell';
+    cell.title = icon.name;
+    cell.draggable = true;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+    wrap.innerHTML = icon.svg;
+    const innerSvg = wrap.querySelector('svg');
+    if (innerSvg) {
+      const w = innerSvg.getAttribute('width') || '100';
+      const h = innerSvg.getAttribute('height') || '100';
+      if (!innerSvg.getAttribute('viewBox')) innerSvg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
+      innerSvg.removeAttribute('width'); innerSvg.removeAttribute('height');
+      innerSvg.style.cssText = 'width:100%;height:100%;pointer-events:none;display:block;';
+    }
+    cell.appendChild(wrap);
+    const nameEl = document.createElement('span');
+    nameEl.className = 'icon-cell-name';
+    nameEl.textContent = icon.name;
+    cell.appendChild(nameEl);
+
+    cell.addEventListener('click', () => {
+      const emblem = {
+        id: uuid(), slug: `custom:${icon.id}`, label: icon.name, category: 'Custom',
+        x: 50, y: 50, size: 20, rotate: 0, flipX: false, flipY: false,
+        fg: '#ffffff', bg: 'transparent', _svgContent: icon.svg,
+      };
+      design.emblems.push(emblem);
+      selectEmblem(emblem.id);
+      renderAll();
+    });
+
+    cell.addEventListener('dragstart', ev => {
+      ev.dataTransfer.setData('application/vexillum-custom', JSON.stringify({
+        id: icon.id, name: icon.name, svg: icon.svg
+      }));
+      ev.dataTransfer.effectAllowed = 'copy';
+    });
+
+    grid.appendChild(cell);
+  });
+  section.appendChild(grid);
+
+  // Insert before the search input
+  const searchInput = document.getElementById('icon-search');
+  searchInput.parentNode.insertBefore(section, searchInput);
 }
 
 function selectEmblem(id) {
@@ -1005,24 +1216,49 @@ function updateEmblemControls() {
   document.getElementById('ec-flip-h').classList.toggle('active', !!emblem.flipX);
   document.getElementById('ec-flip-v').classList.toggle('active', !!emblem.flipY);
 
-  const isHeraldic = !!emblem.heraldic;
-  document.getElementById('ec-gameicon-controls').style.display  = isHeraldic ? 'none' : '';
-  document.getElementById('ec-heraldic-controls').style.display  = isHeraldic ? '' : 'none';
+  const isText     = emblem.type === 'text';
+  const isHeraldic = !!emblem.heraldic && !isText;
 
-  if (!isHeraldic) {
+  document.getElementById('ec-gameicon-controls').style.display  = (!isText && !isHeraldic) ? '' : 'none';
+  document.getElementById('ec-heraldic-controls').style.display  = isHeraldic ? '' : 'none';
+  document.getElementById('ec-text-controls').style.display      = isText ? '' : 'none';
+  // Flip doesn't make visual sense for text; keep shown but less relevant
+  document.getElementById('ec-flip-h').style.opacity = isText ? '0.4' : '1';
+  document.getElementById('ec-flip-v').style.opacity = isText ? '0.4' : '1';
+
+  if (!isText && !isHeraldic) {
     document.getElementById('ec-fg').value = emblem.fg || '#ffffff';
     document.getElementById('ec-bg').value = emblem.bg === 'transparent' ? '#000000' : (emblem.bg || '#000000');
     document.getElementById('ec-bg-transparent').checked = emblem.bg === 'transparent';
-  } else {
+  } else if (isHeraldic) {
     buildHeraldSwatches(emblem);
+  } else if (isText) {
+    document.getElementById('ec-text-content').value  = emblem.text || '';
+    document.getElementById('ec-text-font').value     = emblem.fontFamily || 'Bebas Neue';
+    document.getElementById('ec-text-arc').value      = emblem.textArc || 0;
+    document.getElementById('ec-arc-val').textContent = (emblem.textArc || 0) + '';
   }
 }
 
 function buildHeraldSwatches(emblem) {
   const container = document.getElementById('ec-herald-swatches');
   container.innerHTML = '';
-  if (!emblem.heraldColours) return;
-  Object.entries(emblem.heraldColours).forEach(([origHex, currentHex]) => {
+  const entries = emblem.heraldColours ? Object.entries(emblem.heraldColours) : [];
+  if (entries.length === 0) {
+    // No tinctures extracted — show a fill override picker that replaces ALL fills
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.className = 'ec-herald-swatch';
+    input.value = emblem.fillOverride || '#ffffff';
+    input.title = 'Override fill colour';
+    input.addEventListener('input', e => {
+      emblem.fillOverride = e.target.value;
+      renderAll();
+    });
+    container.appendChild(input);
+    return;
+  }
+  entries.forEach(([origHex, currentHex]) => {
     const input = document.createElement('input');
     input.type = 'color';
     input.className = 'ec-herald-swatch';
@@ -1077,6 +1313,33 @@ function bindEmblemControls() {
     design.emblems = design.emblems.filter(em => em.id !== selectedEmblemId);
     selectEmblem(null);
   });
+
+  // Text emblem controls
+  const ecTextContent = document.getElementById('ec-text-content');
+  if (ecTextContent) {
+    ecTextContent.addEventListener('input', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em && em.type === 'text') { em.text = e.target.value; renderAll(); }
+    });
+  }
+  const ecTextFont = document.getElementById('ec-text-font');
+  if (ecTextFont) {
+    ecTextFont.addEventListener('change', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em && em.type === 'text') { em.fontFamily = e.target.value; renderAll(); }
+    });
+  }
+  const ecTextArc = document.getElementById('ec-text-arc');
+  if (ecTextArc) {
+    ecTextArc.addEventListener('input', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em && em.type === 'text') {
+        em.textArc = +e.target.value;
+        document.getElementById('ec-arc-val').textContent = em.textArc;
+        renderAll();
+      }
+    });
+  }
 }
 
 // ============================================================
@@ -1098,6 +1361,7 @@ function bindHeaderButtons() {
   bindPaletteSelector();
   bindEmblemControls();
   bindSaveModal();
+  bindPreviewModal();
 
   // Auto-save before navigating to Inspire
   const inspireLink = document.querySelector('a.header-nav-link[href="inspire.html"]');
@@ -1366,6 +1630,51 @@ function openSaveModal() {
 
 function closeSaveModal() {
   saveModal.classList.add('hidden');
+}
+
+function bindPreviewModal() {
+  const btn   = document.getElementById('btn-preview');
+  const modal = document.getElementById('preview-modal');
+  const close = document.getElementById('preview-close');
+  const wrap  = document.getElementById('preview-flag-wrap');
+  if (!btn || !modal || !wrap) return;
+
+  btn.addEventListener('click', () => {
+    // Render at 2× scale into the modal
+    const W = 720, H = 480;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    svg.setAttribute('viewBox', '0 0 480 320');
+    svg.style.cssText = 'display:block;';
+
+    // White base
+    const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    base.setAttribute('width', 480); base.setAttribute('height', 320);
+    base.setAttribute('fill', 'white');
+    svg.appendChild(base);
+
+    // Render layers
+    design.layers.forEach(layer => {
+      if (!layer.visible) return;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.innerHTML = renderLayer(layer);
+      svg.appendChild(g);
+    });
+    // Render emblems
+    design.emblems.forEach(em => renderEmblemEl(svg, em, false));
+
+    wrap.innerHTML = '';
+    wrap.appendChild(svg);
+    modal.classList.remove('hidden');
+  });
+
+  close.addEventListener('click', () => modal.classList.add('hidden'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+
+  const exportBtn = document.getElementById('preview-export-png');
+  if (exportBtn) exportBtn.addEventListener('click', exportPng);
 }
 
 function escapeHtml(str) {

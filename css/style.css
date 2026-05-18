@@ -3,7 +3,7 @@
    Game Boy Yellow — bright, bold, high-contrast
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;700&family=Anton&family=Oswald:wght@400;700&family=Pirata+One&display=swap');
 
 /* ---------- Reset & Base ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -598,10 +598,8 @@ html, body {
 
 /* ---------- Centre — Canvas ---------- */
 #canvas-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-rows: 1fr auto;
   background: var(--canvas-bg);
   background-image:
     radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0);
@@ -612,6 +610,11 @@ html, body {
 
 #canvas-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 0;
   filter: drop-shadow(0 6px 24px rgba(0,0,0,0.18)) drop-shadow(0 2px 4px rgba(0,0,0,0.12));
 }
 
@@ -843,7 +846,7 @@ html, body {
   position: relative;
   box-shadow: 2px 2px 0 var(--near-black);
 }
-.icon-cell:hover  { background: var(--yellow); transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--near-black); }
+.icon-cell:hover  { background: var(--yellow); transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--near-black); z-index: 2; position: relative; }
 .icon-cell:active { cursor: grabbing; transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--near-black); }
 
 .icon-cell svg, .icon-cell img {
@@ -868,6 +871,125 @@ html, body {
   font-weight: 600;
 }
 .icon-cell:hover .icon-cell-name { display: block; }
+
+/* ---------- Text Add Panel ---------- */
+.text-add-panel {
+  padding: 6px 8px 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: var(--border-w) solid var(--near-black);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+.text-add-panel input[type="text"] {
+  width: 100%;
+  padding: 5px 8px;
+  border: var(--border-w) solid var(--near-black);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--near-black);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+.text-add-panel input[type="text"]:focus { outline: 2px solid var(--near-black); }
+.text-add-row {
+  display: flex;
+  gap: 4px;
+}
+.text-font-sel {
+  flex: 1;
+  padding: 4px 6px;
+  border: var(--border-w) solid var(--near-black);
+  border-radius: 4px;
+  background: var(--white);
+  font-size: 11px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+.text-add-btn {
+  padding: 4px 10px;
+  border: var(--border-w) solid var(--near-black);
+  border-radius: 4px;
+  background: var(--near-black);
+  color: var(--yellow);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+.text-add-btn:hover { background: var(--dark); }
+
+/* ---------- Import Button ---------- */
+.icon-import-row {
+  display: flex;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(28,28,28,0.15);
+  margin-bottom: 4px;
+}
+.icon-import-btn {
+  width: 100%;
+  padding: 4px 8px;
+  border: var(--border-w) dashed var(--near-black);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.4);
+  color: var(--near-black);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all var(--transition);
+}
+.icon-import-btn:hover { background: var(--white); border-style: solid; }
+
+/* ---------- Text Emblem Controls ---------- */
+.ec-text-input {
+  width: 80px;
+  padding: 2px 5px;
+  border: var(--border-w) solid var(--near-black);
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--white);
+}
+.ec-text-font {
+  padding: 2px 4px;
+  border: var(--border-w) solid var(--near-black);
+  border-radius: 3px;
+  font-size: 10px;
+  background: var(--white);
+  max-width: 90px;
+  cursor: pointer;
+}
+
+/* ---------- Preview Modal ---------- */
+#preview-modal .modal {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+}
+#preview-flag-wrap {
+  border: var(--border-w) solid var(--near-black);
+  box-shadow: 4px 4px 0 var(--near-black);
+  background: white;
+}
+#preview-flag-wrap svg {
+  display: block;
+}
+.preview-actions {
+  display: flex;
+  gap: 10px;
+}
 
 /* ---------- Scrollbars ---------- */
 ::-webkit-scrollbar { width: 5px; height: 5px; }

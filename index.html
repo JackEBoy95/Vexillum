@@ -32,6 +32,10 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       SVG
     </button>
+    <button class="header-btn" id="btn-preview" title="Preview flag full size">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M9 15l6-6"/></svg>
+      Preview
+    </button>
     <button class="header-btn primary" id="btn-export-png" title="Export as PNG image">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       Export PNG
@@ -119,6 +123,22 @@
         <span class="ec-lbl">Tints</span>
         <div id="ec-herald-swatches" style="display:flex;gap:3px;align-items:center;"></div>
       </div>
+      <div class="ec-group" id="ec-text-controls" style="display:none;">
+        <span class="ec-lbl">Text</span>
+        <input id="ec-text-content" type="text" class="ec-text-input" placeholder="Text…">
+        <select id="ec-text-font" class="ec-text-font">
+          <option value="Bebas Neue">Bebas Neue</option>
+          <option value="Cinzel">Cinzel</option>
+          <option value="Anton">Anton</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Pirata One">Pirata One</option>
+          <option value="DM Sans">DM Sans</option>
+        </select>
+        <span class="ec-sep"></span>
+        <span class="ec-lbl">Arc</span>
+        <input id="ec-text-arc" type="range" min="-100" max="100" step="5" value="0" title="Text arc/bend">
+        <span id="ec-arc-val" class="ec-val">0</span>
+      </div>
       <button class="ec-del-btn" id="ec-delete" title="Remove emblem">✕</button>
     </div>
   </main>
@@ -128,7 +148,27 @@
        ============================================================ -->
   <aside id="icons-panel">
     <div class="panel-header">
-      <span class="panel-title">Heraldic Icons</span>
+      <span class="panel-title">Icons &amp; Text</span>
+    </div>
+    <!-- Text add panel -->
+    <div class="text-add-panel">
+      <input id="text-content" type="text" placeholder="Type text for your flag…" autocomplete="off">
+      <div class="text-add-row">
+        <select id="text-font" class="text-font-sel">
+          <option value="Bebas Neue">Bebas Neue</option>
+          <option value="Cinzel">Cinzel</option>
+          <option value="Anton">Anton</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Pirata One">Pirata One</option>
+          <option value="DM Sans">DM Sans</option>
+        </select>
+        <button id="text-add-btn" class="text-add-btn">Add Text →</button>
+      </div>
+    </div>
+    <!-- Import SVG -->
+    <div class="icon-import-row">
+      <button class="icon-import-btn" id="svg-import-btn">↑ Import SVG</button>
+      <input type="file" id="svg-import-input" accept=".svg" style="display:none;">
     </div>
     <input id="icon-search" type="search" placeholder="Search heraldic icons…" autocomplete="off">
     <div class="icon-categories">
@@ -154,6 +194,18 @@
     <p style="font-size:11px;color:var(--text-dim);margin-top:4px;">
       Free tier: up to 3 saved designs stored in your browser.
     </p>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="modal-overlay hidden">
+  <div class="modal" style="position:relative;padding:20px;">
+    <button id="preview-close" class="modal-close" title="Close">×</button>
+    <h2 style="margin-bottom:12px;">Preview</h2>
+    <div id="preview-flag-wrap"></div>
+    <div class="preview-actions" style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
+      <button class="header-btn primary" id="preview-export-png">Export PNG</button>
+    </div>
   </div>
 </div>
 
