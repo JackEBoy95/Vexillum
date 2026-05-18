@@ -484,13 +484,45 @@ function onLayerDragEnd() {
 
 let currentCategory = 'All';
 let iconSearchQuery = '';
+let activeLibrary = 'gameicons'; // 'gameicons' | 'heraldic'
+let activeHeraldCat = null; // currently selected heraldic category id
 
 function bindIconPanel() {
-  // Category buttons
+  // Library tab switcher
+  document.querySelectorAll('.icon-lib-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activeLibrary = tab.dataset.lib;
+      document.querySelectorAll('.icon-lib-tab').forEach(t => t.classList.toggle('active', t === tab));
+      iconSearch.value = '';
+      iconSearchQuery = '';
+      if (activeLibrary === 'gameicons') {
+        currentCategory = 'All';
+        buildGameIconCats();
+        loadIconGrid('All');
+      } else {
+        activeHeraldCat = HERALDIC_CATEGORIES[0].id;
+        buildHeraldCats();
+        loadHeraldGrid(activeHeraldCat);
+      }
+    });
+  });
+
+  // Default: game icons
+  buildGameIconCats();
+
+  iconSearch.addEventListener('input', e => {
+    iconSearchQuery = e.target.value.trim().toLowerCase();
+    if (activeLibrary === 'gameicons') loadIconGrid(currentCategory);
+    else loadHeraldGrid(activeHeraldCat);
+  });
+}
+
+function buildGameIconCats() {
   const catWrap = document.querySelector('.icon-categories');
+  catWrap.innerHTML = '';
   CATEGORIES.forEach(cat => {
     const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (cat === 'All' ? ' active' : '');
+    btn.className = 'cat-btn' + (cat === currentCategory ? ' active' : '');
     btn.textContent = cat;
     btn.addEventListener('click', () => {
       currentCategory = cat;
@@ -499,10 +531,21 @@ function bindIconPanel() {
     });
     catWrap.appendChild(btn);
   });
+}
 
-  iconSearch.addEventListener('input', e => {
-    iconSearchQuery = e.target.value.trim().toLowerCase();
-    loadIconGrid(currentCategory);
+function buildHeraldCats() {
+  const catWrap = document.querySelector('.icon-categories');
+  catWrap.innerHTML = '';
+  HERALDIC_CATEGORIES.forEach(hcat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (hcat.id === activeHeraldCat ? ' active' : '');
+    btn.textContent = hcat.name;
+    btn.addEventListener('click', () => {
+      activeHeraldCat = hcat.id;
+      catWrap.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b === btn));
+      loadHeraldGrid(hcat.id);
+    });
+    catWrap.appendChild(btn);
   });
 }
 
@@ -567,6 +610,76 @@ function loadIconGrid(category) {
   renderBatch();
 }
 
+function loadHeraldGrid(catId) {
+  iconGrid.innerHTML = '';
+  const hcat = HERALDIC_CATEGORIES.find(c => c.id === catId);
+  if (!hcat) return;
+
+  let icons = hcat.icons;
+  if (iconSearchQuery) {
+    icons = icons.filter(slug => slug.includes(iconSearchQuery));
+  }
+
+  if (!icons.length) {
+    iconGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);font-size:12px;padding:20px;">Nothing found</div>';
+    return;
+  }
+
+  // Show a loading indicator for uncached icons
+  const BATCH = 12;
+  let i = 0;
+  function renderBatch() {
+    const end = Math.min(i + BATCH, icons.length);
+    const promises = [];
+    for (; i < end; i++) {
+      const slug = icons[i];
+      const label = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+      const cell = document.createElement('div');
+      cell.className = 'icon-cell heraldic-cell';
+      cell.title = label;
+      cell.draggable = true;
+      cell.dataset.slug = slug;
+      cell.dataset.heraldCat = catId;
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+      cell.appendChild(wrap);
+
+      const name = document.createElement('span');
+      name.className = 'icon-cell-name';
+      name.textContent = label;
+      cell.appendChild(name);
+
+      // Fetch SVG and inject
+      const p = fetchHeraldicSvg(catId, slug).then(svgStr => {
+        if (svgStr) {
+          wrap.innerHTML = svgStr;
+          const innerSvg = wrap.querySelector('svg');
+          if (innerSvg) {
+            innerSvg.style.cssText = 'width:100%;height:100%;pointer-events:none;';
+            innerSvg.removeAttribute('width');
+            innerSvg.removeAttribute('height');
+          }
+        }
+      });
+      promises.push(p);
+
+      cell.addEventListener('dragstart', ev => {
+        ev.dataTransfer.setData('application/vexillum-heraldic', JSON.stringify({
+          slug, label, category: catId, heraldic: true
+        }));
+        ev.dataTransfer.effectAllowed = 'copy';
+      });
+
+      cell.addEventListener('click', () => placeHeraldicEmblem(slug, label, catId, 50, 50));
+      iconGrid.appendChild(cell);
+    }
+    if (i < icons.length) requestAnimationFrame(renderBatch);
+  }
+  renderBatch();
+}
+
 // ============================================================
 // CANVAS EVENTS — Emblem drag drop & selection
 // ============================================================
@@ -584,13 +697,20 @@ function bindCanvasEvents() {
   canvasArea.addEventListener('drop', e => {
     e.preventDefault();
     canvasArea.classList.remove('drag-over');
-    const data = e.dataTransfer.getData('application/vexillum-icon');
-    if (!data) return;
-    const icon = JSON.parse(data);
     const rect = flagSvg.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    placeEmblem(icon, x, y);
+
+    const heraldicData = e.dataTransfer.getData('application/vexillum-heraldic');
+    if (heraldicData) {
+      const icon = JSON.parse(heraldicData);
+      placeHeraldicEmblem(icon.slug, icon.label, icon.category, x, y);
+      return;
+    }
+    const iconData = e.dataTransfer.getData('application/vexillum-icon');
+    if (iconData) {
+      placeEmblem(JSON.parse(iconData), x, y);
+    }
   });
 
   // Click / mousedown on canvas
@@ -619,6 +739,30 @@ function placeEmblem(icon, x, y) {
     fg: '#ffffff',
     bg: 'transparent',
     _svgContent: getIconSvg(icon.slug),
+  };
+  design.emblems.push(emblem);
+  selectEmblem(emblem.id);
+  renderAll();
+}
+
+async function placeHeraldicEmblem(slug, label, catId, x, y) {
+  const svgContent = await fetchHeraldicSvg(catId, slug);
+  if (!svgContent) { showToast('Could not load heraldic icon — check your connection'); return; }
+  const emblem = {
+    id: uuid(),
+    slug: `heraldic:${catId}/${slug}`,
+    label,
+    category: 'Heraldic',
+    heraldic: true,
+    heraldCat: catId,
+    heraldSlug: slug,
+    x: Math.max(0, Math.min(100, x)),
+    y: Math.max(0, Math.min(100, y)),
+    size: 20,
+    rotate: 0,
+    fg: '#ffffff',
+    bg: 'transparent',
+    _svgContent: svgContent,
   };
   design.emblems.push(emblem);
   selectEmblem(emblem.id);
@@ -912,11 +1056,25 @@ function serializeDesign(d) {
 
 function loadDesign(saved) {
   design = { ...saved, emblems: saved.emblems || [] };
-  // Restore inline SVG content from ICON_DATA
-  design.emblems.forEach(em => { em._svgContent = getIconSvg(em.slug); });
+  // Restore inline SVG content
+  const heraldicPromises = [];
+  design.emblems.forEach(em => {
+    if (em.heraldic && em.heraldCat && em.heraldSlug) {
+      // Heraldic emblem — fetch from GitHub
+      heraldicPromises.push(
+        fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => { em._svgContent = svg; })
+      );
+    } else {
+      em._svgContent = getIconSvg(em.slug);
+    }
+  });
   designNameEl.value = design.name;
   selectedEmblemId = null;
+  // Render immediately with what we have, then re-render after heraldic SVGs load
   renderAll();
+  if (heraldicPromises.length) {
+    Promise.all(heraldicPromises).then(() => renderAll());
+  }
 }
 
 // ---- Save Modal ----
