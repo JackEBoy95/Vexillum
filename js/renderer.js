@@ -241,7 +241,11 @@ function renderEmblemEl(svgEl, emblem, selected) {
   const sz = emblem.size / 100 * CANVAS_W;
   const half = sz / 2;
 
-  g.setAttribute('transform', `translate(${px},${py}) rotate(${emblem.rotate || 0})`);
+  // Build transform: translate to position, rotate, then flip
+  const sx = emblem.flipX ? -1 : 1;
+  const sy = emblem.flipY ? -1 : 1;
+  g.setAttribute('transform',
+    `translate(${px},${py}) rotate(${emblem.rotate || 0}) scale(${sx},${sy})`);
 
   // Background rect
   if (emblem.bg && emblem.bg !== 'transparent') {
@@ -254,16 +258,26 @@ function renderEmblemEl(svgEl, emblem, selected) {
 
   // Icon content (inline SVG)
   if (emblem._svgContent) {
+    // For heraldic emblems, apply colour remap before injecting
+    let svgSrc = emblem._svgContent;
+    if (emblem.heraldic && emblem.heraldColours) {
+      svgSrc = _applyHeraldicColourMap(svgSrc, emblem.heraldColours);
+    }
+
     const div = document.createElement('div');
-    div.innerHTML = emblem._svgContent;
+    div.innerHTML = svgSrc;
     const inner = div.querySelector('svg');
     if (inner) {
       const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       icon.setAttribute('x', -half); icon.setAttribute('y', -half);
       icon.setAttribute('width', sz); icon.setAttribute('height', sz);
-      icon.setAttribute('viewBox', inner.getAttribute('viewBox') || '0 0 512 512');
+      // Use the source viewBox; fall back sensibly for DrawShield (400×420) and game-icons (512×512)
+      const vb = inner.getAttribute('viewBox') ||
+        `0 0 ${inner.getAttribute('width') || 512} ${inner.getAttribute('height') || 512}`;
+      icon.setAttribute('viewBox', vb);
       icon.innerHTML = inner.innerHTML;
-      icon.setAttribute('fill', emblem.fg || '#ffffff');
+      // Only set fill for non-heraldic icons (game icons are monochrome silhouettes)
+      if (!emblem.heraldic) icon.setAttribute('fill', emblem.fg || '#ffffff');
       g.appendChild(icon);
     }
   }
@@ -280,6 +294,17 @@ function renderEmblemEl(svgEl, emblem, selected) {
   g.appendChild(hitbox);
 
   svgEl.appendChild(g);
+}
+
+// Internal colour map application (mirrors applyHeraldicColourMap in app.js)
+function _applyHeraldicColourMap(svgStr, colourMap) {
+  let result = svgStr;
+  for (const [from, to] of Object.entries(colourMap)) {
+    result = result.replaceAll(`fill:${from}`, `fill:${to}`);
+    result = result.replaceAll(`fill:${from.toUpperCase()}`, `fill:${to}`);
+    result = result.replaceAll(`fill="${from}"`, `fill="${to}"`);
+  }
+  return result;
 }
 
 // ---- Thumbnail ----

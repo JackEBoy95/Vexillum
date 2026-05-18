@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindCanvasEvents();
   bindKeyboard();
   renderAll();
-  loadIconGrid('All');
+  loadHeraldGrid(HERALDIC_CATEGORIES[0].id);
 });
 
 // ---- Full render cycle ----
@@ -484,52 +484,15 @@ function onLayerDragEnd() {
 
 let currentCategory = 'All';
 let iconSearchQuery = '';
-let activeLibrary = 'gameicons'; // 'gameicons' | 'heraldic'
 let activeHeraldCat = null; // currently selected heraldic category id
 
 function bindIconPanel() {
-  // Library tab switcher
-  document.querySelectorAll('.icon-lib-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      activeLibrary = tab.dataset.lib;
-      document.querySelectorAll('.icon-lib-tab').forEach(t => t.classList.toggle('active', t === tab));
-      iconSearch.value = '';
-      iconSearchQuery = '';
-      if (activeLibrary === 'gameicons') {
-        currentCategory = 'All';
-        buildGameIconCats();
-        loadIconGrid('All');
-      } else {
-        activeHeraldCat = HERALDIC_CATEGORIES[0].id;
-        buildHeraldCats();
-        loadHeraldGrid(activeHeraldCat);
-      }
-    });
-  });
-
-  // Default: game icons
-  buildGameIconCats();
+  activeHeraldCat = HERALDIC_CATEGORIES[0].id;
+  buildHeraldCats();
 
   iconSearch.addEventListener('input', e => {
     iconSearchQuery = e.target.value.trim().toLowerCase();
-    if (activeLibrary === 'gameicons') loadIconGrid(currentCategory);
-    else loadHeraldGrid(activeHeraldCat);
-  });
-}
-
-function buildGameIconCats() {
-  const catWrap = document.querySelector('.icon-categories');
-  catWrap.innerHTML = '';
-  CATEGORIES.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (cat === currentCategory ? ' active' : '');
-    btn.textContent = cat;
-    btn.addEventListener('click', () => {
-      currentCategory = cat;
-      catWrap.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.textContent === cat));
-      loadIconGrid(cat);
-    });
-    catWrap.appendChild(btn);
+    loadHeraldGrid(activeHeraldCat);
   });
 }
 
@@ -745,9 +708,39 @@ function placeEmblem(icon, x, y) {
   renderAll();
 }
 
+// ---- Heraldic colour utilities ----
+// Extract up to 4 unique non-black fill colours from an SVG string
+function extractHeraldicColours(svgStr) {
+  const seen = new Set();
+  const re = /fill:([#][0-9a-fA-F]{3,6})/g;
+  let m;
+  while ((m = re.exec(svgStr)) !== null) {
+    const c = m[1].toLowerCase();
+    if (c !== '#000000' && c !== '#000' && c !== '#1c1c1c') seen.add(c);
+  }
+  return [...seen].slice(0, 4);
+}
+
+// Apply a colour remap {originalHex: newHex} to an SVG string
+function applyHeraldicColourMap(svgStr, colourMap) {
+  if (!colourMap || !Object.keys(colourMap).length) return svgStr;
+  let result = svgStr;
+  for (const [from, to] of Object.entries(colourMap)) {
+    // Replace all occurrences in style="fill:..." and fill="..." attributes
+    result = result.replaceAll(`fill:${from}`, `fill:${to}`);
+    result = result.replaceAll(`fill:${from.toUpperCase()}`, `fill:${to}`);
+    result = result.replaceAll(`fill="${from}"`, `fill="${to}"`);
+  }
+  return result;
+}
+
 async function placeHeraldicEmblem(slug, label, catId, x, y) {
   const svgContent = await fetchHeraldicSvg(catId, slug);
   if (!svgContent) { showToast('Could not load heraldic icon — check your connection'); return; }
+  // Build initial colour map (identity — original colours unchanged)
+  const colours = extractHeraldicColours(svgContent);
+  const heraldColours = {};
+  colours.forEach(c => { heraldColours[c] = c; });
   const emblem = {
     id: uuid(),
     slug: `heraldic:${catId}/${slug}`,
@@ -760,8 +753,11 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
     y: Math.max(0, Math.min(100, y)),
     size: 20,
     rotate: 0,
+    flipX: false,
+    flipY: false,
     fg: '#ffffff',
     bg: 'transparent',
+    heraldColours,
     _svgContent: svgContent,
   };
   design.emblems.push(emblem);
@@ -826,17 +822,43 @@ function onEmblemDragEnd() {
 // ---- Emblem controls bar ----
 function updateEmblemControls() {
   const emblem = design.emblems.find(em => em.id === selectedEmblemId);
-  if (!emblem) {
-    emblemControls.classList.remove('visible');
-    return;
-  }
+  if (!emblem) { emblemControls.classList.remove('visible'); return; }
   emblemControls.classList.add('visible');
 
   document.getElementById('ec-size').value = emblem.size;
   document.getElementById('ec-rotate').value = emblem.rotate;
-  document.getElementById('ec-fg').value = emblem.fg;
-  document.getElementById('ec-bg').value = emblem.bg === 'transparent' ? '#000000' : emblem.bg;
-  document.getElementById('ec-bg-transparent').checked = emblem.bg === 'transparent';
+  document.getElementById('ec-flip-h').classList.toggle('active', !!emblem.flipX);
+  document.getElementById('ec-flip-v').classList.toggle('active', !!emblem.flipY);
+
+  const isHeraldic = !!emblem.heraldic;
+  document.getElementById('ec-gameicon-controls').style.display = isHeraldic ? 'none' : '';
+  document.getElementById('ec-heraldic-controls').style.display = isHeraldic ? '' : 'none';
+
+  if (!isHeraldic) {
+    document.getElementById('ec-fg').value = emblem.fg || '#ffffff';
+    document.getElementById('ec-bg').value = emblem.bg === 'transparent' ? '#000000' : (emblem.bg || '#000000');
+    document.getElementById('ec-bg-transparent').checked = emblem.bg === 'transparent';
+  } else {
+    buildHeraldSwatches(emblem);
+  }
+}
+
+function buildHeraldSwatches(emblem) {
+  const container = document.getElementById('ec-herald-swatches');
+  container.innerHTML = '';
+  if (!emblem.heraldColours) return;
+  Object.entries(emblem.heraldColours).forEach(([origHex, currentHex]) => {
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.className = 'ec-herald-swatch';
+    input.value = currentHex;
+    input.title = `Remap ${origHex}`;
+    input.addEventListener('input', e => {
+      emblem.heraldColours[origHex] = e.target.value;
+      renderAll();
+    });
+    container.appendChild(input);
+  });
 }
 
 function bindEmblemControls() {
@@ -847,6 +869,14 @@ function bindEmblemControls() {
   document.getElementById('ec-rotate').addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em) { em.rotate = +e.target.value; renderAll(); }
+  });
+  document.getElementById('ec-flip-h').addEventListener('click', () => {
+    const em = design.emblems.find(x => x.id === selectedEmblemId);
+    if (em) { em.flipX = !em.flipX; updateEmblemControls(); renderAll(); }
+  });
+  document.getElementById('ec-flip-v').addEventListener('click', () => {
+    const em = design.emblems.find(x => x.id === selectedEmblemId);
+    if (em) { em.flipY = !em.flipY; updateEmblemControls(); renderAll(); }
   });
   document.getElementById('ec-fg').addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
@@ -1062,7 +1092,15 @@ function loadDesign(saved) {
     if (em.heraldic && em.heraldCat && em.heraldSlug) {
       // Heraldic emblem — fetch from GitHub
       heraldicPromises.push(
-        fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => { em._svgContent = svg; })
+        fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
+          em._svgContent = svg;
+          // Init colour map if missing (older saved designs)
+          if (svg && !em.heraldColours) {
+            const colours = extractHeraldicColours(svg);
+            em.heraldColours = {};
+            colours.forEach(c => { em.heraldColours[c] = c; });
+          }
+        })
       );
     } else {
       em._svgContent = getIconSvg(em.slug);

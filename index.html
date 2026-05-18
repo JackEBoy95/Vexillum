@@ -98,18 +98,25 @@
       <div class="emblem-ctrl">
         <label>Rotate</label>
         <input id="ec-rotate" type="range" min="-180" max="180" step="1" value="0">
-        <input id="ec-rotate-num" type="number" min="-180" max="180" value="0" style="display:none">
       </div>
       <div class="emblem-ctrl">
+        <label>Flip</label>
+        <button class="ec-flip-btn" id="ec-flip-h" title="Flip horizontal">↔</button>
+        <button class="ec-flip-btn" id="ec-flip-v" title="Flip vertical">↕</button>
+      </div>
+      <!-- Game-icon only controls -->
+      <div class="emblem-ctrl" id="ec-gameicon-controls">
         <label>Colour</label>
         <input id="ec-fg" type="color" value="#ffffff">
-      </div>
-      <div class="emblem-ctrl">
-        <label>Background</label>
-        <input id="ec-bg" type="color" value="#000000">
-        <label style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;">
+        <label style="font-size:11px;margin-left:6px;display:flex;align-items:center;gap:4px;">
+          Bg <input id="ec-bg" type="color" value="#000000">
           <input id="ec-bg-transparent" type="checkbox" checked> None
         </label>
+      </div>
+      <!-- Heraldic colour remapping controls -->
+      <div class="emblem-ctrl" id="ec-heraldic-controls" style="display:none;">
+        <label>Tinctures</label>
+        <div id="ec-herald-swatches" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
       </div>
       <button class="emblem-delete-btn" id="ec-delete">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
@@ -123,14 +130,9 @@
        ============================================================ -->
   <aside id="icons-panel">
     <div class="panel-header">
-      <span class="panel-title">Icons</span>
+      <span class="panel-title">Heraldic Icons</span>
     </div>
-    <!-- Library switcher tabs -->
-    <div class="icon-library-tabs">
-      <button class="icon-lib-tab active" data-lib="gameicons">Game Icons</button>
-      <button class="icon-lib-tab" data-lib="heraldic">Heraldic ✦</button>
-    </div>
-    <input id="icon-search" type="search" placeholder="Search icons…" autocomplete="off">
+    <input id="icon-search" type="search" placeholder="Search heraldic icons…" autocomplete="off">
     <div class="icon-categories">
       <!-- Populated by JS -->
     </div>
