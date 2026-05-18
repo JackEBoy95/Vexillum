@@ -232,6 +232,7 @@ function renderOverlay(layer) {
 // emblem.x/y are % of canvas; emblem.size is % of canvas width
 
 function renderEmblemEl(svgEl, emblem, selected) {
+  if (emblem.hidden) return;
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   g.classList.add('render-emblem');
   g.dataset.emblemId = emblem.id;

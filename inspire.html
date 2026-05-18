@@ -408,7 +408,7 @@ function renderExampleFlag(container, design) {
   svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   svg.style.cssText = 'width:100%;height:100%;display:block;';
 
-  // White base (so transparent overlays look right)
+  // White base
   const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   base.setAttribute('width', CANVAS_W); base.setAttribute('height', CANVAS_H);
   base.setAttribute('fill', '#ffffff');
@@ -420,28 +420,64 @@ function renderExampleFlag(container, design) {
     g.innerHTML = renderLayer(layer);
     svg.appendChild(g);
   });
+
+  // Render any emblems with inline _svgContent
+  (design.emblems || []).forEach(em => {
+    if (!em._svgContent) return;
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const px = em.x / 100 * CANVAS_W;
+    const py = em.y / 100 * CANVAS_H;
+    const sz = em.size / 100 * CANVAS_W;
+    const half = sz / 2;
+    g.setAttribute('transform', `translate(${px},${py}) rotate(${em.rotate||0})`);
+    const div = document.createElement('div');
+    div.innerHTML = em._svgContent;
+    const inner = div.querySelector('svg');
+    if (inner) {
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('x', -half); icon.setAttribute('y', -half);
+      icon.setAttribute('width', sz); icon.setAttribute('height', sz);
+      const w = inner.getAttribute('width') || '100';
+      const h = inner.getAttribute('height') || '100';
+      icon.setAttribute('viewBox', inner.getAttribute('viewBox') || `0 0 ${w} ${h}`);
+      icon.innerHTML = inner.innerHTML;
+      if (!em.heraldic) icon.setAttribute('fill', em.fg || '#ffffff');
+      g.appendChild(icon);
+    }
+    svg.appendChild(g);
+  });
+
   container.appendChild(svg);
 }
 
-function makeFlag(name, meta, layers, filter) {
+function makeFlag(name, meta, layers, filter, emblems) {
   const card = document.createElement('div');
   card.className = 'flag-card';
   card.dataset.filter = filter || 'all';
 
   const canvasDiv = document.createElement('div');
   canvasDiv.className = 'flag-card-canvas';
-  renderExampleFlag(canvasDiv, { layers, emblems: [] });
+  renderExampleFlag(canvasDiv, { layers, emblems: emblems || [] });
 
   const info = document.createElement('div');
   info.className = 'flag-card-info';
   info.innerHTML = `<div class="flag-card-name">${name}</div><div class="flag-card-meta">${meta}</div>`;
 
   card.addEventListener('click', () => window.location.href = 'index.html');
-
   card.appendChild(canvasDiv);
   card.appendChild(info);
   return card;
 }
+
+// ---- Inline SVG shapes for gallery emblems ----
+const _star5 = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="currentColor"/></svg>`;
+const _star8 = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 56,38 85,15 62,44 95,50 62,56 85,85 56,62 50,95 44,62 15,85 38,56 5,50 38,44 15,15 44,38" fill="currentColor"/></svg>`;
+const _sun = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="20" fill="currentColor"/><g fill="currentColor"><rect x="46" y="4" width="8" height="18" rx="3"/><rect x="46" y="78" width="8" height="18" rx="3"/><rect x="4" y="46" width="18" height="8" rx="3"/><rect x="78" y="46" width="18" height="8" rx="3"/><rect x="46" y="4" width="8" height="18" rx="3" transform="rotate(45 50 50)"/><rect x="46" y="4" width="8" height="18" rx="3" transform="rotate(90 50 50)"/><rect x="46" y="4" width="8" height="18" rx="3" transform="rotate(135 50 50)"/><rect x="46" y="4" width="8" height="18" rx="3" transform="rotate(180 50 50)"/></g></svg>`;
+const _crescent = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50,8 A42,42 0 1,1 50,92 A28,42 0 1,0 50,8 Z" fill="currentColor"/></svg>`;
+const _cross = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M38,5 L62,5 L62,38 L95,38 L95,62 L62,62 L62,95 L38,95 L38,62 L5,62 L5,38 L38,38 Z" fill="currentColor"/></svg>`;
+const _eagle = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50,15 C50,15 30,10 10,25 C10,25 25,30 30,40 C30,40 15,42 10,55 C10,55 25,50 35,55 C35,55 30,70 35,80 C35,80 42,70 50,75 C58,70 65,80 65,80 C70,70 65,55 65,55 C75,50 90,55 90,55 C85,42 70,40 70,40 C75,30 90,25 90,25 C70,10 50,15 50,15 Z M50,30 C50,30 40,35 40,45 C40,55 50,60 50,60 C50,60 60,55 60,45 C60,35 50,30 50,30 Z" fill="currentColor"/></svg>`;
+const _lion = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="55" rx="18" ry="25" fill="currentColor"/><circle cx="50" cy="28" r="16" fill="currentColor"/><ellipse cx="50" cy="24" rx="22" ry="12" fill="currentColor" opacity="0.7"/><ellipse cx="50" cy="80" rx="8" ry="12" fill="currentColor"/><rect x="34" y="68" width="6" height="18" rx="3" fill="currentColor"/><rect x="60" y="68" width="6" height="18" rx="3" fill="currentColor"/><circle cx="44" cy="26" r="3" fill="white"/><circle cx="56" cy="26" r="3" fill="white"/></svg>`;
+const _tree = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="44" y="60" width="12" height="35" rx="3" fill="currentColor"/><polygon points="50,5 75,45 60,42 80,70 20,70 40,42 25,45" fill="currentColor"/></svg>`;
 
 // ---- National flag examples (recreated in SVG) ----
 const NATIONAL_FLAGS = [
@@ -645,12 +681,75 @@ const GALLERY_FLAGS = [
       {id:'2',type:'overlay',visible:true,shape:'triangle',color:'#212121',opacity:100,params:{depth:40,side:0}},
     ]
   },
+  // ---- Fictional flags with emblems ----
+  {
+    name: 'Aurelius Republic', meta: 'Fictional · World-building',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#003087',weight:2},{color:'#ffffff',weight:1},{color:'#C8102E',weight:2}]},
+    ],
+    emblems: [
+      { id:'e1', x:50, y:50, size:22, rotate:0, fg:'#FFD700', bg:'transparent', _svgContent: _sun }
+    ]
+  },
+  {
+    name: 'Kingdom of Verdania', meta: 'Fictional · Fantasy',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'vstripes',visible:true,bands:[{color:'#005C2E',weight:1},{color:'#ffffff',weight:1},{color:'#005C2E',weight:1}]},
+    ],
+    emblems: [
+      { id:'e1', x:50, y:47, size:28, rotate:0, fg:'#5B3A1A', bg:'transparent', _svgContent: _tree }
+    ]
+  },
+  {
+    name: 'Solaris Commonwealth', meta: 'Fictional · Sci-Fi',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#00204A',weight:1}]},
+    ],
+    emblems: [
+      { id:'e1', x:50, y:50, size:30, rotate:22.5, fg:'#FFD700', bg:'transparent', _svgContent: _star8 }
+    ]
+  },
+  {
+    name: 'Ironvale Confederacy', meta: 'Fictional · RPG',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#7B0000',weight:1},{color:'#1C1C1C',weight:1},{color:'#7B0000',weight:1}]},
+    ],
+    emblems: [
+      { id:'e1', x:50, y:50, size:26, rotate:0, fg:'#C0C0C0', bg:'transparent', _svgContent: _eagle }
+    ]
+  },
+  {
+    name: 'The Crescent Alliance', meta: 'Fictional · World-building',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#006600',weight:1}]},
+    ],
+    emblems: [
+      { id:'e1', x:50, y:50, size:28, rotate:0, fg:'#ffffff', bg:'transparent', _svgContent: _crescent },
+      { id:'e2', x:62, y:40, size:10, rotate:0, fg:'#ffffff', bg:'transparent', _svgContent: _star5 }
+    ]
+  },
+  {
+    name: 'Lionheart Order', meta: 'Fictional · Heraldic',
+    filter: 'fictional',
+    layers: [
+      {id:'1',type:'hstripes',visible:true,bands:[{color:'#C8102E',weight:1}]},
+      {id:'2',type:'overlay',visible:true,shape:'cross',color:'#FFD700',opacity:100,params:{thickness:14}},
+    ],
+    emblems: [
+      { id:'e1', x:16, y:50, size:18, rotate:0, fg:'#FFD700', bg:'transparent', _svgContent: _lion }
+    ]
+  },
 ];
 
 // ---- Render all grids ----
 function populateGrid(gridId, flags) {
   const grid = document.getElementById(gridId);
-  flags.forEach(f => grid.appendChild(makeFlag(f.name, f.meta, f.layers, f.filter)));
+  flags.forEach(f => grid.appendChild(makeFlag(f.name, f.meta, f.layers, f.filter, f.emblems)));
 }
 
 populateGrid('national-grid', NATIONAL_FLAGS);

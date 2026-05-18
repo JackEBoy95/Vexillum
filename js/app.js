@@ -56,6 +56,35 @@ const saveModal      = document.getElementById('save-modal');
 // ---- Boot ----
 document.addEventListener('DOMContentLoaded', () => {
   designNameEl.value = design.name;
+
+  // Restore auto-saved design if available
+  try {
+    const saved = localStorage.getItem(AUTOSAVE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.layers) {
+        design = { ...parsed, emblems: parsed.emblems || [] };
+        designNameEl.value = design.name;
+        // Re-fetch heraldic SVGs
+        design.emblems.forEach(em => {
+          if (em.heraldic && em.heraldCat && em.heraldSlug) {
+            fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
+              em._svgContent = svg;
+              if (svg && !em.heraldColours) {
+                const colours = extractHeraldicColours(svg);
+                em.heraldColours = {};
+                colours.forEach(c => { em.heraldColours[c] = c; });
+              }
+              renderAll();
+            });
+          } else {
+            em._svgContent = getIconSvg(em.slug);
+          }
+        });
+      }
+    }
+  } catch(e) {}
+
   bindHeaderButtons();
   bindIconPanel();
   bindCanvasEvents();
@@ -77,12 +106,89 @@ function renderAll() {
 
 function renderLayerList() {
   layerList.innerHTML = '';
-  // Render top-to-bottom visually = reverse of actual order (first in array = bottom)
+
+  // ---- Emblem section ----
+  if (design.emblems.length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'layer-section';
+    const secTitle = document.createElement('div');
+    secTitle.className = 'layer-section-title';
+    secTitle.textContent = 'Icons';
+    sec.appendChild(secTitle);
+    // Reverse so last placed = top of list
+    [...design.emblems].reverse().forEach(emblem => {
+      const row = buildEmblemRow(emblem);
+      sec.appendChild(row);
+    });
+    layerList.appendChild(sec);
+  }
+
+  // ---- Layer section ----
   const layers = [...design.layers].reverse();
   layers.forEach(layer => {
     const card = buildLayerCard(layer);
     layerList.appendChild(card);
   });
+}
+
+function buildEmblemRow(emblem) {
+  const row = document.createElement('div');
+  row.className = 'emblem-row' + (emblem.id === selectedEmblemId ? ' selected' : '');
+  row.dataset.emblemId = emblem.id;
+
+  // Mini preview
+  const preview = document.createElement('div');
+  preview.className = 'emblem-row-preview';
+  if (emblem._svgContent) {
+    const div = document.createElement('div');
+    div.innerHTML = emblem._svgContent;
+    const svg = div.querySelector('svg');
+    if (svg) {
+      const w = svg.getAttribute('width') || '400';
+      const h = svg.getAttribute('height') || '420';
+      if (!svg.getAttribute('viewBox')) svg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
+      svg.removeAttribute('width'); svg.removeAttribute('height');
+      svg.style.cssText = 'width:100%;height:100%;display:block;';
+      preview.appendChild(svg);
+    }
+  }
+
+  // Label
+  const lbl = document.createElement('span');
+  lbl.className = 'emblem-row-label';
+  lbl.textContent = emblem.label || 'Icon';
+
+  // Visibility toggle
+  const visBtn = document.createElement('button');
+  visBtn.className = 'icon-btn';
+  visBtn.title = emblem.hidden ? 'Show' : 'Hide';
+  visBtn.innerHTML = emblem.hidden
+    ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+    : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  visBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    emblem.hidden = !emblem.hidden;
+    renderAll();
+  });
+
+  // Delete
+  const delBtn = document.createElement('button');
+  delBtn.className = 'icon-btn';
+  delBtn.title = 'Remove icon';
+  delBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>`;
+  delBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    design.emblems = design.emblems.filter(em => em.id !== emblem.id);
+    if (selectedEmblemId === emblem.id) selectEmblem(null);
+    else renderAll();
+  });
+
+  row.appendChild(preview);
+  row.appendChild(lbl);
+  row.appendChild(visBtn);
+  row.appendChild(delBtn);
+  row.addEventListener('click', () => selectEmblem(emblem.id));
+  return row;
 }
 
 function buildLayerCard(layer) {
@@ -620,9 +726,14 @@ function loadHeraldGrid(catId) {
           wrap.innerHTML = svgStr;
           const innerSvg = wrap.querySelector('svg');
           if (innerSvg) {
-            innerSvg.style.cssText = 'width:100%;height:100%;pointer-events:none;';
+            const w = innerSvg.getAttribute('width') || '400';
+            const h = innerSvg.getAttribute('height') || '420';
+            if (!innerSvg.getAttribute('viewBox')) {
+              innerSvg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
+            }
             innerSvg.removeAttribute('width');
             innerSvg.removeAttribute('height');
+            innerSvg.style.cssText = 'width:100%;height:100%;pointer-events:none;display:block;overflow:visible;';
           }
         }
       });
@@ -641,6 +752,38 @@ function loadHeraldGrid(catId) {
     if (i < icons.length) requestAnimationFrame(renderBatch);
   }
   renderBatch();
+}
+
+// ---- Snap guide overlay ----
+let _snapGuideGroup = null;
+function _getGuideGroup() {
+  if (!_snapGuideGroup || !_snapGuideGroup.isConnected) {
+    _snapGuideGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    _snapGuideGroup.id = 'snap-guides';
+    _snapGuideGroup.style.pointerEvents = 'none';
+  }
+  // Always ensure it's last child (on top)
+  if (_snapGuideGroup.parentNode !== flagSvg) flagSvg.appendChild(_snapGuideGroup);
+  else flagSvg.removeChild(_snapGuideGroup), flagSvg.appendChild(_snapGuideGroup);
+  return _snapGuideGroup;
+}
+function clearSnapGuides() {
+  if (_snapGuideGroup) _snapGuideGroup.innerHTML = '';
+}
+function _guideLine(x1, y1, x2, y2) {
+  const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+  l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+  l.setAttribute('stroke', '#FF6B35');
+  l.setAttribute('stroke-width', '0.75');
+  l.setAttribute('stroke-dasharray', '4 3');
+  return l;
+}
+function snapToTargets(val, targets, threshold = 2.5) {
+  for (const t of targets) {
+    if (Math.abs(val - t) < threshold) return { v: t, hit: true };
+  }
+  return { v: val, hit: false };
 }
 
 // ============================================================
@@ -791,17 +934,44 @@ function onEmblemDragMove(e) {
   let x = ((e.clientX - rect.left - dragOffsetX) / rect.width) * 100;
   let y = ((e.clientY - rect.top - dragOffsetY) / rect.height) * 100;
 
-  // Snap to thirds, quarters, halves
-  x = snap(x, [0, 25, 33.3, 50, 66.6, 75, 100]);
-  y = snap(y, [0, 25, 33.3, 50, 66.6, 75, 100]);
+  // Snap targets: grid points + centre + other emblem positions
+  const others = design.emblems.filter(em => em.id !== draggingEmblemId);
+  const targetsX = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.x)];
+  const targetsY = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.y)];
 
-  emblem.x = Math.max(0, Math.min(100, x));
-  emblem.y = Math.max(0, Math.min(100, y));
+  const rx = snapToTargets(x, targetsX);
+  const ry = snapToTargets(y, targetsY);
+  x = Math.max(0, Math.min(100, rx.v));
+  y = Math.max(0, Math.min(100, ry.v));
 
-  // Optimised: just re-render emblems
+  emblem.x = x;
+  emblem.y = y;
+
+  // Draw snap guides
+  const g = _getGuideGroup();
+  g.innerHTML = '';
+  if (rx.hit) {
+    const px = rx.v / 100 * 480; // CANVAS_W
+    g.appendChild(_guideLine(px, 0, px, 320)); // CANVAS_H
+  }
+  if (ry.hit) {
+    const py = ry.v / 100 * 320;
+    g.appendChild(_guideLine(0, py, 480, py));
+  }
+  // Show centre crosshair label at exact centre
+  if (rx.hit && Math.abs(rx.v - 50) < 0.1 && ry.hit && Math.abs(ry.v - 50) < 0.1) {
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('cx', 240); dot.setAttribute('cy', 160);
+    dot.setAttribute('r', 3); dot.setAttribute('fill', '#FF6B35');
+    g.appendChild(dot);
+  }
+
+  // Re-render emblems only (fast path)
   const existing = flagSvg.querySelectorAll('.render-emblem');
   existing.forEach(el => el.remove());
   design.emblems.forEach(em => renderEmblemEl(flagSvg, em, em.id === selectedEmblemId));
+  // Ensure guides stay on top
+  flagSvg.removeChild(g); flagSvg.appendChild(g);
   updateEmblemControls();
 }
 
@@ -813,6 +983,7 @@ function snap(val, targets, threshold = 3) {
 }
 
 function onEmblemDragEnd() {
+  clearSnapGuides();
   draggingEmblemId = null;
   document.removeEventListener('mousemove', onEmblemDragMove);
   document.removeEventListener('mouseup', onEmblemDragEnd);
@@ -825,14 +996,18 @@ function updateEmblemControls() {
   if (!emblem) { emblemControls.classList.remove('visible'); return; }
   emblemControls.classList.add('visible');
 
-  document.getElementById('ec-size').value = emblem.size;
-  document.getElementById('ec-rotate').value = emblem.rotate;
+  const sizeEl = document.getElementById('ec-size');
+  const rotEl  = document.getElementById('ec-rotate');
+  sizeEl.value = emblem.size;
+  rotEl.value  = emblem.rotate;
+  document.getElementById('ec-size-val').textContent   = emblem.size + '%';
+  document.getElementById('ec-rotate-val').textContent = emblem.rotate + '°';
   document.getElementById('ec-flip-h').classList.toggle('active', !!emblem.flipX);
   document.getElementById('ec-flip-v').classList.toggle('active', !!emblem.flipY);
 
   const isHeraldic = !!emblem.heraldic;
-  document.getElementById('ec-gameicon-controls').style.display = isHeraldic ? 'none' : '';
-  document.getElementById('ec-heraldic-controls').style.display = isHeraldic ? '' : 'none';
+  document.getElementById('ec-gameicon-controls').style.display  = isHeraldic ? 'none' : '';
+  document.getElementById('ec-heraldic-controls').style.display  = isHeraldic ? '' : 'none';
 
   if (!isHeraldic) {
     document.getElementById('ec-fg').value = emblem.fg || '#ffffff';
@@ -864,11 +1039,19 @@ function buildHeraldSwatches(emblem) {
 function bindEmblemControls() {
   document.getElementById('ec-size').addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
-    if (em) { em.size = +e.target.value; renderAll(); }
+    if (em) {
+      em.size = +e.target.value;
+      document.getElementById('ec-size-val').textContent = em.size + '%';
+      renderAll();
+    }
   });
   document.getElementById('ec-rotate').addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
-    if (em) { em.rotate = +e.target.value; renderAll(); }
+    if (em) {
+      em.rotate = +e.target.value;
+      document.getElementById('ec-rotate-val').textContent = em.rotate + '°';
+      renderAll();
+    }
   });
   document.getElementById('ec-flip-h').addEventListener('click', () => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
@@ -915,6 +1098,12 @@ function bindHeaderButtons() {
   bindPaletteSelector();
   bindEmblemControls();
   bindSaveModal();
+
+  // Auto-save before navigating to Inspire
+  const inspireLink = document.querySelector('a.header-nav-link[href="inspire.html"]');
+  if (inspireLink) {
+    inspireLink.addEventListener('click', () => autoSaveCurrentDesign());
+  }
 }
 
 function bindPaletteSelector() {
@@ -1042,6 +1231,7 @@ function sanitizeFilename(name) {
 // ============================================================
 
 const STORAGE_KEY = 'vexillum_designs';
+const AUTOSAVE_KEY = 'vexillum_current';
 const MAX_FREE_SAVES = 3;
 
 function getSavedDesigns() {
@@ -1082,6 +1272,12 @@ function serializeDesign(d) {
       return rest;
     })
   }));
+}
+
+function autoSaveCurrentDesign() {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(serializeDesign(design)));
+  } catch(e) {}
 }
 
 function loadDesign(saved) {

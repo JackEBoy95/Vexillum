@@ -91,37 +91,35 @@
 
     <!-- Emblem property bar (shown when emblem selected) -->
     <div id="emblem-controls">
-      <div class="emblem-ctrl">
-        <label>Size</label>
-        <input id="ec-size" type="range" min="5" max="80" step="1" value="20">
+      <div class="ec-group">
+        <span class="ec-lbl" title="Size">⤢</span>
+        <input id="ec-size" type="range" min="5" max="80" step="1" value="20" title="Size">
+        <span id="ec-size-val" class="ec-val">20</span>
       </div>
-      <div class="emblem-ctrl">
-        <label>Rotate</label>
-        <input id="ec-rotate" type="range" min="-180" max="180" step="1" value="0">
+      <div class="ec-sep"></div>
+      <div class="ec-group">
+        <span class="ec-lbl" title="Rotate">↻</span>
+        <input id="ec-rotate" type="range" min="-180" max="180" step="1" value="0" title="Rotate">
+        <span id="ec-rotate-val" class="ec-val">0°</span>
       </div>
-      <div class="emblem-ctrl">
-        <label>Flip</label>
+      <div class="ec-sep"></div>
+      <div class="ec-group">
         <button class="ec-flip-btn" id="ec-flip-h" title="Flip horizontal">↔</button>
         <button class="ec-flip-btn" id="ec-flip-v" title="Flip vertical">↕</button>
       </div>
-      <!-- Game-icon only controls -->
-      <div class="emblem-ctrl" id="ec-gameicon-controls">
-        <label>Colour</label>
-        <input id="ec-fg" type="color" value="#ffffff">
-        <label style="font-size:11px;margin-left:6px;display:flex;align-items:center;gap:4px;">
-          Bg <input id="ec-bg" type="color" value="#000000">
-          <input id="ec-bg-transparent" type="checkbox" checked> None
-        </label>
+      <div class="ec-sep"></div>
+      <div class="ec-group" id="ec-gameicon-controls">
+        <span class="ec-lbl">Fg</span>
+        <input id="ec-fg" type="color" value="#ffffff" title="Icon colour">
+        <span class="ec-lbl" style="margin-left:4px;">Bg</span>
+        <input id="ec-bg" type="color" value="#000000" title="Background colour">
+        <input id="ec-bg-transparent" type="checkbox" checked title="Transparent background" style="margin-left:2px;">
       </div>
-      <!-- Heraldic colour remapping controls -->
-      <div class="emblem-ctrl" id="ec-heraldic-controls" style="display:none;">
-        <label>Tinctures</label>
-        <div id="ec-herald-swatches" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+      <div class="ec-group" id="ec-heraldic-controls" style="display:none;">
+        <span class="ec-lbl">Tints</span>
+        <div id="ec-herald-swatches" style="display:flex;gap:3px;align-items:center;"></div>
       </div>
-      <button class="emblem-delete-btn" id="ec-delete">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-        Remove
-      </button>
+      <button class="ec-del-btn" id="ec-delete" title="Remove emblem">✕</button>
     </div>
   </main>
 

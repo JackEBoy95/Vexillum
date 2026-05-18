@@ -132,6 +132,86 @@ const PALETTES = [
       { hex: '#4B0082', name: 'Indigo' },
     ]
   },
+  {
+    id: 'mediterranean',
+    name: 'Mediterranean',
+    colors: [
+      { hex: '#C0392B', name: 'Terracotta' },
+      { hex: '#2471A3', name: 'Aegean Blue' },
+      { hex: '#FFFFFF', name: 'White' },
+      { hex: '#D4AC0D', name: 'Gold' },
+      { hex: '#196F3D', name: 'Olive Green' },
+      { hex: '#F0B27A', name: 'Sand' },
+      { hex: '#1A5276', name: 'Deep Sea' },
+      { hex: '#922B21', name: 'Pompeii' },
+      { hex: '#F7DC6F', name: 'Lemon' },
+      { hex: '#117A65', name: 'Teal' },
+    ]
+  },
+  {
+    id: 'oceanic',
+    name: 'Oceanic',
+    colors: [
+      { hex: '#0E6655', name: 'Deep Teal' },
+      { hex: '#1A5276', name: 'Navy' },
+      { hex: '#76D7C4', name: 'Aquamarine' },
+      { hex: '#F0E68C', name: 'Sand' },
+      { hex: '#FFFFFF', name: 'White' },
+      { hex: '#27AE60', name: 'Seagrass' },
+      { hex: '#2980B9', name: 'Pacific' },
+      { hex: '#F39C12', name: 'Coral Gold' },
+      { hex: '#154360', name: 'Abyss' },
+      { hex: '#ABEBC6', name: 'Seafoam' },
+    ]
+  },
+  {
+    id: 'pastel',
+    name: 'Pastel',
+    colors: [
+      { hex: '#F1948A', name: 'Rose' },
+      { hex: '#85C1E9', name: 'Sky' },
+      { hex: '#82E0AA', name: 'Mint' },
+      { hex: '#F8C471', name: 'Peach' },
+      { hex: '#C39BD3', name: 'Lavender' },
+      { hex: '#FDFEFE', name: 'White' },
+      { hex: '#A9CCE3', name: 'Powder Blue' },
+      { hex: '#F9E79F', name: 'Butter' },
+      { hex: '#A8D5A2', name: 'Sage' },
+      { hex: '#FADADD', name: 'Blush' },
+    ]
+  },
+  {
+    id: 'dark-heraldic',
+    name: 'Dark Heraldic',
+    colors: [
+      { hex: '#7B0000', name: 'Crimson' },
+      { hex: '#00204A', name: 'Midnight' },
+      { hex: '#1A3D00', name: 'Forest' },
+      { hex: '#B8860B', name: 'Dark Gold' },
+      { hex: '#1C1C1C', name: 'Sable' },
+      { hex: '#C0C0C0', name: 'Silver' },
+      { hex: '#4B0082', name: 'Indigo' },
+      { hex: '#8B4513', name: 'Bronze' },
+      { hex: '#F5F5DC', name: 'Bone' },
+      { hex: '#2F4F2F', name: 'Hunter' },
+    ]
+  },
+  {
+    id: 'latin-american',
+    name: 'Latin American',
+    colors: [
+      { hex: '#C0392B', name: 'Red' },
+      { hex: '#27AE60', name: 'Green' },
+      { hex: '#F1C40F', name: 'Yellow' },
+      { hex: '#2C3E50', name: 'Navy' },
+      { hex: '#FFFFFF', name: 'White' },
+      { hex: '#E67E22', name: 'Orange' },
+      { hex: '#8E44AD', name: 'Purple' },
+      { hex: '#1ABC9C', name: 'Teal' },
+      { hex: '#2980B9', name: 'Blue' },
+      { hex: '#D35400', name: 'Burnt Orange' },
+    ]
+  },
 ];
 
 // Default active palette index
