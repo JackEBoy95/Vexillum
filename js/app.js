@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindCanvasEvents();
   bindKeyboard();
   renderAll();
-  loadHeraldGrid(HERALDIC_CATEGORIES[0].id);
+  loadShapesGrid(); // default panel view
 });
 
 // ---- Full render cycle ----
@@ -139,7 +139,14 @@ function buildEmblemRow(emblem) {
   // Mini preview
   const preview = document.createElement('div');
   preview.className = 'emblem-row-preview';
-  if (emblem._svgContent) {
+  if (emblem.type === 'shape' && BASIC_SHAPES[emblem.shapeKey]) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('fill', emblem.fg || '#1C1C1C');
+    svg.style.cssText = 'width:100%;height:100%;display:block;';
+    svg.innerHTML = BASIC_SHAPES[emblem.shapeKey].path;
+    preview.appendChild(svg);
+  } else if (emblem._svgContent) {
     const div = document.createElement('div');
     div.innerHTML = emblem._svgContent;
     const svg = div.querySelector('svg');
@@ -634,7 +641,7 @@ let iconSearchQuery = '';
 let activeHeraldCat = null; // currently selected heraldic category id
 
 function bindIconPanel() {
-  activeHeraldCat = HERALDIC_CATEGORIES[0].id;
+  activeHeraldCat = '__shapes__'; // default to shapes on load
   buildHeraldCats();
 
   iconSearch.addEventListener('input', e => {
@@ -677,6 +684,18 @@ function bindIconPanel() {
 function buildHeraldCats() {
   const catWrap = document.querySelector('.icon-categories');
   catWrap.innerHTML = '';
+
+  // Shapes — always first
+  const shapesBtn = document.createElement('button');
+  shapesBtn.className = 'cat-btn' + (activeHeraldCat === '__shapes__' ? ' active' : '');
+  shapesBtn.textContent = 'Shapes';
+  shapesBtn.addEventListener('click', () => {
+    activeHeraldCat = '__shapes__';
+    catWrap.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b === shapesBtn));
+    loadShapesGrid();
+  });
+  catWrap.appendChild(shapesBtn);
+
   HERALDIC_CATEGORIES.forEach(hcat => {
     const btn = document.createElement('button');
     btn.className = 'cat-btn' + (hcat.id === activeHeraldCat ? ' active' : '');
@@ -687,6 +706,36 @@ function buildHeraldCats() {
       loadHeraldGrid(hcat.id);
     });
     catWrap.appendChild(btn);
+  });
+}
+
+function loadShapesGrid() {
+  iconGrid.innerHTML = '';
+  Object.entries(BASIC_SHAPES).forEach(([key, shape]) => {
+    const cell = document.createElement('div');
+    cell.className = 'icon-cell';
+    cell.title = shape.label;
+    cell.draggable = true;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('fill', '#1C1C1C');
+    svg.style.cssText = 'width:100%;height:100%;pointer-events:none;display:block;';
+    svg.innerHTML = shape.path;
+    cell.appendChild(svg);
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'icon-cell-name';
+    nameEl.textContent = shape.label;
+    cell.appendChild(nameEl);
+
+    cell.addEventListener('click', () => placeShapeEmblem(key, shape.label, 50, 50));
+    cell.addEventListener('dragstart', ev => {
+      ev.dataTransfer.setData('application/vexillum-shape', JSON.stringify({ key, label: shape.label }));
+      ev.dataTransfer.effectAllowed = 'copy';
+    });
+
+    iconGrid.appendChild(cell);
   });
 }
 
@@ -899,6 +948,12 @@ function bindCanvasEvents() {
       renderAll();
       return;
     }
+    const shapeData = e.dataTransfer.getData('application/vexillum-shape');
+    if (shapeData) {
+      const { key, label } = JSON.parse(shapeData);
+      placeShapeEmblem(key, label, x, y);
+      return;
+    }
     const iconData = e.dataTransfer.getData('application/vexillum-icon');
     if (iconData) {
       placeEmblem(JSON.parse(iconData), x, y);
@@ -1014,6 +1069,28 @@ function placeTextEmblem(text, fontFamily, x, y) {
     fg: '#ffffff',
     bg: 'transparent',
     textArc: 0,
+    _svgContent: null,
+  };
+  design.emblems.push(emblem);
+  selectEmblem(emblem.id);
+  renderAll();
+}
+
+function placeShapeEmblem(shapeKey, label, x, y) {
+  const emblem = {
+    id: uuid(),
+    type: 'shape',
+    shapeKey,
+    label,
+    category: 'Shape',
+    x: Math.max(0, Math.min(100, x)),
+    y: Math.max(0, Math.min(100, y)),
+    size: 20,
+    rotate: 0,
+    flipX: false,
+    flipY: false,
+    fg: '#ffffff',
+    bg: 'transparent',
     _svgContent: null,
   };
   design.emblems.push(emblem);

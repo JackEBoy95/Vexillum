@@ -320,7 +320,7 @@ html, body {
   background: var(--white);
   border: var(--border-w) solid var(--near-black);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow: visible; /* allow body to expand fully — list scrolls instead */
   box-shadow: 3px 3px 0 var(--near-black);
   transition: box-shadow var(--transition), transform var(--transition);
 }
@@ -379,6 +379,9 @@ html, body {
   flex-direction: column;
   gap: 10px;
   background: #FAFAF7;
+  max-height: 420px;
+  overflow-y: auto;
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 .layer-card.expanded .layer-body { display: flex; }
 
@@ -439,7 +442,7 @@ html, body {
 /* ---------- Overlay Shape Controls ---------- */
 .shape-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
 }
 .shape-btn {
@@ -598,8 +601,9 @@ html, body {
 
 /* ---------- Centre — Canvas ---------- */
 #canvas-area {
-  display: grid;
-  grid-template-rows: 1fr auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--canvas-bg);
   background-image:
     radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0);
@@ -608,14 +612,21 @@ html, body {
   overflow: hidden;
 }
 
+/* Groups flag + emblem controls so they stay together in the centre */
+#canvas-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 480px; /* matches flag width */
+  filter: drop-shadow(0 6px 24px rgba(0,0,0,0.18)) drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+}
+
 #canvas-wrap {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  min-height: 0;
-  filter: drop-shadow(0 6px 24px rgba(0,0,0,0.18)) drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+  flex-shrink: 0;
 }
 
 /* Flag canvas "screen bezel" effect */
@@ -644,11 +655,13 @@ html, body {
   gap: 6px;
   padding: 4px 12px;
   background: var(--yellow);
-  border-top: var(--border-w) solid var(--near-black);
+  border: var(--border-w) solid var(--near-black);
+  border-top: none;
   width: 100%;
   flex-wrap: nowrap;
   min-height: 36px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 #emblem-controls.visible { display: flex; }
 
@@ -801,9 +814,13 @@ html, body {
   display: flex;
   gap: 4px;
   padding: 6px 8px 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   flex-shrink: 0;
+  overflow-x: auto;
+  /* hide scrollbar on Firefox */
+  scrollbar-width: none;
 }
+.icon-categories::-webkit-scrollbar { display: none; }
 .cat-btn {
   padding: 2px 9px;
   border-radius: 20px;
