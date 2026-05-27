@@ -17,6 +17,38 @@ function _closeAllPopovers() {
 }
 document.addEventListener('click', _closeAllPopovers);
 
+// ---- Colour utilities for Wix-style shade picker ----
+function _hexToHsl(hex) {
+  let r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max+min)/2;
+  if (max===min) { h=s=0; } else {
+    const d = max-min;
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max){ case r: h=((g-b)/d+(g<b?6:0))/6; break; case g: h=((b-r)/d+2)/6; break; case b: h=((r-g)/d+4)/6; break; }
+  }
+  return [h*360, s*100, l*100];
+}
+function _hslToHex(h,s,l) {
+  s/=100; l/=100;
+  const a = s*Math.min(l,1-l);
+  function f(n){ const k=(n+h/30)%12; return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))).toString(16).padStart(2,'0'); }
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+function _generateShades(hex) {
+  // Ensure hex is 6-digit
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return [hex,hex,hex,hex,hex];
+  const [h,s,l] = _hexToHsl(hex);
+  return [
+    _hslToHex(h, Math.max(s*0.25, 4), Math.min(l+45, 95)),
+    _hslToHex(h, Math.max(s*0.55, 8), Math.min(l+25, 88)),
+    hex,
+    _hslToHex(h, Math.min(s*1.1, 100), Math.max(l-22, 8)),
+    _hslToHex(h, Math.min(s*1.2, 100), Math.max(l-42, 4)),
+  ];
+}
+const _NEUTRALS = ['#FFFFFF','#C8C8C8','#888888','#3C3C3C','#000000'];
+
 function newDesign() {
   return {
     id: uuid(),
@@ -64,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const parsed = JSON.parse(saved);
       if (parsed && parsed.layers) {
         design = { ...parsed, emblems: parsed.emblems || [] };
+        if (parsed.flagShape) design.flagShape = parsed.flagShape;
         designNameEl.value = design.name;
         // Re-fetch heraldic SVGs
         design.emblems.forEach(em => {
@@ -289,7 +322,7 @@ function buildLayerBody(layer) {
 }
 
 // ---- Colour picker component ----
-// Returns a swatch button that opens a palette popover. No async, no fetch.
+// Returns a swatch button that opens a Wix-style shade picker popover.
 function buildColorPicker(initialValue, onChangeCallback) {
   const wrap = document.createElement('div');
   wrap.className = 'cp-wrap';
@@ -300,46 +333,70 @@ function buildColorPicker(initialValue, onChangeCallback) {
   swatch.type = 'button';
   swatch.title = 'Choose colour';
 
-  // Build popover (appended to body so it escapes overflow clips)
   const popover = document.createElement('div');
   popover.className = 'cp-popover hidden';
 
-  const chips = document.createElement('div');
-  chips.className = 'cp-chips';
+  let _currentHex = initialValue;
 
-  function buildChips() {
-    chips.innerHTML = '';
+  function _pick(hex) {
+    _currentHex = hex;
+    swatch.style.background = hex;
+    nativeSwatch.style.background = hex;
+    native.value = hex;
+    // Update selected state on all chips
+    popover.querySelectorAll('[data-hex]').forEach(c => {
+      c.classList.toggle('selected', c.dataset.hex.toLowerCase() === hex.toLowerCase());
+    });
+    onChangeCallback(hex);
+  }
+
+  // Build shade grid — rebuilt on open in case palette changed
+  const shadeGrid = document.createElement('div');
+  shadeGrid.className = 'cp-shade-grid';
+
+  function buildShadeGrid() {
+    shadeGrid.innerHTML = '';
     const palette = getActivePalette();
-    palette.colors.forEach(col => {
-      const chip = document.createElement('button');
-      chip.className = 'cp-chip';
-      chip.style.background = col.hex;
-      chip.title = col.name;
-      chip.dataset.hex = col.hex;
-      chip.type = 'button';
-      if (col.hex.toLowerCase() === swatch.style.background.toLowerCase()) {
-        chip.classList.add('selected');
-      }
-      chip.addEventListener('click', e => {
-        e.stopPropagation();
-        swatch.style.background = col.hex;
-        nativeSwatch.style.background = col.hex;
-        native.value = col.hex;
-        chips.querySelectorAll('.cp-chip').forEach(c => c.classList.toggle('selected', c.dataset.hex === col.hex));
-        onChangeCallback(col.hex);
-        _closeAllPopovers();
+    // Get 5 base colours from palette.bases or first 5 colours
+    const bases = palette.bases || palette.colors.slice(0,5).map(c=>c.hex);
+    bases.slice(0,5).forEach(baseHex => {
+      const col = document.createElement('div');
+      col.className = 'cp-shade-col';
+      _generateShades(baseHex).forEach(shade => {
+        const chip = document.createElement('button');
+        chip.className = 'cp-shade-chip' + (shade.toLowerCase() === _currentHex.toLowerCase() ? ' selected' : '');
+        chip.dataset.hex = shade;
+        chip.style.background = shade;
+        chip.type = 'button';
+        chip.title = shade;
+        chip.addEventListener('click', e => { e.stopPropagation(); _pick(shade); _closeAllPopovers(); });
+        col.appendChild(chip);
       });
-      chips.appendChild(chip);
+      shadeGrid.appendChild(col);
     });
   }
-  buildChips();
+  buildShadeGrid();
+
+  // Neutrals row
+  const neutralRow = document.createElement('div');
+  neutralRow.className = 'cp-neutral-row';
+  _NEUTRALS.forEach(hex => {
+    const chip = document.createElement('button');
+    chip.className = 'cp-neutral-chip' + (hex.toLowerCase() === _currentHex.toLowerCase() ? ' selected' : '');
+    chip.dataset.hex = hex;
+    chip.style.background = hex;
+    chip.type = 'button';
+    chip.title = hex;
+    chip.addEventListener('click', e => { e.stopPropagation(); _pick(hex); _closeAllPopovers(); });
+    neutralRow.appendChild(chip);
+  });
 
   // Custom colour row
   const customRow = document.createElement('div');
   customRow.className = 'cp-custom-row';
   const customLabel = document.createElement('span');
   customLabel.className = 'cp-custom-label';
-  customLabel.textContent = 'Custom colour';
+  customLabel.textContent = 'Custom';
   const nativeWrap = document.createElement('div');
   nativeWrap.className = 'cp-native-wrap';
   const nativeSwatch = document.createElement('div');
@@ -349,19 +406,15 @@ function buildColorPicker(initialValue, onChangeCallback) {
   native.type = 'color';
   native.className = 'cp-native';
   native.value = initialValue;
-  native.addEventListener('input', e => {
-    swatch.style.background = e.target.value;
-    nativeSwatch.style.background = e.target.value;
-    chips.querySelectorAll('.cp-chip').forEach(c => c.classList.remove('selected'));
-    onChangeCallback(e.target.value);
-  });
+  native.addEventListener('input', e => { _pick(e.target.value); });
   native.addEventListener('click', e => e.stopPropagation());
   nativeWrap.appendChild(nativeSwatch);
   nativeWrap.appendChild(native);
   customRow.appendChild(customLabel);
   customRow.appendChild(nativeWrap);
 
-  popover.appendChild(chips);
+  popover.appendChild(shadeGrid);
+  popover.appendChild(neutralRow);
   popover.appendChild(customRow);
   document.body.appendChild(popover);
 
@@ -369,15 +422,11 @@ function buildColorPicker(initialValue, onChangeCallback) {
     e.stopPropagation();
     if (_activePopover === popover) { _closeAllPopovers(); return; }
     _closeAllPopovers();
-    // Refresh chips in case palette changed
-    buildChips();
-    // Position near swatch
+    buildShadeGrid(); // refresh in case palette changed
     const r = swatch.getBoundingClientRect();
-    let left = r.left;
-    let top  = r.bottom + 6;
-    // Keep on screen
-    if (left + 210 > window.innerWidth)  left = window.innerWidth - 218;
-    if (top + 200  > window.innerHeight) top  = r.top - 206;
+    let left = r.left, top = r.bottom + 6;
+    if (left + 220 > window.innerWidth) left = window.innerWidth - 228;
+    if (top + 260 > window.innerHeight) top = r.top - 266;
     popover.style.left = left + 'px';
     popover.style.top  = top  + 'px';
     popover.classList.remove('hidden');
@@ -385,7 +434,7 @@ function buildColorPicker(initialValue, onChangeCallback) {
   });
 
   wrap.appendChild(swatch);
-  return wrap; // caller appends wrap to DOM
+  return wrap;
 }
 
 // ---- Stripes body ----
@@ -602,6 +651,7 @@ function onLayerDragEnd() {
 // ---- Emblem row drag-to-reorder ----
 let _dragEmblemId = null;
 let _dragEmblemY  = 0;
+let _copiedEmblem = null;
 
 function startEmblemRowDrag(e, emblemId) {
   _dragEmblemId = emblemId;
@@ -1239,17 +1289,17 @@ function onEmblemDragMove(e) {
   const g = _getGuideGroup();
   g.innerHTML = '';
   if (rx.hit) {
-    const px = rx.v / 100 * 480; // CANVAS_W
-    g.appendChild(_guideLine(px, 0, px, 320)); // CANVAS_H
+    const px = rx.v / 100 * CANVAS_W;
+    g.appendChild(_guideLine(px, 0, px, CANVAS_H));
   }
   if (ry.hit) {
     const py = ry.v / 100 * 320;
-    g.appendChild(_guideLine(0, py, 480, py));
+    g.appendChild(_guideLine(0, py, CANVAS_W, py));
   }
   // Show centre crosshair label at exact centre
   if (rx.hit && Math.abs(rx.v - 50) < 0.1 && ry.hit && Math.abs(ry.v - 50) < 0.1) {
     const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    dot.setAttribute('cx', 240); dot.setAttribute('cy', 160);
+    dot.setAttribute('cx', CANVAS_W/2); dot.setAttribute('cy', CANVAS_H/2);
     dot.setAttribute('r', 3); dot.setAttribute('fill', '#FF6B35');
     g.appendChild(dot);
   }
@@ -1391,6 +1441,14 @@ function bindEmblemControls() {
     selectEmblem(null);
   });
 
+  const ecDupe = document.getElementById('ec-duplicate');
+  if (ecDupe) {
+    ecDupe.addEventListener('click', () => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { _copiedEmblem = JSON.parse(JSON.stringify(em)); _pasteEmblem(); }
+    });
+  }
+
   // Text emblem controls
   const ecTextContent = document.getElementById('ec-text-content');
   if (ecTextContent) {
@@ -1439,6 +1497,8 @@ function bindHeaderButtons() {
   bindEmblemControls();
   bindSaveModal();
   bindPreviewModal();
+  bindFlagShapePicker();
+  bindDarkMode();
 
   // Auto-save before navigating to Inspire
   const inspireLink = document.querySelector('a.header-nav-link[href="inspire.html"]');
@@ -1471,13 +1531,51 @@ function bindPaletteSelector() {
 
 function bindKeyboard() {
   document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
+    const inInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+    const ctrl = e.ctrlKey || e.metaKey;
+
+    // Copy
+    if (ctrl && e.key === 'c' && selectedEmblemId && !inInput) {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { _copiedEmblem = JSON.parse(JSON.stringify(em)); showToast('Copied', ''); }
+      e.preventDefault(); return;
+    }
+    // Paste
+    if (ctrl && e.key === 'v' && _copiedEmblem && !inInput) {
+      _pasteEmblem();
+      e.preventDefault(); return;
+    }
+    // Duplicate
+    if (ctrl && e.key === 'd' && selectedEmblemId && !inInput) {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { _copiedEmblem = JSON.parse(JSON.stringify(em)); _pasteEmblem(); }
+      e.preventDefault(); return;
+    }
+    if (inInput) return;
     if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEmblemId) {
       design.emblems = design.emblems.filter(em => em.id !== selectedEmblemId);
       selectEmblem(null);
     }
     if (e.key === 'Escape') selectEmblem(null);
   });
+}
+
+function _pasteEmblem() {
+  if (!_copiedEmblem) return;
+  const newEm = JSON.parse(JSON.stringify(_copiedEmblem));
+  newEm.id = uuid();
+  newEm.x  = Math.min(97, (_copiedEmblem.x || 50) + 4);
+  newEm.y  = Math.min(97, (_copiedEmblem.y || 50) + 4);
+  // Don't carry over transient SVG for heraldic — it'll be re-fetched
+  if (newEm.heraldic && newEm.heraldCat && newEm.heraldSlug) {
+    fetchHeraldicSvg(newEm.heraldCat, newEm.heraldSlug).then(svg => {
+      newEm._svgContent = svg;
+      renderAll();
+    });
+  }
+  design.emblems.push(newEm);
+  selectEmblem(newEm.id);
+  renderAll();
 }
 
 // ============================================================
@@ -1500,9 +1598,15 @@ function getSvgString(scale = 1) {
   tempSvg.setAttribute('height', H);
   tempSvg.setAttribute('viewBox', `0 0 ${CANVAS_W} ${CANVAS_H}`);
 
-  // Clip rect for clean edges
+  // Clip path for clean edges (shape-aware)
+  const shapeId = design.flagShape || 'rect32';
+  const shape = FLAG_SHAPES[shapeId] || FLAG_SHAPES.rect32;
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-  defs.innerHTML = `<clipPath id="flag-clip"><rect width="${CANVAS_W}" height="${CANVAS_H}"/></clipPath>`;
+  if (shape.clip) {
+    defs.innerHTML = `<clipPath id="flag-clip"><polygon points="${shape.clip}"/></clipPath>`;
+  } else {
+    defs.innerHTML = `<clipPath id="flag-clip"><rect width="${CANVAS_W}" height="${CANVAS_H}"/></clipPath>`;
+  }
   tempSvg.appendChild(defs);
 
   const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -1752,6 +1856,82 @@ function bindPreviewModal() {
 
   const exportBtn = document.getElementById('preview-export-png');
   if (exportBtn) exportBtn.addEventListener('click', exportPng);
+}
+
+function bindFlagShapePicker() {
+  const btn = document.getElementById('btn-flag-shape');
+  const pop = document.getElementById('shape-picker');
+  if (!btn || !pop) return;
+
+  // Build grid of shape options
+  const grid = document.createElement('div');
+  grid.className = 'shape-picker-grid';
+
+  Object.entries(FLAG_SHAPES).forEach(([id, shape]) => {
+    const b = document.createElement('button');
+    b.className = 'shape-picker-btn' + ((design.flagShape || 'rect32') === id ? ' active' : '');
+    b.dataset.shapeId = id;
+    // Mini SVG preview
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 40 40');
+    svg.setAttribute('width', '40');
+    svg.setAttribute('height', '40');
+    svg.setAttribute('fill', 'currentColor');
+    svg.innerHTML = shape.icon;
+    const lbl = document.createElement('span');
+    lbl.textContent = shape.label.replace('\n', ' ');
+    b.appendChild(svg);
+    b.appendChild(lbl);
+    b.addEventListener('click', () => {
+      applyFlagShape(id);
+      grid.querySelectorAll('.shape-picker-btn').forEach(x => x.classList.toggle('active', x.dataset.shapeId === id));
+      pop.classList.add('hidden');
+    });
+    grid.appendChild(b);
+  });
+
+  const title = document.createElement('div');
+  title.className = 'shape-picker-title';
+  title.textContent = 'Flag Shape';
+  pop.appendChild(title);
+  pop.appendChild(grid);
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (!pop.classList.contains('hidden')) { pop.classList.add('hidden'); return; }
+    const r = btn.getBoundingClientRect();
+    pop.style.right = (window.innerWidth - r.right) + 'px';
+    pop.style.top   = (r.bottom + 6) + 'px';
+    pop.style.left  = 'auto';
+    pop.classList.remove('hidden');
+  });
+
+  document.addEventListener('click', e => {
+    if (!pop.contains(e.target) && e.target !== btn) pop.classList.add('hidden');
+  });
+}
+
+function applyFlagShape(shapeId) {
+  design.flagShape = shapeId;
+  renderAll();
+  autoSaveCurrentDesign();
+}
+
+function bindDarkMode() {
+  const btn = document.getElementById('btn-dark-mode');
+  if (!btn) return;
+  // Restore saved preference
+  if (localStorage.getItem('vexillum_dark') === '1') {
+    document.body.classList.add('dark-mode');
+    btn.textContent = '☀';
+    btn.title = 'Light mode';
+  }
+  btn.addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark-mode');
+    btn.textContent = isDark ? '☀' : '☾';
+    btn.title = isDark ? 'Light mode' : 'Dark mode';
+    localStorage.setItem('vexillum_dark', isDark ? '1' : '0');
+  });
 }
 
 function escapeHtml(str) {

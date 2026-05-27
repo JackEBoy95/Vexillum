@@ -7,6 +7,7 @@ const PALETTES = [
   {
     id: 'heraldic',
     name: 'Heraldic Tinctures',
+    bases: ['#C8102E', '#003087', '#005C2E', '#FFD700', '#6B2D8B'],
     colors: [
       { hex: '#C8102E', name: 'Gules' },
       { hex: '#003087', name: 'Azure' },
@@ -23,6 +24,7 @@ const PALETTES = [
   {
     id: 'nordic',
     name: 'Nordic',
+    bases: ['#003580', '#C60C30', '#006AA7', '#FECC02', '#D4A017'],
     colors: [
       { hex: '#003580', name: 'Deep Navy' },
       { hex: '#C60C30', name: 'Scarlet' },
@@ -39,6 +41,7 @@ const PALETTES = [
   {
     id: 'pan-african',
     name: 'Pan-African',
+    bases: ['#CE1126', '#009A44', '#FCD116', '#1C1C1C', '#4169E1'],
     colors: [
       { hex: '#009A44', name: 'African Green' },
       { hex: '#FCD116', name: 'Gold' },
@@ -55,6 +58,7 @@ const PALETTES = [
   {
     id: 'islamic',
     name: 'Islamic',
+    bases: ['#006600', '#C8102E', '#FFD700', '#003087', '#9B59B6'],
     colors: [
       { hex: '#006600', name: 'Emerald' },
       { hex: '#FFFFFF', name: 'White' },
@@ -71,6 +75,7 @@ const PALETTES = [
   {
     id: 'east-asian',
     name: 'East Asian',
+    bases: ['#DE2910', '#FFDE00', '#003153', '#4CAF50', '#800020'],
     colors: [
       { hex: '#DE2910', name: 'China Red' },
       { hex: '#FFDE00', name: 'Imperial Yellow' },
@@ -87,6 +92,7 @@ const PALETTES = [
   {
     id: 'natural',
     name: 'Natural',
+    bases: ['#228B22', '#8B4513', '#87CEEB', '#4682B4', '#F4A460'],
     colors: [
       { hex: '#228B22', name: 'Forest' },
       { hex: '#8B4513', name: 'Earth' },
@@ -103,6 +109,7 @@ const PALETTES = [
   {
     id: 'bold',
     name: 'Bold & Modern',
+    bases: ['#E53935', '#1E88E5', '#43A047', '#FFB300', '#8E24AA'],
     colors: [
       { hex: '#E53935', name: 'Red' },
       { hex: '#1E88E5', name: 'Blue' },
@@ -119,6 +126,7 @@ const PALETTES = [
   {
     id: 'slavic',
     name: 'Slavic',
+    bases: ['#D52B1E', '#003DA5', '#FFD700', '#006400', '#4B0082'],
     colors: [
       { hex: '#D52B1E', name: 'Red' },
       { hex: '#003DA5', name: 'Blue' },
@@ -135,6 +143,7 @@ const PALETTES = [
   {
     id: 'mediterranean',
     name: 'Mediterranean',
+    bases: ['#C0392B', '#2471A3', '#D4AC0D', '#196F3D', '#117A65'],
     colors: [
       { hex: '#C0392B', name: 'Terracotta' },
       { hex: '#2471A3', name: 'Aegean Blue' },
@@ -151,6 +160,7 @@ const PALETTES = [
   {
     id: 'oceanic',
     name: 'Oceanic',
+    bases: ['#0E6655', '#1A5276', '#76D7C4', '#27AE60', '#F39C12'],
     colors: [
       { hex: '#0E6655', name: 'Deep Teal' },
       { hex: '#1A5276', name: 'Navy' },
@@ -167,6 +177,7 @@ const PALETTES = [
   {
     id: 'pastel',
     name: 'Pastel',
+    bases: ['#F1948A', '#85C1E9', '#82E0AA', '#F8C471', '#C39BD3'],
     colors: [
       { hex: '#F1948A', name: 'Rose' },
       { hex: '#85C1E9', name: 'Sky' },
@@ -183,6 +194,7 @@ const PALETTES = [
   {
     id: 'dark-heraldic',
     name: 'Dark Heraldic',
+    bases: ['#7B0000', '#00204A', '#B8860B', '#4B0082', '#1A3D00'],
     colors: [
       { hex: '#7B0000', name: 'Crimson' },
       { hex: '#00204A', name: 'Midnight' },
@@ -199,6 +211,7 @@ const PALETTES = [
   {
     id: 'latin-american',
     name: 'Latin American',
+    bases: ['#C0392B', '#27AE60', '#F1C40F', '#2C3E50', '#8E44AD'],
     colors: [
       { hex: '#C0392B', name: 'Red' },
       { hex: '#27AE60', name: 'Green' },

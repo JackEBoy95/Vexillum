@@ -3,8 +3,8 @@
 // All flag layers are rendered as SVG elements
 // ============================================================
 
-const CANVAS_W = 480;
-const CANVAS_H = 320;
+let CANVAS_W = 480;
+let CANVAS_H = 320;
 
 // ---- Overlay shape renderers ----
 // Each returns an SVG path/shape string that fills the flag canvas.
@@ -28,6 +28,52 @@ const BASIC_SHAPES = {
   pentagon:  { label: 'Pentagon',   path: '<polygon points="50,5 95,38 77,92 23,92 5,38"/>' },
   hexagon:   { label: 'Hexagon',    path: '<polygon points="50,5 91,27 91,73 50,95 9,73 9,27"/>' },
   ring:      { label: 'Ring',       path: '<path fill-rule="evenodd" d="M50,6 A44,44 0 1,0 50,94 A44,44 0 1,0 50,6 M50,24 A26,26 0 1,1 50,76 A26,26 0 1,1 50,24"/>' },
+};
+
+// ---- Flag shape definitions ----
+// Each shape defines coordinate space (w × h), an optional SVG clip polygon,
+// and display dimensions (kept to max ~480px wide / ~380px tall).
+const FLAG_SHAPES = {
+  rect32: {
+    label: 'Rectangle\n3:2', w: 480, h: 320, dispW: 480, dispH: 320,
+    clip: null,
+    icon: `<rect x="1" y="5" width="38" height="26" rx="1"/>`,
+  },
+  rect21: {
+    label: 'Wide\n2:1', w: 480, h: 240, dispW: 480, dispH: 240,
+    clip: null,
+    icon: `<rect x="1" y="8" width="38" height="18" rx="1"/>`,
+  },
+  square: {
+    label: 'Square\n1:1', w: 360, h: 360, dispW: 360, dispH: 360,
+    clip: null,
+    icon: `<rect x="5" y="5" width="30" height="30" rx="1"/>`,
+  },
+  pennant: {
+    label: 'Pennant', w: 480, h: 300, dispW: 480, dispH: 300,
+    clip: '0,0 480,150 0,300',
+    icon: `<polygon points="0,5 40,20 0,35"/>`,
+  },
+  swallowtail: {
+    label: 'Swallowtail', w: 480, h: 320, dispW: 480, dispH: 320,
+    clip: '0,0 480,0 340,160 480,320 0,320',
+    icon: `<polygon points="0,5 40,5 28,20 40,35 0,35"/>`,
+  },
+  shield: {
+    label: 'Shield', w: 480, h: 380, dispW: 444, dispH: 352,
+    clip: '0,0 480,0 480,240 240,380 0,240',
+    icon: `<polygon points="2,5 38,5 38,25 20,38 2,25"/>`,
+  },
+  nepal: {
+    label: 'Nepal\n(approx)', w: 300, h: 380, dispW: 300, dispH: 380,
+    clip: '0,0 190,95 0,190 270,380 0,380',
+    icon: `<polygon points="0,0 20,10 0,20 28,38 0,38"/>`,
+  },
+  battle: {
+    label: 'Battle\nStandard', w: 360, h: 360, dispW: 360, dispH: 360,
+    clip: null,
+    icon: `<rect x="5" y="5" width="30" height="30" rx="1"/>`,
+  },
 };
 
 const SHAPES = {
@@ -208,24 +254,67 @@ const SHAPES = {
 // emblems: array of Emblem objects (rendered by emblem layer separately)
 
 function renderFlag(svgEl, design, selectedEmblemId = null) {
-  // Clear existing rendered content (not defs)
-  const existing = svgEl.querySelectorAll('.render-layer, .render-emblem');
+  // Determine active flag shape
+  const shapeId = design.flagShape || 'rect32';
+  const shape = FLAG_SHAPES[shapeId] || FLAG_SHAPES.rect32;
+  CANVAS_W = shape.w;
+  CANVAS_H = shape.h;
+
+  // Update SVG element dimensions
+  svgEl.setAttribute('viewBox', `0 0 ${shape.w} ${shape.h}`);
+  svgEl.setAttribute('width',  shape.dispW);
+  svgEl.setAttribute('height', shape.dispH);
+
+  // Clear previous rendered content (layers, emblems, clip group)
+  const existing = svgEl.querySelectorAll('.render-layer, .render-emblem, .render-group, .render-defs');
   existing.forEach(el => el.remove());
 
-  // Render layers bottom to top
+  // Manage defs for clip path
+  let defs = svgEl.querySelector('defs');
+  if (!defs) {
+    defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    svgEl.insertBefore(defs, svgEl.firstChild);
+  }
+  // Remove old shape clip
+  const oldClip = defs.querySelector('#flag-shape-clip');
+  if (oldClip) oldClip.remove();
+
+  if (shape.clip) {
+    const clipEl = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+    clipEl.setAttribute('id', 'flag-shape-clip');
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', shape.clip);
+    clipEl.appendChild(poly);
+    defs.appendChild(clipEl);
+  }
+
+  // Create clipped group for all content
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  group.classList.add('render-group');
+  if (shape.clip) group.setAttribute('clip-path', 'url(#flag-shape-clip)');
+
+  // White base rect
+  const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  base.setAttribute('width', shape.w); base.setAttribute('height', shape.h);
+  base.setAttribute('fill', 'white');
+  group.appendChild(base);
+
+  // Render layers
   design.layers.forEach(layer => {
     if (!layer.visible) return;
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.classList.add('render-layer');
     g.dataset.layerId = layer.id;
     g.innerHTML = renderLayer(layer);
-    svgEl.appendChild(g);
+    group.appendChild(g);
   });
 
-  // Render emblems
+  // Render emblems into the clipped group
   design.emblems.forEach(emblem => {
-    renderEmblemEl(svgEl, emblem, emblem.id === selectedEmblemId);
+    renderEmblemEl(group, emblem, emblem.id === selectedEmblemId);
   });
+
+  svgEl.appendChild(group);
 }
 
 function renderLayer(layer) {
@@ -399,16 +488,33 @@ function _applyHeraldicColourMap(svgStr, colourMap) {
 // ---- Thumbnail ----
 // Returns an SVG element (60x40) for use in layer cards / saved designs
 
-function makeThumbnail(design) {
+function makeThumbnail(des) {
+  const shapeId = des.flagShape || 'rect32';
+  const shape = FLAG_SHAPES[shapeId] || FLAG_SHAPES.rect32;
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', `0 0 ${CANVAS_W} ${CANVAS_H}`);
+  svg.setAttribute('viewBox', `0 0 ${shape.w} ${shape.h}`);
   svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-  design.layers.forEach(layer => {
-    if (!layer.visible) return;
+  if (shape.clip) {
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    defs.innerHTML = `<clipPath id="thumb-clip"><polygon points="${shape.clip}"/></clipPath>`;
+    svg.appendChild(defs);
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.innerHTML = renderLayer(layer);
+    g.setAttribute('clip-path', 'url(#thumb-clip)');
+    des.layers.forEach(layer => {
+      if (!layer.visible) return;
+      const lg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      lg.innerHTML = renderLayer(layer);
+      g.appendChild(lg);
+    });
     svg.appendChild(g);
-  });
+  } else {
+    des.layers.forEach(layer => {
+      if (!layer.visible) return;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.innerHTML = renderLayer(layer);
+      svg.appendChild(g);
+    });
+  }
   return svg;
 }
 

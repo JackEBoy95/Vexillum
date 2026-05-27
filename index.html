@@ -20,6 +20,10 @@
     <a href="inspire.html" class="header-nav-link">Inspire</a>
     <input id="design-name" type="text" value="Untitled Flag" spellcheck="false" autocomplete="off" title="Click to rename your design">
     <div class="header-spacer"></div>
+    <button class="header-btn" id="btn-flag-shape" title="Change flag shape">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+      Shape
+    </button>
     <button class="header-btn" id="btn-open" title="Open saved design">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
       Open
@@ -40,7 +44,11 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       Export PNG
     </button>
+    <button class="dark-mode-toggle" id="btn-dark-mode" title="Dark mode">☾</button>
   </header>
+
+  <!-- Flag shape picker popover (populated by JS) -->
+  <div id="shape-picker" class="shape-picker-pop hidden"></div>
 
   <!-- ============================================================
        LEFT PANEL — Layers
@@ -141,7 +149,8 @@
           <input id="ec-text-arc" type="range" min="-100" max="100" step="5" value="0" title="Text arc/bend">
           <span id="ec-arc-val" class="ec-val">0</span>
         </div>
-        <button class="ec-del-btn" id="ec-delete" title="Remove emblem">✕</button>
+        <button class="ec-flip-btn" id="ec-duplicate" title="Duplicate emblem (Ctrl+D)" style="margin-left:auto;width:22px;height:22px;">⊕</button>
+        <button class="ec-del-btn" id="ec-delete" title="Remove emblem (Del)" style="margin-left:4px;">✕</button>
       </div>
     </div><!-- /#canvas-center -->
   </main>
