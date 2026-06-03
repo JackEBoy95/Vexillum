@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vexillum — Flag Design Studio</title>
-  <meta name="description" content="Design beautiful flags with an intuitive layer system. Export SVG and PNG. Free to use.">
+  <title>FlagBuilder — Flag Design Studio</title>
+  <meta name="description" content="Design beautiful flags with an intuitive layer system. Export SVG and PNG. Free to use. FlagBuilder.com">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
        HEADER
        ============================================================ -->
   <header id="header">
-    <div id="logo">VEXILLUM</div>
+    <div id="logo">FLAGBUILDER</div>
     <div class="nav-sep"></div>
     <a href="inspire.html" class="header-nav-link">Inspire</a>
     <input id="design-name" type="text" value="Untitled Flag" spellcheck="false" autocomplete="off" title="Click to rename your design">
@@ -27,6 +27,14 @@
     <button class="header-btn" id="btn-open" title="Open saved design">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
       Open
+    </button>
+    <button class="header-btn" id="btn-undo" title="Undo (Ctrl+Z)" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+      Undo
+    </button>
+    <button class="header-btn" id="btn-redo" title="Redo (Ctrl+Y)" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
+      Redo
     </button>
     <button class="header-btn" id="btn-save" title="Save design to browser">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>

@@ -10,6 +10,22 @@ let dragOffsetX = 0, dragOffsetY = 0;
 let dragLayerId = null;
 let dragLayerOriginY = 0;
 
+// ---- Undo / Redo ----
+let _history    = [];
+let _histIdx    = -1;
+let _histTimer  = null;
+const MAX_HISTORY = 50;
+
+// ---- Handle drag state ----
+let _handleDragType    = null;
+let _handleDragEmblemId = null;
+let _handleStartDist   = 0;
+let _handleStartSize   = 0;
+let _handleStartAngle  = 0;
+let _handleStartRotate = 0;
+let _handleCenterX     = 0;
+let _handleCenterY     = 0;
+
 // ---- Global colour picker state ----
 let _activePopover = null;
 function _closeAllPopovers() {
@@ -124,6 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
   bindKeyboard();
   renderAll();
   loadShapesGrid(); // default panel view
+  pushHistory();    // record initial state so first undo restores it
+  _updateUndoRedoBtns();
 });
 
 // ---- Full render cycle ----
@@ -198,6 +216,23 @@ function buildEmblemRow(emblem) {
   lbl.className = 'emblem-row-label';
   lbl.textContent = emblem.label || 'Icon';
 
+  // Colour swatch (fg colour picker for non-heraldic emblems)
+  if (!emblem.heraldic) {
+    const colorWrap = buildColorPicker(emblem.fg || '#ffffff', val => {
+      emblem.fg = val;
+      // Update the swatch fill in the row preview (dark bg so white shows)
+      if (emblem.type === 'shape') {
+        const previewSvg = preview.querySelector('svg');
+        if (previewSvg) previewSvg.setAttribute('fill', val);
+      }
+      onChange();
+    });
+    colorWrap.classList.add('emblem-row-color');
+    const sw = colorWrap.querySelector('.cp-swatch');
+    if (sw) { sw.style.width = '18px'; sw.style.height = '18px'; sw.style.borderRadius = '3px'; }
+    row.appendChild(colorWrap);
+  }
+
   // Visibility toggle
   const visBtn = document.createElement('button');
   visBtn.className = 'icon-btn';
@@ -219,8 +254,8 @@ function buildEmblemRow(emblem) {
   delBtn.addEventListener('click', e => {
     e.stopPropagation();
     design.emblems = design.emblems.filter(em => em.id !== emblem.id);
-    if (selectedEmblemId === emblem.id) selectEmblem(null);
-    else renderAll();
+    if (selectedEmblemId === emblem.id) selectedEmblemId = null;
+    _commitChange();
   });
 
   // Drag handle (insert at beginning)
@@ -598,7 +633,7 @@ function toggleLayerExpanded(id) {
 }
 function deleteLayer(id) {
   design.layers = design.layers.filter(l => l.id !== id);
-  renderAll();
+  _commitChange();
 }
 
 function addLayer(type) {
@@ -614,7 +649,7 @@ function addLayer(type) {
     layer.params = {};
   }
   design.layers.push(layer);
-  renderAll();
+  _commitChange();
 }
 
 // ---- Layer drag to reorder ----
@@ -994,8 +1029,8 @@ function bindCanvasEvents() {
         fg: '#ffffff', bg: 'transparent', _svgContent: icon.svg,
       };
       design.emblems.push(emblem);
-      selectEmblem(emblem.id);
-      renderAll();
+      selectedEmblemId = emblem.id;
+      _commitChange();
       return;
     }
     const shapeData = e.dataTransfer.getData('application/vexillum-shape');
@@ -1012,6 +1047,16 @@ function bindCanvasEvents() {
 
   // Click / mousedown on canvas
   flagSvg.addEventListener('mousedown', e => {
+    // Handle clicks (resize / rotate) take priority
+    const handleEl = e.target.closest('.emblem-handle');
+    if (handleEl) {
+      const emblemEl = handleEl.closest('[data-emblem-id]');
+      if (emblemEl) {
+        startHandleDrag(e, emblemEl.dataset.emblemId, handleEl.dataset.handle);
+      }
+      e.stopPropagation();
+      return;
+    }
     const emblemEl = e.target.closest('[data-emblem-id]');
     if (emblemEl) {
       const id = emblemEl.dataset.emblemId;
@@ -1021,6 +1066,76 @@ function bindCanvasEvents() {
       selectEmblem(null);
     }
   });
+}
+
+// ============================================================
+// HANDLE DRAG — resize & rotate emblems
+// ============================================================
+
+function startHandleDrag(e, emblemId, handleType) {
+  const emblem = design.emblems.find(em => em.id === emblemId);
+  if (!emblem) return;
+  selectEmblem(emblemId);
+  _handleDragType    = handleType;
+  _handleDragEmblemId = emblemId;
+  _handleStartSize   = emblem.size;
+  _handleStartRotate = emblem.rotate || 0;
+
+  const rect = flagSvg.getBoundingClientRect();
+  const svgX = (e.clientX - rect.left) / rect.width * CANVAS_W;
+  const svgY = (e.clientY - rect.top)  / rect.height * CANVAS_H;
+  _handleCenterX = emblem.x / 100 * CANVAS_W;
+  _handleCenterY = emblem.y / 100 * CANVAS_H;
+
+  const dx = svgX - _handleCenterX, dy = svgY - _handleCenterY;
+  _handleStartDist  = Math.sqrt(dx * dx + dy * dy) || 1;
+  _handleStartAngle = Math.atan2(dy, dx);
+
+  document.addEventListener('mousemove', onHandleDragMove);
+  document.addEventListener('mouseup',   onHandleDragEnd);
+  e.preventDefault();
+}
+
+function onHandleDragMove(e) {
+  if (!_handleDragType || !_handleDragEmblemId) return;
+  const emblem = design.emblems.find(em => em.id === _handleDragEmblemId);
+  if (!emblem) return;
+
+  const rect = flagSvg.getBoundingClientRect();
+  const svgX = (e.clientX - rect.left) / rect.width * CANVAS_W;
+  const svgY = (e.clientY - rect.top)  / rect.height * CANVAS_H;
+  const dx = svgX - _handleCenterX, dy = svgY - _handleCenterY;
+
+  if (_handleDragType === 'rotate') {
+    const angle = Math.atan2(dy, dx);
+    const delta = (angle - _handleStartAngle) * 180 / Math.PI;
+    emblem.rotate = Math.round(_handleStartRotate + delta);
+    const rv = document.getElementById('ec-rotate');
+    if (rv) { rv.value = emblem.rotate; document.getElementById('ec-rotate-val').textContent = emblem.rotate + '°'; }
+  } else {
+    // resize — ratio of current mouse distance vs start distance
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const newSize = Math.max(2, Math.min(80, _handleStartSize * dist / _handleStartDist));
+    emblem.size = Math.round(newSize * 10) / 10;
+    const sv = document.getElementById('ec-size');
+    if (sv) { sv.value = emblem.size; document.getElementById('ec-size-val').textContent = emblem.size + '%'; }
+  }
+
+  // Fast re-render
+  flagSvg.querySelectorAll('.render-emblem').forEach(el => el.remove());
+  design.emblems.forEach(em => renderEmblemEl(flagSvg, em, em.id === selectedEmblemId));
+}
+
+function onHandleDragEnd() {
+  if (!_handleDragType) return;
+  _handleDragType = null;
+  _handleDragEmblemId = null;
+  document.removeEventListener('mousemove', onHandleDragMove);
+  document.removeEventListener('mouseup',   onHandleDragEnd);
+  clearTimeout(_histTimer);
+  renderAll();
+  pushHistory();
+  autoSaveCurrentDesign();
 }
 
 function placeEmblem(icon, x, y) {
@@ -1038,8 +1153,8 @@ function placeEmblem(icon, x, y) {
     _svgContent: getIconSvg(icon.slug),
   };
   design.emblems.push(emblem);
-  selectEmblem(emblem.id);
-  renderAll();
+  selectedEmblemId = emblem.id;
+  _commitChange();
 }
 
 // ---- Heraldic colour utilities ----
@@ -1097,8 +1212,8 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
     _svgContent: svgContent,
   };
   design.emblems.push(emblem);
-  selectEmblem(emblem.id);
-  renderAll();
+  selectedEmblemId = emblem.id;
+  _commitChange();
 }
 
 function placeTextEmblem(text, fontFamily, x, y) {
@@ -1122,8 +1237,8 @@ function placeTextEmblem(text, fontFamily, x, y) {
     _svgContent: null,
   };
   design.emblems.push(emblem);
-  selectEmblem(emblem.id);
-  renderAll();
+  selectedEmblemId = emblem.id;
+  _commitChange();
 }
 
 function placeShapeEmblem(shapeKey, label, x, y) {
@@ -1144,8 +1259,8 @@ function placeShapeEmblem(shapeKey, label, x, y) {
     _svgContent: null,
   };
   design.emblems.push(emblem);
-  selectEmblem(emblem.id);
-  renderAll();
+  selectedEmblemId = emblem.id;
+  _commitChange();
 }
 
 // ---- Custom SVG import ----
@@ -1226,8 +1341,8 @@ function renderCustomIconSection() {
         fg: '#ffffff', bg: 'transparent', _svgContent: icon.svg,
       };
       design.emblems.push(emblem);
-      selectEmblem(emblem.id);
-      renderAll();
+      selectedEmblemId = emblem.id;
+      _commitChange();
     });
 
     cell.addEventListener('dragstart', ev => {
@@ -1272,44 +1387,76 @@ function onEmblemDragMove(e) {
   let x = ((e.clientX - rect.left - dragOffsetX) / rect.width) * 100;
   let y = ((e.clientY - rect.top - dragOffsetY) / rect.height) * 100;
 
-  // Snap targets: grid points + centre + other emblem positions
   const others = design.emblems.filter(em => em.id !== draggingEmblemId);
+
+  // Grid snap targets + positions of other emblems
   const targetsX = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.x)];
   const targetsY = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.y)];
 
+  // Equal-distance snap: add positions where this emblem is evenly spaced with others
+  const equalX = [], equalY = [];
+  for (let i = 0; i < others.length; i++) {
+    for (let j = i + 1; j < others.length; j++) {
+      // Midpoint — dragging emblem equidistant from others[i] and others[j]
+      equalX.push((others[i].x + others[j].x) / 2);
+      equalY.push((others[i].y + others[j].y) / 2);
+    }
+    // Extension — drag at equal spacing on either side of each other emblem
+    for (let j = 0; j < others.length; j++) {
+      if (i === j) continue;
+      equalX.push(others[i].x + (others[i].x - others[j].x));
+      equalY.push(others[i].y + (others[i].y - others[j].y));
+    }
+  }
+
   const rx = snapToTargets(x, targetsX);
   const ry = snapToTargets(y, targetsY);
-  x = Math.max(0, Math.min(100, rx.v));
-  y = Math.max(0, Math.min(100, ry.v));
+  let rxEq = { v: x, hit: false }, ryEq = { v: y, hit: false };
+  if (!rx.hit) rxEq = snapToTargets(x, equalX, 2.0);
+  if (!ry.hit) ryEq = snapToTargets(y, equalY, 2.0);
 
+  x = Math.max(0, Math.min(100, rx.hit ? rx.v : (rxEq.hit ? rxEq.v : x)));
+  y = Math.max(0, Math.min(100, ry.hit ? ry.v : (ryEq.hit ? ryEq.v : y)));
   emblem.x = x;
   emblem.y = y;
 
   // Draw snap guides
-  const g = _getGuideGroup();
-  g.innerHTML = '';
-  if (rx.hit) {
-    const px = rx.v / 100 * CANVAS_W;
-    g.appendChild(_guideLine(px, 0, px, CANVAS_H));
+  const gg = _getGuideGroup();
+  gg.innerHTML = '';
+  // Grid/align guides (orange)
+  if (rx.hit) gg.appendChild(_guideLine(rx.v / 100 * CANVAS_W, 0, rx.v / 100 * CANVAS_W, CANVAS_H));
+  if (ry.hit) gg.appendChild(_guideLine(0, ry.v / 100 * CANVAS_H, CANVAS_W, ry.v / 100 * CANVAS_H));
+  // Equal-distance guides (teal)
+  if (!rx.hit && rxEq.hit) {
+    const lx = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const gx = rxEq.v / 100 * CANVAS_W;
+    lx.setAttribute('x1', gx); lx.setAttribute('y1', 0);
+    lx.setAttribute('x2', gx); lx.setAttribute('y2', CANVAS_H);
+    lx.setAttribute('stroke', '#06B6D4'); lx.setAttribute('stroke-width', '0.75');
+    lx.setAttribute('stroke-dasharray', '3 3');
+    gg.appendChild(lx);
   }
-  if (ry.hit) {
-    const py = ry.v / 100 * 320;
-    g.appendChild(_guideLine(0, py, CANVAS_W, py));
+  if (!ry.hit && ryEq.hit) {
+    const ly = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const gy = ryEq.v / 100 * CANVAS_H;
+    ly.setAttribute('x1', 0); ly.setAttribute('y1', gy);
+    ly.setAttribute('x2', CANVAS_W); ly.setAttribute('y2', gy);
+    ly.setAttribute('stroke', '#06B6D4'); ly.setAttribute('stroke-width', '0.75');
+    ly.setAttribute('stroke-dasharray', '3 3');
+    gg.appendChild(ly);
   }
-  // Show centre crosshair label at exact centre
+  // Centre crosshair dot
   if (rx.hit && Math.abs(rx.v - 50) < 0.1 && ry.hit && Math.abs(ry.v - 50) < 0.1) {
     const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     dot.setAttribute('cx', CANVAS_W/2); dot.setAttribute('cy', CANVAS_H/2);
     dot.setAttribute('r', 3); dot.setAttribute('fill', '#FF6B35');
-    g.appendChild(dot);
+    gg.appendChild(dot);
   }
 
   // Re-render emblems only (fast path)
-  const existing = flagSvg.querySelectorAll('.render-emblem');
-  existing.forEach(el => el.remove());
+  flagSvg.querySelectorAll('.render-emblem').forEach(el => el.remove());
   design.emblems.forEach(em => renderEmblemEl(flagSvg, em, em.id === selectedEmblemId));
-  // Ensure guides stay on top
-  flagSvg.removeChild(g); flagSvg.appendChild(g);
+  flagSvg.removeChild(gg); flagSvg.appendChild(gg);
   updateEmblemControls();
 }
 
@@ -1325,7 +1472,10 @@ function onEmblemDragEnd() {
   draggingEmblemId = null;
   document.removeEventListener('mousemove', onEmblemDragMove);
   document.removeEventListener('mouseup', onEmblemDragEnd);
-  onChange();
+  clearTimeout(_histTimer);
+  renderAll();
+  pushHistory();
+  autoSaveCurrentDesign();
 }
 
 // ---- Emblem controls bar ----
@@ -1438,7 +1588,8 @@ function bindEmblemControls() {
   });
   document.getElementById('ec-delete').addEventListener('click', () => {
     design.emblems = design.emblems.filter(em => em.id !== selectedEmblemId);
-    selectEmblem(null);
+    selectedEmblemId = null;
+    _commitChange();
   });
 
   const ecDupe = document.getElementById('ec-duplicate');
@@ -1488,6 +1639,11 @@ function bindHeaderButtons() {
   document.getElementById('btn-add-vstripes').addEventListener('click', () => addLayer('vstripes'));
   document.getElementById('btn-add-overlay').addEventListener('click',  () => addLayer('overlay'));
 
+  const undoBtn = document.getElementById('btn-undo');
+  const redoBtn = document.getElementById('btn-redo');
+  if (undoBtn) undoBtn.addEventListener('click', undo);
+  if (redoBtn) redoBtn.addEventListener('click', redo);
+
   document.getElementById('btn-save').addEventListener('click', saveDesign);
   document.getElementById('btn-open').addEventListener('click', openSaveModal);
   document.getElementById('btn-export-png').addEventListener('click', exportPng);
@@ -1534,6 +1690,14 @@ function bindKeyboard() {
     const inInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
     const ctrl = e.ctrlKey || e.metaKey;
 
+    // Undo
+    if (ctrl && e.key === 'z' && !e.shiftKey && !inInput) {
+      undo(); e.preventDefault(); return;
+    }
+    // Redo (Ctrl+Y or Ctrl+Shift+Z)
+    if (ctrl && (e.key === 'y' || (e.key === 'z' && e.shiftKey)) && !inInput) {
+      redo(); e.preventDefault(); return;
+    }
     // Copy
     if (ctrl && e.key === 'c' && selectedEmblemId && !inInput) {
       const em = design.emblems.find(x => x.id === selectedEmblemId);
@@ -1542,8 +1706,7 @@ function bindKeyboard() {
     }
     // Paste
     if (ctrl && e.key === 'v' && _copiedEmblem && !inInput) {
-      _pasteEmblem();
-      e.preventDefault(); return;
+      _pasteEmblem(); e.preventDefault(); return;
     }
     // Duplicate
     if (ctrl && e.key === 'd' && selectedEmblemId && !inInput) {
@@ -1554,7 +1717,9 @@ function bindKeyboard() {
     if (inInput) return;
     if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEmblemId) {
       design.emblems = design.emblems.filter(em => em.id !== selectedEmblemId);
-      selectEmblem(null);
+      selectedEmblemId = null;
+      _commitChange();
+      return;
     }
     if (e.key === 'Escape') selectEmblem(null);
   });
@@ -1566,7 +1731,6 @@ function _pasteEmblem() {
   newEm.id = uuid();
   newEm.x  = Math.min(97, (_copiedEmblem.x || 50) + 4);
   newEm.y  = Math.min(97, (_copiedEmblem.y || 50) + 4);
-  // Don't carry over transient SVG for heraldic — it'll be re-fetched
   if (newEm.heraldic && newEm.heraldCat && newEm.heraldSlug) {
     fetchHeraldicSvg(newEm.heraldCat, newEm.heraldSlug).then(svg => {
       newEm._svgContent = svg;
@@ -1574,8 +1738,60 @@ function _pasteEmblem() {
     });
   }
   design.emblems.push(newEm);
-  selectEmblem(newEm.id);
+  selectedEmblemId = newEm.id;
+  _commitChange();
+}
+
+// ============================================================
+// UNDO / REDO
+// ============================================================
+
+function pushHistory() {
+  const state = JSON.stringify(serializeDesign(design));
+  if (_histIdx >= 0 && _history[_histIdx] === state) return; // no change
+  _history = _history.slice(0, _histIdx + 1);
+  _history.push(state);
+  if (_history.length > MAX_HISTORY) _history.shift();
+  _histIdx = _history.length - 1;
+  _updateUndoRedoBtns();
+}
+
+function undo() {
+  if (_histIdx <= 0) return;
+  _histIdx--;
+  _applyHistoryState(JSON.parse(_history[_histIdx]));
+}
+
+function redo() {
+  if (_histIdx >= _history.length - 1) return;
+  _histIdx++;
+  _applyHistoryState(JSON.parse(_history[_histIdx]));
+}
+
+function _applyHistoryState(state) {
+  design = { ...state, emblems: (state.emblems || []).map(em => ({ ...em })) };
+  design.emblems.forEach(em => {
+    if (em.heraldic && em.heraldCat && em.heraldSlug) {
+      fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
+        em._svgContent = svg;
+        renderAll();
+      });
+    } else if (em.slug && !em.heraldic) {
+      em._svgContent = getIconSvg(em.slug);
+    }
+  });
+  designNameEl.value = design.name;
+  selectedEmblemId = null;
   renderAll();
+  _updateUndoRedoBtns();
+  autoSaveCurrentDesign();
+}
+
+function _updateUndoRedoBtns() {
+  const ub = document.getElementById('btn-undo');
+  const rb = document.getElementById('btn-redo');
+  if (ub) ub.disabled = (_histIdx <= 0);
+  if (rb) rb.disabled = (_histIdx >= _history.length - 1);
 }
 
 // ============================================================
@@ -1584,6 +1800,18 @@ function _pasteEmblem() {
 
 function onChange() {
   renderAll();
+  autoSaveCurrentDesign();
+  // Debounced history push (handles slider drags, continuous changes)
+  clearTimeout(_histTimer);
+  _histTimer = setTimeout(pushHistory, 600);
+}
+
+// Immediate history push (use after discrete actions: place, delete, layer add/remove)
+function _commitChange() {
+  clearTimeout(_histTimer);
+  renderAll();
+  pushHistory();
+  autoSaveCurrentDesign();
 }
 
 // ============================================================

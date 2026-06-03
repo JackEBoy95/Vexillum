@@ -676,7 +676,7 @@ html, body {
 
 #flag-svg {
   display: block;
-  width: 480px;
+  width: 480px;  /* overridden at runtime by renderFlag() for non-rectangle shapes */
   height: 320px;
   cursor: crosshair;
 }
@@ -1285,3 +1285,27 @@ body.dark-mode .icon-cell:hover:not(.heraldic-cell) svg {
 }
 .cp-neutral-chip:hover { transform: scale(1.1); }
 .cp-neutral-chip.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---------- Undo / Redo disabled state ---------- */
+.header-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---------- Emblem handle cursors (SVG elements) ---------- */
+.emblem-handle { cursor: pointer; }
+
+/* ---------- Colour swatch in emblem row (left panel) ---------- */
+.emblem-row-color {
+  flex-shrink: 0;
+}
+/* In selected rows the swatch border becomes white for contrast */
+.emblem-row.selected .emblem-row-color .cp-swatch {
+  border-color: rgba(255,255,255,0.5);
+}
+
+/* ---------- Heraldic icon cell — prevent SVG overflow ---------- */
+.heraldic-cell > div svg {
+  overflow: hidden !important;
+}
