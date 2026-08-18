@@ -1419,7 +1419,7 @@ body.dark-mode .icon-cell:hover:not(.heraldic-cell) svg {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 14px;
-  width: 280px;
+  width: min(280px, 90vw);
   box-shadow: var(--shadow-lg);
 }
 .shape-picker-pop.hidden { display: none; }
@@ -2155,8 +2155,8 @@ body.dark-mode .icon-cell:hover:not(.heraldic-cell) svg {
   #btn-undo span, #btn-redo span { display: none; }
   #btn-undo, #btn-redo { padding: 6px 8px; min-width: 0; gap: 0; }
 
-  /* Hamburger */
-  .mobile-menu-btn { display: flex !important; flex-shrink: 0; padding: 6px 10px; }
+  /* Hamburger — pushed to the far right */
+  .mobile-menu-btn { display: flex !important; flex-shrink: 0; padding: 6px 10px; margin-left: auto; }
 
   /* Enable the dropdown panel on mobile */
   .header-menu { display: flex; }
@@ -2198,13 +2198,13 @@ body.dark-mode .icon-cell:hover:not(.heraldic-cell) svg {
 
   /* Scale the flag canvas to fit the viewport width */
   #canvas-center {
-    width: 100%;
-    max-width: min(480px, 100vw - 16px);
+    width: 100% !important;
+    max-width: min(480px, 100vw - 40px) !important;
     filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
   }
   #flag-svg {
-    width: 100%;
-    height: auto;
+    width: 100% !important;
+    height: auto !important;
   }
 
   /* Emblem toolbar: account for mobile nav bar + iOS safe area */

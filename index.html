@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body>
 
@@ -37,6 +37,10 @@
     <a href="learn.html" class="header-nav-link">Learn</a>
     <input id="design-name" type="text" value="Untitled Flag" spellcheck="false" autocomplete="off" title="Click to rename your design">
     <div class="header-spacer"></div>
+    <button class="header-btn" id="btn-random" title="Generate a random flag">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+      Random
+    </button>
     <button class="header-btn" id="btn-flag-shape" title="Change flag shape">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
       Shape
@@ -451,6 +455,10 @@
 
 <!-- Mobile dropdown menu — outside #app so it doesn't affect the grid -->
 <div id="header-menu" class="header-menu" aria-hidden="true">
+  <button class="hm-item" data-target="btn-random">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+    Random Flag
+  </button>
   <button class="hm-item" data-target="btn-flag-shape">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
     Flag Shape
@@ -500,12 +508,12 @@
 <!-- ============================================================
      SCRIPTS
      ============================================================ -->
-<script src="js/icon-data.js?v=5"></script>
-<script src="js/icons.js?v=5"></script>
-<script src="js/heraldic-icons.js?v=5"></script>
-<script src="js/palettes.js?v=5"></script>
-<script src="js/renderer.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/icon-data.js?v=6"></script>
+<script src="js/icons.js?v=6"></script>
+<script src="js/heraldic-icons.js?v=6"></script>
+<script src="js/palettes.js?v=6"></script>
+<script src="js/renderer.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
 
 <div id="site-credit">Icons by <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a> (CC BY 3.0)</div>
 

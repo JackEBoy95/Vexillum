@@ -2142,6 +2142,7 @@ function bindHeaderButtons() {
   bindSaveModal();
   bindPreviewModal();
   bindFlagShapePicker();
+  bindRandomFlag();
   bindDarkMode();
   bindTemplatesModal();
   bindVexChecker();
@@ -3498,9 +3499,18 @@ function bindFlagShapePicker() {
     e.stopPropagation();
     if (!pop.classList.contains('hidden')) { pop.classList.add('hidden'); return; }
     const r = btn.getBoundingClientRect();
-    pop.style.right = (window.innerWidth - r.right) + 'px';
-    pop.style.top   = (r.bottom + 6) + 'px';
-    pop.style.left  = 'auto';
+    if (r.width === 0) {
+      // mobile: button is hidden — centre the picker below the header
+      pop.style.left      = '50%';
+      pop.style.right     = 'auto';
+      pop.style.top       = '50px';
+      pop.style.transform = 'translateX(-50%)';
+    } else {
+      pop.style.right     = (window.innerWidth - r.right) + 'px';
+      pop.style.top       = (r.bottom + 6) + 'px';
+      pop.style.left      = 'auto';
+      pop.style.transform = '';
+    }
     pop.classList.remove('hidden');
   });
 
@@ -3513,6 +3523,48 @@ function applyFlagShape(shapeId) {
   design.flagShape = shapeId;
   renderAll();
   autoSaveCurrentDesign();
+}
+
+function randomFlag() {
+  const numBands = 2 + Math.floor(Math.random() * 3);
+  const isV      = Math.random() < 0.35;
+  const pal      = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+  const cols     = [...pal.colors].sort(() => Math.random() - 0.5);
+
+  const bands = Array.from({ length: numBands }, (_, i) => ({
+    color: cols[i % cols.length], weight: 1
+  }));
+
+  const layers = [{ id: uuid(), type: isV ? 'vstripes' : 'hstripes', visible: true, expanded: false, bands }];
+
+  if (Math.random() < 0.55) {
+    const opts = [
+      { shape: 'cross',    params: { thickness: 10 + Math.floor(Math.random() * 25) } },
+      { shape: 'nordic',   params: { thickness: 25 + Math.floor(Math.random() * 20), offset: 30 + Math.floor(Math.random() * 20) } },
+      { shape: 'saltire',  params: { thickness: 10 + Math.floor(Math.random() * 20) } },
+      { shape: 'chevron',  params: { depth: 30 + Math.floor(Math.random() * 30), thickness: 20 + Math.floor(Math.random() * 25) } },
+      { shape: 'triangle', params: { depth: 30 + Math.floor(Math.random() * 50), side: 0 } },
+      { shape: 'canton',   params: { width: 28 + Math.floor(Math.random() * 15), height: 40 + Math.floor(Math.random() * 20) } },
+    ];
+    const pick = opts[Math.floor(Math.random() * opts.length)];
+    const overlayColor = cols.find(c => c !== bands[0].color) || '#ffffff';
+    layers.push({ id: uuid(), type: 'overlay', shape: pick.shape, color: overlayColor, opacity: 100, visible: true, expanded: false, params: pick.params });
+  }
+
+  design = newDesign();
+  design.layers = layers;
+  design.emblems = [];
+  design.name = 'Random Flag';
+  designNameEl.value = design.name;
+  pushHistory();
+  renderAll();
+  autoSaveCurrentDesign();
+  showToast('New random flag!', 'success');
+}
+
+function bindRandomFlag() {
+  const btn = document.getElementById('btn-random');
+  if (btn) btn.addEventListener('click', randomFlag);
 }
 
 function bindDarkMode() {

@@ -21,7 +21,7 @@
       align-items: center;
       gap: 20px;
       padding: 0 32px;
-      height: 52px;
+      min-height: 60px;
       background: var(--yellow);
       border-bottom: 2px solid var(--near-black);
       position: sticky;
@@ -57,8 +57,14 @@
       text-decoration: none;
       transition: all 0.12s;
       box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+      white-space: nowrap;
     }
     .nav-cta:hover { background: var(--dark); }
+    @media (max-width: 600px) {
+      #site-nav { padding: 0 16px; gap: 12px; min-height: 56px; }
+      .nav-link { display: none; }
+      #site-nav .logo { font-size: 20px; }
+    }
 
     /* ---- Page sections ---- */
     .page-section {
