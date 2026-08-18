@@ -2356,7 +2356,7 @@ function bindHeaderMenu() {
     item.addEventListener('click', () => {
       closeMenu();
       const target = document.getElementById(item.dataset.target);
-      if (target) target.click();
+      if (target) setTimeout(() => target.click(), 0);
     });
   });
 
