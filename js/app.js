@@ -2355,8 +2355,23 @@ function bindHeaderMenu() {
   menu.querySelectorAll('.hm-item[data-target]').forEach(item => {
     item.addEventListener('click', () => {
       closeMenu();
-      const target = document.getElementById(item.dataset.target);
-      if (target) setTimeout(() => target.click(), 0);
+      const targetId = item.dataset.target;
+      setTimeout(() => {
+        if (targetId === 'btn-flag-shape') {
+          // Open picker directly — clicking a display:none button is unreliable on mobile
+          const pop = document.getElementById('shape-picker');
+          if (pop) {
+            pop.style.left      = '50%';
+            pop.style.right     = 'auto';
+            pop.style.top       = '50px';
+            pop.style.transform = 'translateX(-50%)';
+            pop.classList.remove('hidden');
+          }
+        } else {
+          const target = document.getElementById(targetId);
+          if (target) target.click();
+        }
+      }, 50);
     });
   });
 
@@ -3529,7 +3544,7 @@ function randomFlag() {
   const numBands = 2 + Math.floor(Math.random() * 3);
   const isV      = Math.random() < 0.35;
   const pal      = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-  const cols     = [...pal.colors].sort(() => Math.random() - 0.5);
+  const cols     = [...pal.colors].map(c => c.hex).sort(() => Math.random() - 0.5);
 
   const bands = Array.from({ length: numBands }, (_, i) => ({
     color: cols[i % cols.length], weight: 1
@@ -3537,7 +3552,7 @@ function randomFlag() {
 
   const layers = [{ id: uuid(), type: isV ? 'vstripes' : 'hstripes', visible: true, expanded: false, bands }];
 
-  if (Math.random() < 0.55) {
+  if (Math.random() < 0.65) {
     const opts = [
       { shape: 'cross',    params: { thickness: 10 + Math.floor(Math.random() * 25) } },
       { shape: 'nordic',   params: { thickness: 25 + Math.floor(Math.random() * 20), offset: 30 + Math.floor(Math.random() * 20) } },
@@ -3545,9 +3560,11 @@ function randomFlag() {
       { shape: 'chevron',  params: { depth: 30 + Math.floor(Math.random() * 30), thickness: 20 + Math.floor(Math.random() * 25) } },
       { shape: 'triangle', params: { depth: 30 + Math.floor(Math.random() * 50), side: 0 } },
       { shape: 'canton',   params: { width: 28 + Math.floor(Math.random() * 15), height: 40 + Math.floor(Math.random() * 20) } },
+      { shape: 'hbar',     params: { thickness: 15 + Math.floor(Math.random() * 20) } },
+      { shape: 'vbar',     params: { thickness: 15 + Math.floor(Math.random() * 20) } },
     ];
     const pick = opts[Math.floor(Math.random() * opts.length)];
-    const overlayColor = cols.find(c => c !== bands[0].color) || '#ffffff';
+    const overlayColor = cols.find(c => c !== bands[0].color) || '#FFFFFF';
     layers.push({ id: uuid(), type: 'overlay', shape: pick.shape, color: overlayColor, opacity: 100, visible: true, expanded: false, params: pick.params });
   }
 
