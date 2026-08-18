@@ -33,6 +33,9 @@ let _prevDragY   = 0;
 
 // ---- Global colour picker state ----
 let _activePopover = null;
+
+// ---- Shape picker open timestamp (guards against iOS ghost-click closing it) ----
+let _shapePickerOpenTime = 0;
 function _closeAllPopovers() {
   if (_activePopover) { _activePopover.classList.add('hidden'); _activePopover = null; }
 }
@@ -2358,15 +2361,7 @@ function bindHeaderMenu() {
       const targetId = item.dataset.target;
       setTimeout(() => {
         if (targetId === 'btn-flag-shape') {
-          // Open picker directly — clicking a display:none button is unreliable on mobile
-          const pop = document.getElementById('shape-picker');
-          if (pop) {
-            pop.style.left      = '50%';
-            pop.style.right     = 'auto';
-            pop.style.top       = '50px';
-            pop.style.transform = 'translateX(-50%)';
-            pop.classList.remove('hidden');
-          }
+          if (window._openShapePicker) window._openShapePicker();
         } else {
           const target = document.getElementById(targetId);
           if (target) target.click();
@@ -3510,12 +3505,11 @@ function bindFlagShapePicker() {
   pop.appendChild(title);
   pop.appendChild(grid);
 
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
+  function openShapePicker() {
     if (!pop.classList.contains('hidden')) { pop.classList.add('hidden'); return; }
+    _shapePickerOpenTime = Date.now();
     const r = btn.getBoundingClientRect();
     if (r.width === 0) {
-      // mobile: button is hidden — centre the picker below the header
       pop.style.left      = '50%';
       pop.style.right     = 'auto';
       pop.style.top       = '50px';
@@ -3527,9 +3521,16 @@ function bindFlagShapePicker() {
       pop.style.transform = '';
     }
     pop.classList.remove('hidden');
+  }
+  window._openShapePicker = openShapePicker;
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    openShapePicker();
   });
 
   document.addEventListener('click', e => {
+    if (Date.now() - _shapePickerOpenTime < 400) return;
     if (!pop.contains(e.target) && e.target !== btn) pop.classList.add('hidden');
   });
 }
