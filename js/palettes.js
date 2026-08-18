@@ -225,6 +225,176 @@ const PALETTES = [
       { hex: '#D35400', name: 'Burnt Orange' },
     ]
   },
+  {
+    id: 'tropical',
+    name: 'Tropical',
+    bases: ['#FF6B35', '#F7931E', '#FFD700', '#00A86B', '#007FFF'],
+    colors: [
+      { hex: '#FF6B35', name: 'Coral' },
+      { hex: '#F7931E', name: 'Mango' },
+      { hex: '#FFD700', name: 'Yellow' },
+      { hex: '#00A86B', name: 'Jade Green' },
+      { hex: '#007FFF', name: 'Azure' },
+      { hex: '#FF1493', name: 'Hibiscus' },
+      { hex: '#00CED1', name: 'Turquoise' },
+      { hex: '#FF4500', name: 'Flame' },
+      { hex: '#00FF7F', name: 'Spring Green' },
+      { hex: '#FFFFFF', name: 'White' },
+    ]
+  },
+  {
+    id: 'arctic',
+    name: 'Arctic',
+    bases: ['#B0D4E8', '#7BAFD4', '#4A90B8', '#2C5F7A', '#E8F4F8'],
+    colors: [
+      { hex: '#E8F4F8', name: 'Ice White' },
+      { hex: '#B0D4E8', name: 'Glacier' },
+      { hex: '#7BAFD4', name: 'Arctic Blue' },
+      { hex: '#4A90B8', name: 'Polar Blue' },
+      { hex: '#2C5F7A', name: 'Deep Ice' },
+      { hex: '#A8D8EA', name: 'Frost' },
+      { hex: '#FFFFFF', name: 'Snow' },
+      { hex: '#D4E9F7', name: 'Pale Sky' },
+      { hex: '#5B9EC9', name: 'Tundra' },
+      { hex: '#1C4F6E', name: 'Abyss' },
+    ]
+  },
+  {
+    id: 'desert',
+    name: 'Desert',
+    bases: ['#C19A6B', '#E5C07B', '#8B4513', '#D2691E', '#F4A460'],
+    colors: [
+      { hex: '#C19A6B', name: 'Sand' },
+      { hex: '#E5C07B', name: 'Dune' },
+      { hex: '#8B4513', name: 'Saddle Brown' },
+      { hex: '#D2691E', name: 'Rust' },
+      { hex: '#F4A460', name: 'Sandy Brown' },
+      { hex: '#CD853F', name: 'Peru' },
+      { hex: '#DEB887', name: 'Burlywood' },
+      { hex: '#A0522D', name: 'Sienna' },
+      { hex: '#FFF8DC', name: 'Cornsilk' },
+      { hex: '#6B3A2A', name: 'Terra Cotta' },
+    ]
+  },
+  {
+    id: 'medieval',
+    name: 'Medieval',
+    bases: ['#8B0000', '#4B0082', '#006400', '#B8860B', '#2F4F4F'],
+    colors: [
+      { hex: '#8B0000', name: 'Blood Red' },
+      { hex: '#4B0082', name: 'Indigo' },
+      { hex: '#006400', name: 'Forest' },
+      { hex: '#B8860B', name: 'Dark Gold' },
+      { hex: '#2F4F4F', name: 'Dark Slate' },
+      { hex: '#F5F5DC', name: 'Parchment' },
+      { hex: '#8B6914', name: 'Bronze' },
+      { hex: '#C0C0C0', name: 'Silver' },
+      { hex: '#1C1C1C', name: 'Jet Black' },
+      { hex: '#8B8B00', name: 'Olive' },
+    ]
+  },
+  {
+    id: 'maritime',
+    name: 'Maritime',
+    bases: ['#003087', '#C60C30', '#FFFFFF', '#002868', '#006994'],
+    colors: [
+      { hex: '#003087', name: 'Navy' },
+      { hex: '#C60C30', name: 'Signal Red' },
+      { hex: '#FFFFFF', name: 'White' },
+      { hex: '#FFD700', name: 'Gold' },
+      { hex: '#002868', name: 'Deep Navy' },
+      { hex: '#006994', name: 'Ocean' },
+      { hex: '#B22222', name: 'Firebrick' },
+      { hex: '#1C1C1C', name: 'Black' },
+      { hex: '#4682B4', name: 'Steel Blue' },
+      { hex: '#F0E68C', name: 'Pale Yellow' },
+    ]
+  },
+  {
+    id: 'celtic',
+    name: 'Celtic',
+    bases: ['#006400', '#FF8C00', '#FFD700', '#4B0082', '#8B0000'],
+    colors: [
+      { hex: '#006400', name: 'Shamrock' },
+      { hex: '#FF8C00', name: 'Celtic Orange' },
+      { hex: '#FFD700', name: 'Gold' },
+      { hex: '#4B0082', name: 'Woad' },
+      { hex: '#8B0000', name: 'War Red' },
+      { hex: '#F5F5DC', name: 'Parchment' },
+      { hex: '#228B22', name: 'Irish Green' },
+      { hex: '#1C1C1C', name: 'Charcoal' },
+      { hex: '#B8860B', name: 'Amber' },
+      { hex: '#2F4F4F', name: 'Slate' },
+    ]
+  },
+  {
+    id: 'neon',
+    name: 'Neon',
+    bases: ['#FF0090', '#00FFCC', '#FFFF00', '#00AAFF', '#FF6600'],
+    colors: [
+      { hex: '#FF0090', name: 'Neon Pink' },
+      { hex: '#00FFCC', name: 'Neon Teal' },
+      { hex: '#FFFF00', name: 'Neon Yellow' },
+      { hex: '#00AAFF', name: 'Neon Blue' },
+      { hex: '#FF6600', name: 'Neon Orange' },
+      { hex: '#9900FF', name: 'Neon Purple' },
+      { hex: '#00FF41', name: 'Neon Green' },
+      { hex: '#FF0000', name: 'Neon Red' },
+      { hex: '#00FFFF', name: 'Cyan' },
+      { hex: '#FFFFFF', name: 'White' },
+    ]
+  },
+  {
+    id: 'monochrome',
+    name: 'Monochrome',
+    bases: ['#1C1C1C', '#555555', '#888888', '#BBBBBB', '#F0F0F0'],
+    colors: [
+      { hex: '#1C1C1C', name: 'Jet' },
+      { hex: '#333333', name: 'Charcoal' },
+      { hex: '#555555', name: 'Dark Grey' },
+      { hex: '#777777', name: 'Mid Grey' },
+      { hex: '#999999', name: 'Grey' },
+      { hex: '#BBBBBB', name: 'Light Grey' },
+      { hex: '#D0D0D0', name: 'Silver' },
+      { hex: '#E8E8E8', name: 'Pale' },
+      { hex: '#F5F5F5', name: 'Almost White' },
+      { hex: '#FFFFFF', name: 'White' },
+    ]
+  },
+  {
+    id: 'sunset',
+    name: 'Sunset',
+    bases: ['#FF4500', '#FF8C00', '#FFD700', '#FF69B4', '#C71585'],
+    colors: [
+      { hex: '#FF4500', name: 'Crimson Dusk' },
+      { hex: '#FF6347', name: 'Tomato' },
+      { hex: '#FF8C00', name: 'Amber' },
+      { hex: '#FFD700', name: 'Gold' },
+      { hex: '#FFA07A', name: 'Salmon' },
+      { hex: '#FF69B4', name: 'Hot Pink' },
+      { hex: '#C71585', name: 'Deep Rose' },
+      { hex: '#4B0082', name: 'Dusk Purple' },
+      { hex: '#2C3E50', name: 'Night' },
+      { hex: '#FFF3E0', name: 'Horizon' },
+    ]
+  },
+  {
+    id: 'pride',
+    name: 'Pride Rainbow',
+    bases: ['#FF0018', '#FFA52C', '#FFFF41', '#008018', '#0000F9'],
+    colors: [
+      { hex: '#FF0018', name: 'Red' },
+      { hex: '#FFA52C', name: 'Orange' },
+      { hex: '#FFFF41', name: 'Yellow' },
+      { hex: '#008018', name: 'Green' },
+      { hex: '#0000F9', name: 'Blue' },
+      { hex: '#86007D', name: 'Violet' },
+      { hex: '#FF69B4', name: 'Pink' },
+      { hex: '#55CDFC', name: 'Sky Blue' },
+      { hex: '#FFFFFF', name: 'White' },
+      { hex: '#F7A8B8', name: 'Light Pink' },
+    ]
+  },
 ];
 
 // Default active palette index

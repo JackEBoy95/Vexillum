@@ -26,6 +26,11 @@ let _handleStartRotate = 0;
 let _handleCenterX     = 0;
 let _handleCenterY     = 0;
 
+// ---- Multi-select & group drag ----
+let _multiSelect = new Set();
+let _prevDragX   = 0;
+let _prevDragY   = 0;
+
 // ---- Global colour picker state ----
 let _activePopover = null;
 function _closeAllPopovers() {
@@ -105,34 +110,48 @@ const saveModal      = document.getElementById('save-modal');
 document.addEventListener('DOMContentLoaded', () => {
   designNameEl.value = design.name;
 
-  // Restore auto-saved design if available
-  try {
-    const saved = localStorage.getItem(AUTOSAVE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed && parsed.layers) {
-        design = { ...parsed, emblems: parsed.emblems || [] };
-        if (parsed.flagShape) design.flagShape = parsed.flagShape;
-        designNameEl.value = design.name;
-        // Re-fetch heraldic SVGs
-        design.emblems.forEach(em => {
-          if (em.heraldic && em.heraldCat && em.heraldSlug) {
-            fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
-              em._svgContent = svg;
-              if (svg && !em.heraldColours) {
-                const colours = extractHeraldicColours(svg);
-                em.heraldColours = {};
-                colours.forEach(c => { em.heraldColours[c] = c; });
-              }
-              renderAll();
-            });
-          } else {
-            em._svgContent = getIconSvg(em.slug);
-          }
-        });
-      }
+  // Priority 1: load from shared URL hash (?#d=…)
+  let loadedFromUrl = false;
+  if (window.location.hash.startsWith('#d=')) {
+    loadedFromUrl = _loadDesignFromUrl();
+    if (loadedFromUrl) {
+      designNameEl.value = design.name;
+      // Clear the hash so refreshing doesn't re-load it (user may have edited since)
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      showToast('Shared design loaded — it\'s now yours to edit!', 'success');
     }
-  } catch(e) {}
+  }
+
+  // Priority 2: Restore auto-saved design if no URL share
+  if (!loadedFromUrl) {
+    try {
+      const saved = localStorage.getItem(AUTOSAVE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.layers) {
+          design = { ...parsed, emblems: parsed.emblems || [] };
+          if (parsed.flagShape) design.flagShape = parsed.flagShape;
+          designNameEl.value = design.name;
+          // Re-fetch heraldic SVGs
+          design.emblems.forEach(em => {
+            if (em.heraldic && em.heraldCat && em.heraldSlug) {
+              fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
+                em._svgContent = svg;
+                if (svg && !em.heraldColours) {
+                  const colours = extractHeraldicColours(svg);
+                  em.heraldColours = {};
+                  colours.forEach(c => { em.heraldColours[c] = c; });
+                }
+                renderAll();
+              });
+            } else {
+              em._svgContent = getIconSvg(em.slug);
+            }
+          });
+        }
+      }
+    } catch(e) {}
+  }
 
   bindHeaderButtons();
   bindIconPanel();
@@ -146,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ---- Full render cycle ----
 function renderAll() {
-  renderFlag(flagSvg, design, selectedEmblemId);
+  renderFlag(flagSvg, design, selectedEmblemId, _multiSelect);
   renderLayerList();
   updateEmblemControls();
 }
@@ -183,14 +202,21 @@ function renderLayerList() {
 }
 
 function buildEmblemRow(emblem) {
+  const isMultiSel = _multiSelect.has(emblem.id);
   const row = document.createElement('div');
-  row.className = 'emblem-row' + (emblem.id === selectedEmblemId ? ' selected' : '');
+  row.className = 'emblem-row'
+    + (emblem.id === selectedEmblemId ? ' selected' : '')
+    + (isMultiSel ? ' multi-selected' : '');
   row.dataset.emblemId = emblem.id;
 
   // Mini preview
   const preview = document.createElement('div');
   preview.className = 'emblem-row-preview';
-  if (emblem.type === 'shape' && BASIC_SHAPES[emblem.shapeKey]) {
+
+  // Group: show stacked-square icon
+  if (emblem.type === 'group') {
+    preview.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%;"><rect x="2" y="8" width="12" height="12" rx="1"/><rect x="10" y="4" width="12" height="12" rx="1"/></svg>`;
+  } else if (emblem.type === 'shape' && BASIC_SHAPES[emblem.shapeKey]) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 100 100');
     svg.setAttribute('fill', emblem.fg || '#1C1C1C');
@@ -216,8 +242,8 @@ function buildEmblemRow(emblem) {
   lbl.className = 'emblem-row-label';
   lbl.textContent = emblem.label || 'Icon';
 
-  // Colour swatch (fg colour picker for non-heraldic emblems)
-  if (!emblem.heraldic) {
+  // Colour swatch (fg colour picker for non-heraldic, non-group emblems)
+  if (!emblem.heraldic && emblem.type !== 'group') {
     const colorWrap = buildColorPicker(emblem.fg || '#ffffff', val => {
       emblem.fg = val;
       // Update the swatch fill in the row preview (dark bg so white shows)
@@ -263,7 +289,7 @@ function buildEmblemRow(emblem) {
   dragHandle.className = 'layer-drag';
   dragHandle.title = 'Drag to reorder';
   dragHandle.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg>`;
-  dragHandle.addEventListener('mousedown', e => startEmblemRowDrag(e, emblem.id));
+  dragHandle.addEventListener('pointerdown', e => startEmblemRowDrag(e, emblem.id));
 
   row.appendChild(dragHandle);
   row.appendChild(preview);
@@ -276,7 +302,7 @@ function buildEmblemRow(emblem) {
 
 function buildLayerCard(layer) {
   const card = document.createElement('div');
-  card.className = 'layer-card' + (layer.expanded ? ' expanded' : '') + (!layer.visible ? ' hidden' : '');
+  card.className = 'layer-card' + (layer.expanded ? ' expanded' : '') + (!layer.visible ? ' hidden' : '') + (layer.locked ? ' locked' : '');
   card.dataset.layerId = layer.id;
 
   const header = document.createElement('div');
@@ -291,7 +317,7 @@ function buildLayerCard(layer) {
     <circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/>
     <circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/>
   </svg>`;
-  drag.addEventListener('mousedown', e => startLayerDrag(e, layer.id));
+  drag.addEventListener('pointerdown', e => { if (!layer.locked) startLayerDrag(e, layer.id); });
 
   // Thumbnail
   const thumb = document.createElement('div');
@@ -313,11 +339,21 @@ function buildLayerCard(layer) {
     : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
   vis.addEventListener('click', e => { e.stopPropagation(); toggleLayerVisible(layer.id); });
 
+  // Lock
+  const lock = document.createElement('button');
+  lock.className = 'icon-btn layer-lock' + (layer.locked ? ' active' : '');
+  lock.title = layer.locked ? 'Unlock layer' : 'Lock layer';
+  lock.innerHTML = layer.locked
+    ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`
+    : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>`;
+  lock.addEventListener('click', e => { e.stopPropagation(); toggleLayerLocked(layer.id); });
+
   header.appendChild(drag);
   header.appendChild(thumb);
   header.appendChild(label);
   header.appendChild(vis);
-  header.addEventListener('click', () => toggleLayerExpanded(layer.id));
+  header.appendChild(lock);
+  header.addEventListener('click', () => { if (!layer.locked) toggleLayerExpanded(layer.id); });
 
   // Body
   const body = document.createElement('div');
@@ -328,7 +364,7 @@ function buildLayerCard(layer) {
   const delBtn = document.createElement('button');
   delBtn.className = 'layer-delete';
   delBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg> Remove layer`;
-  delBtn.addEventListener('click', () => deleteLayer(layer.id));
+  delBtn.addEventListener('click', () => { if (!layer.locked) deleteLayer(layer.id); else showToast('Unlock this layer first'); });
   body.appendChild(delBtn);
 
   card.appendChild(header);
@@ -372,29 +408,49 @@ function buildColorPicker(initialValue, onChangeCallback) {
   popover.className = 'cp-popover hidden';
 
   let _currentHex = initialValue;
+  let _shadesExpanded = false;
 
   function _pick(hex) {
     _currentHex = hex;
     swatch.style.background = hex;
     nativeSwatch.style.background = hex;
     native.value = hex;
-    // Update selected state on all chips
     popover.querySelectorAll('[data-hex]').forEach(c => {
       c.classList.toggle('selected', c.dataset.hex.toLowerCase() === hex.toLowerCase());
     });
     onChangeCallback(hex);
   }
 
-  // Build shade grid — rebuilt on open in case palette changed
+  // ── Compact chip row: one chip per palette base colour ──
+  const chipRow = document.createElement('div');
+  chipRow.className = 'cp-chip-row';
+
+  function buildChipRow() {
+    chipRow.innerHTML = '';
+    const palette = getActivePalette();
+    const bases = palette.bases || palette.colors.slice(0, 8).map(c => c.hex);
+    bases.slice(0, 8).forEach(hex => {
+      const chip = document.createElement('button');
+      chip.className = 'cp-base-chip' + (hex.toLowerCase() === _currentHex.toLowerCase() ? ' selected' : '');
+      chip.dataset.hex = hex;
+      chip.style.background = hex;
+      chip.type = 'button';
+      chip.title = hex;
+      chip.addEventListener('click', e => { e.stopPropagation(); _pick(hex); _closeAllPopovers(); });
+      chipRow.appendChild(chip);
+    });
+  }
+  buildChipRow();
+
+  // ── Shade grid: hidden by default, shown when expanded ──
   const shadeGrid = document.createElement('div');
-  shadeGrid.className = 'cp-shade-grid';
+  shadeGrid.className = 'cp-shade-grid cp-shade-collapsed';
 
   function buildShadeGrid() {
     shadeGrid.innerHTML = '';
     const palette = getActivePalette();
-    // Get 5 base colours from palette.bases or first 5 colours
-    const bases = palette.bases || palette.colors.slice(0,5).map(c=>c.hex);
-    bases.slice(0,5).forEach(baseHex => {
+    const bases = palette.bases || palette.colors.slice(0, 5).map(c => c.hex);
+    bases.slice(0, 5).forEach(baseHex => {
       const col = document.createElement('div');
       col.className = 'cp-shade-col';
       _generateShades(baseHex).forEach(shade => {
@@ -410,9 +466,8 @@ function buildColorPicker(initialValue, onChangeCallback) {
       shadeGrid.appendChild(col);
     });
   }
-  buildShadeGrid();
 
-  // Neutrals row
+  // ── Neutrals row ──
   const neutralRow = document.createElement('div');
   neutralRow.className = 'cp-neutral-row';
   _NEUTRALS.forEach(hex => {
@@ -426,12 +481,25 @@ function buildColorPicker(initialValue, onChangeCallback) {
     neutralRow.appendChild(chip);
   });
 
-  // Custom colour row
-  const customRow = document.createElement('div');
-  customRow.className = 'cp-custom-row';
-  const customLabel = document.createElement('span');
-  customLabel.className = 'cp-custom-label';
-  customLabel.textContent = 'Custom';
+  // ── Bottom row: expand shades toggle + custom input ──
+  const bottomRow = document.createElement('div');
+  bottomRow.className = 'cp-bottom-row';
+
+  const expandBtn = document.createElement('button');
+  expandBtn.type = 'button';
+  expandBtn.className = 'cp-expand-btn';
+  expandBtn.title = 'Show shades';
+  expandBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg> Shades`;
+  expandBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    _shadesExpanded = !_shadesExpanded;
+    shadeGrid.classList.toggle('cp-shade-collapsed', !_shadesExpanded);
+    expandBtn.classList.toggle('open', _shadesExpanded);
+    expandBtn.innerHTML = _shadesExpanded
+      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg> Shades`
+      : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg> Shades`;
+  });
+
   const nativeWrap = document.createElement('div');
   nativeWrap.className = 'cp-native-wrap';
   const nativeSwatch = document.createElement('div');
@@ -445,23 +513,33 @@ function buildColorPicker(initialValue, onChangeCallback) {
   native.addEventListener('click', e => e.stopPropagation());
   nativeWrap.appendChild(nativeSwatch);
   nativeWrap.appendChild(native);
-  customRow.appendChild(customLabel);
-  customRow.appendChild(nativeWrap);
 
+  const customLabel = document.createElement('span');
+  customLabel.className = 'cp-custom-label';
+  customLabel.textContent = 'Custom';
+
+  bottomRow.appendChild(expandBtn);
+  bottomRow.appendChild(customLabel);
+  bottomRow.appendChild(nativeWrap);
+
+  popover.appendChild(chipRow);
   popover.appendChild(shadeGrid);
   popover.appendChild(neutralRow);
-  popover.appendChild(customRow);
+  popover.appendChild(bottomRow);
   document.body.appendChild(popover);
 
   swatch.addEventListener('click', e => {
     e.stopPropagation();
     if (_activePopover === popover) { _closeAllPopovers(); return; }
     _closeAllPopovers();
-    buildShadeGrid(); // refresh in case palette changed
+    buildChipRow();
+    buildShadeGrid();
+    // Position: prefer below, flip above if needed
     const r = swatch.getBoundingClientRect();
+    const popH = _shadesExpanded ? 280 : 160;
     let left = r.left, top = r.bottom + 6;
-    if (left + 220 > window.innerWidth) left = window.innerWidth - 228;
-    if (top + 260 > window.innerHeight) top = r.top - 266;
+    if (left + 220 > window.innerWidth) left = Math.max(4, window.innerWidth - 224);
+    if (top + popH > window.innerHeight) top = Math.max(4, r.top - popH - 6);
     popover.style.left = left + 'px';
     popover.style.top  = top  + 'px';
     popover.classList.remove('hidden');
@@ -486,6 +564,60 @@ function buildStripesBody(layer) {
 
       const colorWrap = buildColorPicker(band.color, val => { band.color = val; onChange(); });
 
+      // Gradient toggle button
+      const gradBtn = document.createElement('button');
+      gradBtn.className = 'band-grad-btn' + (band.gradient ? ' active' : '');
+      gradBtn.title = band.gradient ? 'Remove gradient' : 'Add gradient fade';
+      gradBtn.textContent = '⟿';
+      gradBtn.addEventListener('click', () => {
+        band.gradient = !band.gradient;
+        if (band.gradient && !band.gradientEnd) band.gradientEnd = '#ffffff';
+        rebuildBandRows();
+        onChange();
+      });
+
+      // Gradient end colour (only shown when gradient is on)
+      const gradEndWrap = band.gradient
+        ? buildColorPicker(band.gradientEnd || '#ffffff', val => { band.gradientEnd = val; onChange(); })
+        : null;
+
+      // Pattern fill selector (only shown when no gradient)
+      let patternSelect = null;
+      if (!band.gradient) {
+        patternSelect = document.createElement('select');
+        patternSelect.className = 'band-pattern-select';
+        patternSelect.title = 'Fill pattern';
+        [
+          ['solid','Solid'],
+          ['hatch45','Hatch ╲'],
+          ['hatch-h','Lines ═'],
+          ['hatch-v','Lines ║'],
+          ['crosshatch','Crosshatch ╳'],
+          ['dots','Dots ·'],
+          ['checker','Checker ▦'],
+        ].forEach(([val, lbl]) => {
+          const opt = document.createElement('option');
+          opt.value = val; opt.textContent = lbl;
+          if ((band.pattern || 'solid') === val) opt.selected = true;
+          patternSelect.appendChild(opt);
+        });
+        patternSelect.addEventListener('change', e => {
+          band.pattern = e.target.value;
+          // Show/hide bg colour picker based on whether it's a non-solid pattern
+          rebuildBandRows();
+          onChange();
+        });
+      }
+
+      // Pattern background colour (shown for non-solid patterns without gradient)
+      let patternBgWrap = null;
+      if (!band.gradient && band.pattern && band.pattern !== 'solid') {
+        patternBgWrap = buildColorPicker(band.patternBg || 'transparent', val => {
+          band.patternBg = val; onChange();
+        });
+        patternBgWrap.title = 'Pattern background colour';
+      }
+
       const weightInput = document.createElement('input');
       weightInput.type = 'range';
       weightInput.min = 1; weightInput.max = 20; weightInput.step = 1;
@@ -505,6 +637,10 @@ function buildStripesBody(layer) {
       });
 
       row.appendChild(colorWrap);
+      row.appendChild(gradBtn);
+      if (gradEndWrap) row.appendChild(gradEndWrap);
+      if (patternSelect) row.appendChild(patternSelect);
+      if (patternBgWrap) row.appendChild(patternBgWrap);
       row.appendChild(weightInput);
       row.appendChild(removeBtn);
       bandsList.appendChild(row);
@@ -603,6 +739,39 @@ function buildOverlayBody(layer) {
     });
   }
 
+  // Clip region
+  const clipSection = document.createElement('div');
+  clipSection.className = 'clip-region-section';
+  clipSection.innerHTML = `<span class="control-label">Clip Region</span>`;
+  const clipGrid = document.createElement('div');
+  clipGrid.className = 'clip-region-grid';
+  const regions = [
+    ['tl','top','tr'],
+    ['left','full','right'],
+    ['bl','bottom','br'],
+  ];
+  const regionLabels = { tl:'↖', top:'↑', tr:'↗', left:'←', full:'□', right:'→', bl:'↙', bottom:'↓', br:'↘' };
+  regions.forEach(row => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'clip-region-row';
+    row.forEach(region => {
+      const btn = document.createElement('button');
+      btn.className = 'clip-region-btn' + ((layer.clipRegion || 'full') === region ? ' active' : '');
+      btn.title = region;
+      btn.textContent = regionLabels[region];
+      btn.addEventListener('click', () => {
+        layer.clipRegion = region;
+        clipGrid.querySelectorAll('.clip-region-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        onChange();
+      });
+      rowEl.appendChild(btn);
+    });
+    clipGrid.appendChild(rowEl);
+  });
+  clipSection.appendChild(clipGrid);
+  wrap.appendChild(clipSection);
+
   return wrap;
 }
 
@@ -618,6 +787,12 @@ function shapeIcon(key) {
     quarter:  `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="10" height="10"/><rect x="12" y="12" width="10" height="10"/></svg>`,
     hband:    `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="20" height="6"/></svg>`,
     vband:    `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="20"/></svg>`,
+    border:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="3" y="3" width="18" height="18"/></svg>`,
+    wavyh:    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2,12 Q5,9 8,12 Q11,15 14,12 Q17,9 20,12 Q21,13 22,12 L22,16 Q21,17 20,16 Q17,13 14,16 Q11,19 8,16 Q5,13 2,16 Z"/></svg>`,
+    zigzagh:  `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="2,10 6,14 10,10 14,14 18,10 22,14 22,22 2,22"/></svg>`,
+    rhombus:  `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 22,12 12,22 2,12"/></svg>`,
+    crescent: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18,5 A9,9 0 1,0 18,19 A7,7 0 1,1 18,5 Z"/></svg>`,
+    star:     `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9"/></svg>`,
   };
   return icons[key] || `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="2"/></svg>`;
 }
@@ -630,6 +805,10 @@ function toggleLayerVisible(id) {
 function toggleLayerExpanded(id) {
   const layer = design.layers.find(l => l.id === id);
   if (layer) { layer.expanded = !layer.expanded; renderLayerList(); }
+}
+function toggleLayerLocked(id) {
+  const layer = design.layers.find(l => l.id === id);
+  if (layer) { layer.locked = !layer.locked; renderLayerList(); }
 }
 function deleteLayer(id) {
   design.layers = design.layers.filter(l => l.id !== id);
@@ -656,8 +835,9 @@ function addLayer(type) {
 function startLayerDrag(e, layerId) {
   dragLayerId = layerId;
   dragLayerOriginY = e.clientY;
-  document.addEventListener('mousemove', onLayerDragMove);
-  document.addEventListener('mouseup', onLayerDragEnd);
+  document.addEventListener('pointermove', onLayerDragMove);
+  document.addEventListener('pointerup', onLayerDragEnd);
+  try { e.target.setPointerCapture(e.pointerId); } catch {}
   e.preventDefault();
 }
 function onLayerDragMove(e) {
@@ -679,8 +859,8 @@ function onLayerDragMove(e) {
 }
 function onLayerDragEnd() {
   dragLayerId = null;
-  document.removeEventListener('mousemove', onLayerDragMove);
-  document.removeEventListener('mouseup', onLayerDragEnd);
+  document.removeEventListener('pointermove', onLayerDragMove);
+  document.removeEventListener('pointerup', onLayerDragEnd);
 }
 
 // ---- Emblem row drag-to-reorder ----
@@ -691,8 +871,8 @@ let _copiedEmblem = null;
 function startEmblemRowDrag(e, emblemId) {
   _dragEmblemId = emblemId;
   _dragEmblemY  = e.clientY;
-  document.addEventListener('mousemove', _onEmblemRowMove);
-  document.addEventListener('mouseup',   _onEmblemRowEnd);
+  document.addEventListener('pointermove', _onEmblemRowMove);
+  document.addEventListener('pointerup',   _onEmblemRowEnd);
   e.preventDefault();
   e.stopPropagation();
 }
@@ -713,8 +893,8 @@ function _onEmblemRowMove(e) {
 }
 function _onEmblemRowEnd() {
   _dragEmblemId = null;
-  document.removeEventListener('mousemove', _onEmblemRowMove);
-  document.removeEventListener('mouseup',   _onEmblemRowEnd);
+  document.removeEventListener('pointermove', _onEmblemRowMove);
+  document.removeEventListener('pointerup',   _onEmblemRowEnd);
 }
 
 // ============================================================
@@ -907,7 +1087,11 @@ function loadHeraldGrid(catId) {
     const end = Math.min(i + BATCH, icons.length);
     const promises = [];
     for (; i < end; i++) {
-      const slug = icons[i];
+      const raw = icons[i];
+      // Support "folder:slug" entries used by merged categories
+      const colonIdx = raw.indexOf(':');
+      const fetchCat = colonIdx !== -1 ? raw.slice(0, colonIdx) : catId;
+      const slug     = colonIdx !== -1 ? raw.slice(colonIdx + 1) : raw;
       const label = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       const cell = document.createElement('div');
@@ -915,7 +1099,7 @@ function loadHeraldGrid(catId) {
       cell.title = label;
       cell.draggable = true;
       cell.dataset.slug = slug;
-      cell.dataset.heraldCat = catId;
+      cell.dataset.heraldCat = fetchCat;
 
       const wrap = document.createElement('div');
       wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;';
@@ -927,7 +1111,7 @@ function loadHeraldGrid(catId) {
       cell.appendChild(name);
 
       // Fetch SVG and inject
-      const p = fetchHeraldicSvg(catId, slug).then(svgStr => {
+      const p = fetchHeraldicSvg(fetchCat, slug).then(svgStr => {
         if (svgStr) {
           wrap.innerHTML = svgStr;
           const innerSvg = wrap.querySelector('svg');
@@ -947,12 +1131,12 @@ function loadHeraldGrid(catId) {
 
       cell.addEventListener('dragstart', ev => {
         ev.dataTransfer.setData('application/vexillum-heraldic', JSON.stringify({
-          slug, label, category: catId, heraldic: true
+          slug, label, category: fetchCat, heraldic: true
         }));
         ev.dataTransfer.effectAllowed = 'copy';
       });
 
-      cell.addEventListener('click', () => placeHeraldicEmblem(slug, label, catId, 50, 50));
+      cell.addEventListener('click', () => placeHeraldicEmblem(slug, label, fetchCat, 50, 50));
       iconGrid.appendChild(cell);
     }
     if (i < icons.length) requestAnimationFrame(renderBatch);
@@ -1046,7 +1230,7 @@ function bindCanvasEvents() {
   });
 
   // Click / mousedown on canvas
-  flagSvg.addEventListener('mousedown', e => {
+  flagSvg.addEventListener('pointerdown', e => {
     // Handle clicks (resize / rotate) take priority
     const handleEl = e.target.closest('.emblem-handle');
     if (handleEl) {
@@ -1060,11 +1244,39 @@ function bindCanvasEvents() {
     const emblemEl = e.target.closest('[data-emblem-id]');
     if (emblemEl) {
       const id = emblemEl.dataset.emblemId;
-      selectEmblem(id);
-      startEmblemDrag(e, id);
-    } else {
-      selectEmblem(null);
+      if (e.shiftKey) {
+        // Shift+click: toggle multi-select
+        if (_multiSelect.has(id)) {
+          _multiSelect.delete(id);
+        } else {
+          _multiSelect.add(id);
+        }
+        renderAll();
+      } else {
+        _multiSelect.clear();
+        selectEmblem(id);
+        startEmblemDrag(e, id);
+      }
+      closeOverlayQuickedit();
+      return;
     }
+
+    // Check if click landed on a rendered overlay layer
+    const layerEl = e.target.closest('[data-layer-id]');
+    if (layerEl) {
+      const layerId = layerEl.dataset.layerId;
+      const layer = design.layers.find(l => l.id === layerId && l.type === 'overlay');
+      if (layer && !layer.locked) {
+        openOverlayQuickedit(layer);
+        _multiSelect.clear();
+        selectEmblem(null);
+        return;
+      }
+    }
+
+    _multiSelect.clear();
+    selectEmblem(null);
+    closeOverlayQuickedit();
   });
 }
 
@@ -1091,8 +1303,9 @@ function startHandleDrag(e, emblemId, handleType) {
   _handleStartDist  = Math.sqrt(dx * dx + dy * dy) || 1;
   _handleStartAngle = Math.atan2(dy, dx);
 
-  document.addEventListener('mousemove', onHandleDragMove);
-  document.addEventListener('mouseup',   onHandleDragEnd);
+  document.addEventListener('pointermove', onHandleDragMove);
+  document.addEventListener('pointerup',   onHandleDragEnd);
+  try { e.target.setPointerCapture(e.pointerId); } catch {}
   e.preventDefault();
 }
 
@@ -1111,14 +1324,14 @@ function onHandleDragMove(e) {
     const delta = (angle - _handleStartAngle) * 180 / Math.PI;
     emblem.rotate = Math.round(_handleStartRotate + delta);
     const rv = document.getElementById('ec-rotate');
-    if (rv) { rv.value = emblem.rotate; document.getElementById('ec-rotate-val').textContent = emblem.rotate + '°'; }
+    if (rv) { rv.value = emblem.rotate; document.getElementById('ec-rotate-val').value = emblem.rotate; }
   } else {
     // resize — ratio of current mouse distance vs start distance
     const dist = Math.sqrt(dx * dx + dy * dy);
     const newSize = Math.max(2, Math.min(80, _handleStartSize * dist / _handleStartDist));
     emblem.size = Math.round(newSize * 10) / 10;
     const sv = document.getElementById('ec-size');
-    if (sv) { sv.value = emblem.size; document.getElementById('ec-size-val').textContent = emblem.size + '%'; }
+    if (sv) { sv.value = emblem.size; document.getElementById('ec-size-val').value = emblem.size; }
   }
 
   // Fast re-render
@@ -1130,8 +1343,8 @@ function onHandleDragEnd() {
   if (!_handleDragType) return;
   _handleDragType = null;
   _handleDragEmblemId = null;
-  document.removeEventListener('mousemove', onHandleDragMove);
-  document.removeEventListener('mouseup',   onHandleDragEnd);
+  document.removeEventListener('pointermove', onHandleDragMove);
+  document.removeEventListener('pointerup',   onHandleDragEnd);
   clearTimeout(_histTimer);
   renderAll();
   pushHistory();
@@ -1148,6 +1361,11 @@ function placeEmblem(icon, x, y) {
     y: Math.max(0, Math.min(100, y)),
     size: 20,
     rotate: 0,
+    scaleX: 1,
+    scaleY: 1,
+    opacity: 100,
+    strokeColor: '#000000',
+    strokeWidth: 0,
     fg: '#ffffff',
     bg: 'transparent',
     _svgContent: getIconSvg(icon.slug),
@@ -1206,6 +1424,11 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
     rotate: 0,
     flipX: false,
     flipY: false,
+    scaleX: 1,
+    scaleY: 1,
+    opacity: 100,
+    strokeColor: '#000000',
+    strokeWidth: 0,
     fg: '#ffffff',
     bg: 'transparent',
     heraldColours,
@@ -1231,6 +1454,11 @@ function placeTextEmblem(text, fontFamily, x, y) {
     rotate: 0,
     flipX: false,
     flipY: false,
+    scaleX: 1,
+    scaleY: 1,
+    opacity: 100,
+    strokeColor: '#000000',
+    strokeWidth: 0,
     fg: '#ffffff',
     bg: 'transparent',
     textArc: 0,
@@ -1242,6 +1470,7 @@ function placeTextEmblem(text, fontFamily, x, y) {
 }
 
 function placeShapeEmblem(shapeKey, label, x, y) {
+  const shapeDef = (typeof BASIC_SHAPES !== 'undefined') ? BASIC_SHAPES[shapeKey] : null;
   const emblem = {
     id: uuid(),
     type: 'shape',
@@ -1254,6 +1483,11 @@ function placeShapeEmblem(shapeKey, label, x, y) {
     rotate: 0,
     flipX: false,
     flipY: false,
+    scaleX: shapeDef && shapeDef.defaultScaleX != null ? shapeDef.defaultScaleX : 1,
+    scaleY: shapeDef && shapeDef.defaultScaleY != null ? shapeDef.defaultScaleY : 1,
+    opacity: 100,
+    strokeColor: '#000000',
+    strokeWidth: 0,
     fg: '#ffffff',
     bg: 'transparent',
     _svgContent: null,
@@ -1372,10 +1606,13 @@ function startEmblemDrag(e, id) {
   draggingEmblemId = id;
   const rect = flagSvg.getBoundingClientRect();
   dragOffsetX = e.clientX - rect.left - (emblem.x / 100 * rect.width);
-  dragOffsetY = e.clientY - rect.top - (emblem.y / 100 * rect.height);
+  dragOffsetY = e.clientY - rect.top  - (emblem.y / 100 * rect.height);
+  _prevDragX = emblem.x;
+  _prevDragY = emblem.y;
 
-  document.addEventListener('mousemove', onEmblemDragMove);
-  document.addEventListener('mouseup', onEmblemDragEnd);
+  document.addEventListener('pointermove', onEmblemDragMove);
+  document.addEventListener('pointerup', onEmblemDragEnd);
+  try { flagSvg.setPointerCapture(e.pointerId); } catch {}
   e.preventDefault();
 }
 
@@ -1417,6 +1654,21 @@ function onEmblemDragMove(e) {
 
   x = Math.max(0, Math.min(100, rx.hit ? rx.v : (rxEq.hit ? rxEq.v : x)));
   y = Math.max(0, Math.min(100, ry.hit ? ry.v : (ryEq.hit ? ryEq.v : y)));
+
+  // For group emblems, move all children by the same delta
+  if (emblem.type === 'group' && Array.isArray(emblem.children)) {
+    const dx = x - _prevDragX;
+    const dy = y - _prevDragY;
+    if (dx !== 0 || dy !== 0) {
+      emblem.children.forEach(child => {
+        child.x = Math.max(0, Math.min(100, child.x + dx));
+        child.y = Math.max(0, Math.min(100, child.y + dy));
+      });
+    }
+  }
+  _prevDragX = x;
+  _prevDragY = y;
+
   emblem.x = x;
   emblem.y = y;
 
@@ -1470,8 +1722,8 @@ function snap(val, targets, threshold = 3) {
 function onEmblemDragEnd() {
   clearSnapGuides();
   draggingEmblemId = null;
-  document.removeEventListener('mousemove', onEmblemDragMove);
-  document.removeEventListener('mouseup', onEmblemDragEnd);
+  document.removeEventListener('pointermove', onEmblemDragMove);
+  document.removeEventListener('pointerup', onEmblemDragEnd);
   clearTimeout(_histTimer);
   renderAll();
   pushHistory();
@@ -1481,17 +1733,54 @@ function onEmblemDragEnd() {
 // ---- Emblem controls bar ----
 function updateEmblemControls() {
   const emblem = design.emblems.find(em => em.id === selectedEmblemId);
-  if (!emblem) { emblemControls.classList.remove('visible'); return; }
+
+  // Group button — show whenever 2+ emblems are multi-selected
+  const groupBtn   = document.getElementById('ec-group');
+  const ungroupBtn = document.getElementById('ec-ungroup');
+  if (groupBtn)   groupBtn.style.display   = _multiSelect.size >= 2 ? '' : 'none';
+  if (ungroupBtn) ungroupBtn.style.display = (emblem && emblem.type === 'group') ? '' : 'none';
+
+  if (!emblem) {
+    if (_multiSelect.size < 2) emblemControls.classList.remove('visible');
+    else emblemControls.classList.add('visible'); // show bar just for Group button
+    return;
+  }
   emblemControls.classList.add('visible');
 
   const sizeEl = document.getElementById('ec-size');
   const rotEl  = document.getElementById('ec-rotate');
   sizeEl.value = emblem.size;
   rotEl.value  = emblem.rotate;
-  document.getElementById('ec-size-val').textContent   = emblem.size + '%';
-  document.getElementById('ec-rotate-val').textContent = emblem.rotate + '°';
+  document.getElementById('ec-size-val').value   = emblem.size;
+  document.getElementById('ec-rotate-val').value = emblem.rotate;
   document.getElementById('ec-flip-h').classList.toggle('active', !!emblem.flipX);
   document.getElementById('ec-flip-v').classList.toggle('active', !!emblem.flipY);
+
+  // Opacity
+  const opEl = document.getElementById('ec-opacity');
+  if (opEl) { opEl.value = emblem.opacity ?? 100; document.getElementById('ec-opacity-val').value = emblem.opacity ?? 100; }
+
+  // Distribute buttons — only show when 2+ multi-selected
+  const distH = document.getElementById('ec-dist-h');
+  const distV = document.getElementById('ec-dist-v');
+  if (distH) distH.style.display = _multiSelect.size >= 3 ? '' : 'none';
+  if (distV) distV.style.display = _multiSelect.size >= 3 ? '' : 'none';
+
+  // Stroke/outline controls
+  const strokeColorEl = document.getElementById('ec-stroke-color');
+  const strokeWidthEl = document.getElementById('ec-stroke-width');
+  const strokeWidthValEl = document.getElementById('ec-stroke-width-val');
+  if (strokeColorEl) strokeColorEl.value = emblem.strokeColor || '#000000';
+  if (strokeWidthEl) strokeWidthEl.value = emblem.strokeWidth || 0;
+  if (strokeWidthValEl) strokeWidthValEl.value = emblem.strokeWidth || 0;
+
+  // W%/H% stretch controls
+  const sxPct = Math.round((emblem.scaleX || 1) * 100);
+  const syPct = Math.round((emblem.scaleY || 1) * 100);
+  const scaleXEl = document.getElementById('ec-scale-x');
+  const scaleYEl = document.getElementById('ec-scale-y');
+  if (scaleXEl) { scaleXEl.value = sxPct; document.getElementById('ec-scale-x-val').value = sxPct; }
+  if (scaleYEl) { scaleYEl.value = syPct; document.getElementById('ec-scale-y-val').value = syPct; }
 
   const isText     = emblem.type === 'text';
   const isHeraldic = !!emblem.heraldic && !isText;
@@ -1550,43 +1839,199 @@ function buildHeraldSwatches(emblem) {
 }
 
 function bindEmblemControls() {
-  document.getElementById('ec-size').addEventListener('input', e => {
+  const ecSize = document.getElementById('ec-size');
+  const ecSizeVal = document.getElementById('ec-size-val');
+  const ecRotate = document.getElementById('ec-rotate');
+  const ecRotateVal = document.getElementById('ec-rotate-val');
+  const ecFlipH = document.getElementById('ec-flip-h');
+  const ecFlipV = document.getElementById('ec-flip-v');
+
+  if (ecSize) ecSize.addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em) {
       em.size = +e.target.value;
-      document.getElementById('ec-size-val').textContent = em.size + '%';
+      if (ecSizeVal) ecSizeVal.value = em.size;
       renderAll();
     }
   });
-  document.getElementById('ec-rotate').addEventListener('input', e => {
+  if (ecSizeVal) {
+    ecSizeVal.addEventListener('input', e => {
+      const val = Math.max(5, Math.min(80, +e.target.value || 5));
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.size = val; if (ecSize) ecSize.value = val; onChange(); }
+    });
+    ecSizeVal.addEventListener('change', e => {
+      const val = Math.max(5, Math.min(80, +e.target.value || 5));
+      e.target.value = val;
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.size = val; if (ecSize) ecSize.value = val; _commitChange(); }
+    });
+  }
+
+  if (ecRotate) ecRotate.addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em) {
       em.rotate = +e.target.value;
-      document.getElementById('ec-rotate-val').textContent = em.rotate + '°';
+      if (ecRotateVal) ecRotateVal.value = em.rotate;
       renderAll();
     }
   });
-  document.getElementById('ec-flip-h').addEventListener('click', () => {
+  if (ecRotateVal) {
+    ecRotateVal.addEventListener('input', e => {
+      const val = Math.max(-180, Math.min(180, +e.target.value || 0));
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.rotate = val; if (ecRotate) ecRotate.value = val; onChange(); }
+    });
+    ecRotateVal.addEventListener('change', e => {
+      const val = Math.max(-180, Math.min(180, +e.target.value || 0));
+      e.target.value = val;
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.rotate = val; if (ecRotate) ecRotate.value = val; _commitChange(); }
+    });
+  }
+  if (ecFlipH) ecFlipH.addEventListener('click', () => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em) { em.flipX = !em.flipX; updateEmblemControls(); renderAll(); }
   });
-  document.getElementById('ec-flip-v').addEventListener('click', () => {
+  if (ecFlipV) ecFlipV.addEventListener('click', () => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em) { em.flipY = !em.flipY; updateEmblemControls(); renderAll(); }
   });
-  document.getElementById('ec-fg').addEventListener('input', e => {
+
+  // Opacity controls
+  const ecOpacity    = document.getElementById('ec-opacity');
+  const ecOpacityVal = document.getElementById('ec-opacity-val');
+  if (ecOpacity) {
+    ecOpacity.addEventListener('input', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.opacity = +e.target.value; ecOpacityVal.value = e.target.value; renderAll(); }
+    });
+  }
+  if (ecOpacityVal) {
+    ecOpacityVal.addEventListener('input', e => {
+      const val = Math.max(5, Math.min(100, +e.target.value || 100));
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.opacity = val; ecOpacity.value = val; onChange(); }
+    });
+    ecOpacityVal.addEventListener('change', e => {
+      const val = Math.max(5, Math.min(100, +e.target.value || 100));
+      e.target.value = val;
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.opacity = val; ecOpacity.value = val; _commitChange(); }
+    });
+  }
+
+  // Alignment buttons
+  function _alignEmblem(em, axis, mode) {
+    // axis: 'x'|'y', mode: 'start'|'centre'|'end'
+    const sxm = em.scaleX || 1;
+    const sym = em.scaleY || 1;
+    const halfWpct = (em.size / 100 * CANVAS_W * sxm / 2) / CANVAS_W * 100;
+    const halfHpct = (em.size / 100 * CANVAS_W * sym / 2) / CANVAS_H * 100;
+    if (axis === 'x') {
+      if (mode === 'start')  em.x = halfWpct;
+      if (mode === 'centre') em.x = 50;
+      if (mode === 'end')    em.x = 100 - halfWpct;
+    } else {
+      if (mode === 'start')  em.y = halfHpct;
+      if (mode === 'centre') em.y = 50;
+      if (mode === 'end')    em.y = 100 - halfHpct;
+    }
+  }
+  function _doAlign(axis, mode) {
+    const targets = _multiSelect.size >= 2
+      ? design.emblems.filter(em => _multiSelect.has(em.id))
+      : design.emblems.filter(em => em.id === selectedEmblemId);
+    targets.forEach(em => _alignEmblem(em, axis, mode));
+    renderAll(); _commitChange();
+  }
+  function _doDistribute(axis) {
+    const targets = design.emblems
+      .filter(em => _multiSelect.has(em.id))
+      .sort((a, b) => (axis === 'x' ? a.x - b.x : a.y - b.y));
+    if (targets.length < 3) return;
+    const first = axis === 'x' ? targets[0].x : targets[0].y;
+    const last  = axis === 'x' ? targets[targets.length-1].x : targets[targets.length-1].y;
+    const step  = (last - first) / (targets.length - 1);
+    targets.forEach((em, i) => { if (axis === 'x') em.x = first + step * i; else em.y = first + step * i; });
+    renderAll(); _commitChange();
+  }
+
+  ['ec-align-left','ec-align-ch','ec-align-right','ec-align-top','ec-align-cv','ec-align-bottom','ec-dist-h','ec-dist-v'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      if (id === 'ec-align-left')   _doAlign('x','start');
+      if (id === 'ec-align-ch')     _doAlign('x','centre');
+      if (id === 'ec-align-right')  _doAlign('x','end');
+      if (id === 'ec-align-top')    _doAlign('y','start');
+      if (id === 'ec-align-cv')     _doAlign('y','centre');
+      if (id === 'ec-align-bottom') _doAlign('y','end');
+      if (id === 'ec-dist-h')       _doDistribute('x');
+      if (id === 'ec-dist-v')       _doDistribute('y');
+    });
+  });
+
+  // W%/H% stretch controls
+  const ecScaleX    = document.getElementById('ec-scale-x');
+  const ecScaleXVal = document.getElementById('ec-scale-x-val');
+  const ecScaleY    = document.getElementById('ec-scale-y');
+  const ecScaleYVal = document.getElementById('ec-scale-y-val');
+  if (ecScaleX) {
+    ecScaleX.addEventListener('input', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.scaleX = +e.target.value / 100; ecScaleXVal.value = e.target.value; renderAll(); }
+    });
+  }
+  if (ecScaleXVal) {
+    ecScaleXVal.addEventListener('input', e => {
+      const val = Math.max(25, Math.min(500, +e.target.value || 100));
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.scaleX = val / 100; ecScaleX.value = val; onChange(); }
+    });
+    ecScaleXVal.addEventListener('change', e => {
+      const val = Math.max(25, Math.min(500, +e.target.value || 100));
+      e.target.value = val;
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.scaleX = val / 100; ecScaleX.value = val; _commitChange(); }
+    });
+  }
+  if (ecScaleY) {
+    ecScaleY.addEventListener('input', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.scaleY = +e.target.value / 100; ecScaleYVal.value = e.target.value; renderAll(); }
+    });
+  }
+  if (ecScaleYVal) {
+    ecScaleYVal.addEventListener('input', e => {
+      const val = Math.max(25, Math.min(500, +e.target.value || 100));
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.scaleY = val / 100; ecScaleY.value = val; onChange(); }
+    });
+    ecScaleYVal.addEventListener('change', e => {
+      const val = Math.max(25, Math.min(500, +e.target.value || 100));
+      e.target.value = val;
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.scaleY = val / 100; ecScaleY.value = val; _commitChange(); }
+    });
+  }
+  const ecFg = document.getElementById('ec-fg');
+  if (ecFg) ecFg.addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em) { em.fg = e.target.value; renderAll(); }
   });
-  document.getElementById('ec-bg').addEventListener('input', e => {
+  const ecBg = document.getElementById('ec-bg');
+  if (ecBg) ecBg.addEventListener('input', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em && em.bg !== 'transparent') { em.bg = e.target.value; renderAll(); }
   });
-  document.getElementById('ec-bg-transparent').addEventListener('change', e => {
+  const ecBgTransparent = document.getElementById('ec-bg-transparent');
+  if (ecBgTransparent) ecBgTransparent.addEventListener('change', e => {
     const em = design.emblems.find(x => x.id === selectedEmblemId);
     if (em) { em.bg = e.target.checked ? 'transparent' : '#000000'; renderAll(); }
   });
-  document.getElementById('ec-delete').addEventListener('click', () => {
+  const ecDelete = document.getElementById('ec-delete');
+  if (ecDelete) ecDelete.addEventListener('click', () => {
     design.emblems = design.emblems.filter(em => em.id !== selectedEmblemId);
     selectedEmblemId = null;
     _commitChange();
@@ -1599,6 +2044,12 @@ function bindEmblemControls() {
       if (em) { _copiedEmblem = JSON.parse(JSON.stringify(em)); _pasteEmblem(); }
     });
   }
+
+  // Group / Ungroup
+  const ecGroup = document.getElementById('ec-group');
+  if (ecGroup) ecGroup.addEventListener('click', groupEmblems);
+  const ecUngroup = document.getElementById('ec-ungroup');
+  if (ecUngroup) ecUngroup.addEventListener('click', () => ungroupEmblem(selectedEmblemId));
 
   // Text emblem controls
   const ecTextContent = document.getElementById('ec-text-content');
@@ -1626,6 +2077,44 @@ function bindEmblemControls() {
       }
     });
   }
+
+  // Stroke/outline controls
+  const ecStrokeColor    = document.getElementById('ec-stroke-color');
+  const ecStrokeWidth    = document.getElementById('ec-stroke-width');
+  const ecStrokeWidthVal = document.getElementById('ec-stroke-width-val');
+  if (ecStrokeColor) {
+    ecStrokeColor.addEventListener('input', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.strokeColor = e.target.value; renderAll(); }
+    });
+  }
+  if (ecStrokeWidth) {
+    ecStrokeWidth.addEventListener('input', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) {
+        em.strokeWidth = +e.target.value;
+        if (ecStrokeWidthVal) ecStrokeWidthVal.value = e.target.value;
+        renderAll();
+      }
+    });
+    ecStrokeWidth.addEventListener('change', e => {
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.strokeWidth = +e.target.value; _commitChange(); }
+    });
+  }
+  if (ecStrokeWidthVal) {
+    ecStrokeWidthVal.addEventListener('input', e => {
+      const val = Math.max(0, Math.min(20, +e.target.value || 0));
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.strokeWidth = val; if (ecStrokeWidth) ecStrokeWidth.value = val; renderAll(); }
+    });
+    ecStrokeWidthVal.addEventListener('change', e => {
+      const val = Math.max(0, Math.min(20, +e.target.value || 0));
+      e.target.value = val;
+      const em = design.emblems.find(x => x.id === selectedEmblemId);
+      if (em) { em.strokeWidth = val; if (ecStrokeWidth) ecStrokeWidth.value = val; _commitChange(); }
+    });
+  }
 }
 
 // ============================================================
@@ -1646,8 +2135,7 @@ function bindHeaderButtons() {
 
   document.getElementById('btn-save').addEventListener('click', saveDesign);
   document.getElementById('btn-open').addEventListener('click', openSaveModal);
-  document.getElementById('btn-export-png').addEventListener('click', exportPng);
-  document.getElementById('btn-export-svg').addEventListener('click', exportSvg);
+  // Export PNG/SVG are now handled inside bindExportModal()
 
   bindPaletteSelector();
   bindEmblemControls();
@@ -1655,12 +2143,226 @@ function bindHeaderButtons() {
   bindPreviewModal();
   bindFlagShapePicker();
   bindDarkMode();
+  bindTemplatesModal();
+  bindVexChecker();
+  bindExportModal();
+  bindShareModal();
+  bindUpgradeModal();
+  bindOverlayQuickedit();
+  bindMobileNav();
+  bindHeaderMenu();
 
   // Auto-save before navigating to Inspire
   const inspireLink = document.querySelector('a.header-nav-link[href="inspire.html"]');
   if (inspireLink) {
     inspireLink.addEventListener('click', () => autoSaveCurrentDesign());
   }
+}
+
+// ============================================================
+// OVERLAY IN-CANVAS QUICKEDIT
+// ============================================================
+
+let _oqeLayerId = null;
+
+function openOverlayQuickedit(layer) {
+  _oqeLayerId = layer.id;
+  const panel  = document.getElementById('overlay-quickedit');
+  const title  = document.getElementById('oqe-title');
+  const body   = document.getElementById('oqe-body');
+  if (!panel || !body) return;
+
+  title.textContent = SHAPES[layer.shape]?.label || 'Overlay';
+  body.innerHTML = '';
+
+  // ---- Shape picker ----
+  const grid = document.createElement('div');
+  grid.className = 'oqe-shape-grid';
+  Object.entries(SHAPES).forEach(([key, shape]) => {
+    const btn = document.createElement('button');
+    btn.className = 'oqe-shape-btn' + (layer.shape === key ? ' active' : '');
+    btn.title = shape.label;
+    btn.innerHTML = shapeIcon(key);
+    btn.addEventListener('click', () => {
+      layer.shape = key;
+      layer.params = {};
+      onChange();
+      // Rebuild the panel with the new shape
+      openOverlayQuickedit(layer);
+    });
+    grid.appendChild(btn);
+  });
+  body.appendChild(grid);
+
+  // ---- Colour row ----
+  const colourRow = document.createElement('div');
+  colourRow.className = 'oqe-row';
+  colourRow.innerHTML = '<span class="oqe-label">Colour</span>';
+  const colourPicker = buildColorPicker(layer.color || '#ffffff', val => {
+    layer.color = val;
+    onChange();
+  });
+  colourRow.appendChild(colourPicker);
+  body.appendChild(colourRow);
+
+  // ---- Opacity row ----
+  const opRow = document.createElement('div');
+  opRow.className = 'oqe-row';
+  const opVal = document.createElement('span');
+  opVal.className = 'oqe-val';
+  opVal.textContent = `${layer.opacity ?? 100}%`;
+  opRow.innerHTML = '<span class="oqe-label">Opacity</span>';
+  const opInput = document.createElement('input');
+  opInput.type = 'range'; opInput.min = 5; opInput.max = 100; opInput.step = 5;
+  opInput.value = layer.opacity ?? 100;
+  opInput.addEventListener('input', e => {
+    layer.opacity = +e.target.value;
+    opVal.textContent = `${layer.opacity}%`;
+    onChange();
+  });
+  opRow.appendChild(opInput);
+  opRow.appendChild(opVal);
+  body.appendChild(opRow);
+
+  // ---- Shape-specific params ----
+  if (layer.shape && SHAPES[layer.shape]) {
+    const shapeDef = SHAPES[layer.shape];
+    Object.entries(shapeDef.params || {}).forEach(([key, def]) => {
+      const row = document.createElement('div');
+      row.className = 'oqe-row';
+      const val = document.createElement('span');
+      val.className = 'oqe-val';
+      val.textContent = layer.params?.[key] ?? def.default;
+      row.innerHTML = `<span class="oqe-label">${def.label}</span>`;
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = def.min; input.max = def.max; input.step = def.step || 1;
+      input.value = layer.params?.[key] ?? def.default;
+      input.addEventListener('input', e => {
+        if (!layer.params) layer.params = {};
+        layer.params[key] = +e.target.value;
+        val.textContent = layer.params[key];
+        onChange();
+      });
+      row.appendChild(input);
+      row.appendChild(val);
+      body.appendChild(row);
+    });
+  }
+
+  panel.classList.remove('hidden');
+}
+
+function closeOverlayQuickedit() {
+  _oqeLayerId = null;
+  const panel = document.getElementById('overlay-quickedit');
+  if (panel) panel.classList.add('hidden');
+}
+
+function bindOverlayQuickedit() {
+  const closeBtn = document.getElementById('oqe-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeOverlayQuickedit);
+}
+
+// ============================================================
+// MOBILE NAV
+// ============================================================
+
+function bindMobileNav() {
+  const nav = document.getElementById('mobile-nav');
+  if (!nav) return;
+
+  const layersPanel = document.getElementById('layers-panel');
+  const iconsPanel  = document.getElementById('icons-panel');
+
+  // Which panel is currently open: null | 'layers' | 'icons'
+  let activePanel = null;
+
+  function showPanel(name) {
+    if (activePanel === name) {
+      // Toggle off — go back to canvas
+      closeAllPanels();
+      setActiveBtn('canvas');
+      return;
+    }
+    activePanel = name;
+    layersPanel.classList.toggle('panel-open', name === 'layers');
+    iconsPanel.classList.toggle('panel-open',  name === 'icons');
+    setActiveBtn(name);
+  }
+
+  function closeAllPanels() {
+    activePanel = null;
+    layersPanel.classList.remove('panel-open');
+    iconsPanel.classList.remove('panel-open');
+  }
+
+  function setActiveBtn(name) {
+    nav.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.panel === name);
+    });
+  }
+
+  document.getElementById('mnav-canvas').addEventListener('click', () => {
+    closeAllPanels();
+    setActiveBtn('canvas');
+  });
+  document.getElementById('mnav-layers').addEventListener('click', () => showPanel('layers'));
+  document.getElementById('mnav-icons').addEventListener('click',  () => showPanel('icons'));
+  document.getElementById('mnav-export').addEventListener('click', () => {
+    closeAllPanels();
+    setActiveBtn('canvas');
+    document.getElementById('export-modal').classList.remove('hidden');
+  });
+
+  // Tapping the canvas area closes open panels
+  document.getElementById('canvas-area').addEventListener('pointerdown', e => {
+    if (activePanel) {
+      closeAllPanels();
+      setActiveBtn('canvas');
+    }
+  }, { passive: true });
+}
+
+function bindHeaderMenu() {
+  const menuBtn  = document.getElementById('btn-menu');
+  const menu     = document.getElementById('header-menu');
+  const backdrop = document.getElementById('header-menu-backdrop');
+  if (!menuBtn || !menu) return;
+
+  function openMenu() {
+    menu.classList.add('open');
+    backdrop.classList.add('open');
+    menuBtn.setAttribute('aria-expanded', 'true');
+    menu.setAttribute('aria-hidden', 'false');
+  }
+  function closeMenu() {
+    menu.classList.remove('open');
+    backdrop.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded', 'false');
+    menu.setAttribute('aria-hidden', 'true');
+  }
+
+  menuBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    menu.classList.contains('open') ? closeMenu() : openMenu();
+  });
+
+  backdrop.addEventListener('click', closeMenu);
+
+  // Forward each menu item click to its real header button (or follow href)
+  menu.querySelectorAll('.hm-item[data-target]').forEach(item => {
+    item.addEventListener('click', () => {
+      closeMenu();
+      const target = document.getElementById(item.dataset.target);
+      if (target) target.click();
+    });
+  });
+
+  // Links in the menu just navigate — close the menu first so the transition is clean
+  menu.querySelectorAll('a.hm-item').forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
 }
 
 function bindPaletteSelector() {
@@ -1714,6 +2416,15 @@ function bindKeyboard() {
       if (em) { _copiedEmblem = JSON.parse(JSON.stringify(em)); _pasteEmblem(); }
       e.preventDefault(); return;
     }
+    // Group
+    if (ctrl && e.key === 'g' && !inInput) {
+      if (_multiSelect.size >= 2) groupEmblems();
+      else if (selectedEmblemId) {
+        const em = design.emblems.find(x => x.id === selectedEmblemId);
+        if (em && em.type === 'group') ungroupEmblem(selectedEmblemId);
+      }
+      e.preventDefault(); return;
+    }
     if (inInput) return;
     if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEmblemId) {
       design.emblems = design.emblems.filter(em => em.id !== selectedEmblemId);
@@ -1721,7 +2432,7 @@ function bindKeyboard() {
       _commitChange();
       return;
     }
-    if (e.key === 'Escape') selectEmblem(null);
+    if (e.key === 'Escape') { _multiSelect.clear(); selectEmblem(null); }
   });
 }
 
@@ -1739,6 +2450,64 @@ function _pasteEmblem() {
   }
   design.emblems.push(newEm);
   selectedEmblemId = newEm.id;
+  _commitChange();
+}
+
+// ============================================================
+// GROUP / UNGROUP
+// ============================================================
+
+function groupEmblems() {
+  const ids = [..._multiSelect];
+  if (ids.length < 2) return;
+
+  const children = ids.map(id => design.emblems.find(em => em.id === id)).filter(Boolean);
+  if (children.length < 2) { showToast('Select 2+ icons to group', ''); return; }
+
+  // Compute centroid
+  const cx = children.reduce((s, c) => s + c.x, 0) / children.length;
+  const cy = children.reduce((s, c) => s + c.y, 0) / children.length;
+
+  const group = {
+    id:       uuid(),
+    type:     'group',
+    label:    'Group',
+    x:        cx,
+    y:        cy,
+    size:     20,
+    rotate:   0,
+    flipX:    false,
+    flipY:    false,
+    hidden:   false,
+    children: children.map(c => JSON.parse(JSON.stringify(c))), // deep copy
+  };
+
+  // Preserve _svgContent on children (not serialized but needed for render)
+  group.children.forEach((gc, i) => {
+    gc._svgContent = children[i]._svgContent;
+  });
+
+  // Remove individual emblems, insert group in same z-order as first member
+  const firstIdx = Math.min(...ids.map(id => design.emblems.findIndex(em => em.id === id)));
+  design.emblems = design.emblems.filter(em => !ids.includes(em.id));
+  design.emblems.splice(Math.max(0, firstIdx), 0, group);
+
+  _multiSelect.clear();
+  selectedEmblemId = group.id;
+  showToast(`Grouped ${children.length} icons`, 'success');
+  _commitChange();
+}
+
+function ungroupEmblem(id) {
+  const group = design.emblems.find(em => em.id === id && em.type === 'group');
+  if (!group) return;
+
+  const idx = design.emblems.findIndex(em => em.id === id);
+  const released = (group.children || []).map(c => ({ ...c, id: c.id || uuid() }));
+
+  design.emblems.splice(idx, 1, ...released);
+  selectedEmblemId = null;
+  showToast('Ungrouped', 'success');
   _commitChange();
 }
 
@@ -1804,6 +2573,9 @@ function onChange() {
   // Debounced history push (handles slider drags, continuous changes)
   clearTimeout(_histTimer);
   _histTimer = setTimeout(pushHistory, 600);
+  // Update vex checker if open
+  const vexBody = document.getElementById('vex-checker-body');
+  if (vexBody && !vexBody.classList.contains('hidden')) updateVexChecker();
 }
 
 // Immediate history push (use after discrete actions: place, delete, layer add/remove)
@@ -1813,6 +2585,76 @@ function _commitChange() {
   pushHistory();
   autoSaveCurrentDesign();
 }
+
+// ============================================================
+// TIER / PRO SYSTEM
+// ============================================================
+
+const TIER_KEY     = 'vexillum_tier';       // localStorage key: 'free' | 'pro' | 'business'
+const TIER_KEY_VAL = 'vexillum_tier_key';   // stores the activation key
+
+// Hardcoded valid keys for v1 (replace with server validation later)
+const VALID_KEYS = {
+  'VEXILLUM-PRO-DEMO-2024':  'pro',
+  'VEXILLUM-BIZ-DEMO-2024':  'business',
+};
+
+function getTier() {
+  return localStorage.getItem(TIER_KEY) || 'free';
+}
+function isPro()      { return true; } // all features free
+function isBusiness() { return getTier() === 'business'; }
+
+function setTier(tier, key) {
+  localStorage.setItem(TIER_KEY, tier);
+  if (key) localStorage.setItem(TIER_KEY_VAL, key);
+  _updateTierUI();
+}
+
+function _updateTierUI() {
+  const badge = document.getElementById('header-tier-badge');
+  if (!badge) return;
+  const tier = getTier();
+  badge.className = 'header-tier-badge header-tier-' + tier;
+  badge.textContent = tier.toUpperCase();
+  badge.title = isPro() ? 'Pro features active' : 'Upgrade to Pro';
+  // Make badge clickable — free opens upgrade modal, pro does nothing distracting
+  badge.style.cursor = isPro() ? 'default' : 'pointer';
+}
+
+// Gate a feature: if free, show upgrade modal and return false. Otherwise return true.
+function requirePro(featureName) {
+  if (isPro()) return true;
+  openUpgradeModal(featureName);
+  return false;
+}
+function requireBusiness(featureName) {
+  if (isBusiness()) return true;
+  openUpgradeModal(featureName);
+  return false;
+}
+
+let _upgradeModalOpen = false;
+
+function openUpgradeModal(featureName) {
+  const modal = document.getElementById('upgrade-modal');
+  if (!modal) return;
+  // Update the header prompt if a specific feature triggered it
+  const tagline = modal.querySelector('.upgrade-tagline');
+  if (tagline && featureName) {
+    tagline.textContent = `"${featureName}" is a Pro feature`;
+  } else if (tagline) {
+    tagline.textContent = 'Design flags without limits';
+  }
+  modal.classList.remove('hidden');
+  _upgradeModalOpen = true;
+}
+
+// Upgrade modal removed — all features are free
+function bindUpgradeModal() { _updateTierUI(); }
+function openUpgradeModal() {}
+function _launchCheckout() {}
+function _activateKey() {}
 
 // ============================================================
 // EXPORT
@@ -1832,6 +2674,8 @@ function getSvgString(scale = 1) {
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   if (shape.clip) {
     defs.innerHTML = `<clipPath id="flag-clip"><polygon points="${shape.clip}"/></clipPath>`;
+  } else if (shape.clipD) {
+    defs.innerHTML = `<clipPath id="flag-clip"><path d="${shape.clipD}"/></clipPath>`;
   } else {
     defs.innerHTML = `<clipPath id="flag-clip"><rect width="${CANVAS_W}" height="${CANVAS_H}"/></clipPath>`;
   }
@@ -1862,6 +2706,7 @@ function getSvgString(scale = 1) {
 }
 
 function exportSvg() {
+  if (!requirePro('SVG export')) return;
   const svgStr = getSvgString(1);
   const blob = new Blob([svgStr], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
@@ -1873,30 +2718,284 @@ function exportSvg() {
   showToast('SVG exported', 'success');
 }
 
-function exportPng() {
-  const scale = 2; // 960×640
-  const svgStr = getSvgString(scale);
-  const W = CANVAS_W * scale, H = CANVAS_H * scale;
-  const blob = new Blob([svgStr], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(blob);
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    URL.revokeObjectURL(url);
+// Returns a Promise<string> data URL for a PNG at the given pixel scale
+function _makePngDataUrl(scale) {
+  return new Promise((resolve, reject) => {
+    const svgStr = getSvgString(scale);
+    const W = CANVAS_W * scale, H = CANVAS_H * scale;
+    const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+
+      // Watermark removed — all exports are free
+      if (false) {
+        const fontSize = Math.max(11, Math.round(H * 0.038));
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `600 ${fontSize}px DM Sans, sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        // Drop shadow for legibility on any background
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 4;
+        ctx.fillText('vexillum.app', W - 8, H - 6);
+        ctx.restore();
+      }
+
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+    img.src = url;
+  });
+}
+
+function exportPng(scale = 2) {
+  _makePngDataUrl(scale).then(dataUrl => {
     const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
+    a.href = dataUrl;
     a.download = `${sanitizeFilename(design.name)}.png`;
     a.click();
     showToast('PNG exported', 'success');
-  };
-  img.src = url;
+  }).catch(() => showToast('Export failed', 'error'));
 }
 
 function sanitizeFilename(name) {
   return name.replace(/[^a-z0-9_\-\s]/gi, '').replace(/\s+/g, '-').toLowerCase() || 'flag';
+}
+
+// ============================================================
+// EXPORT MODAL
+// ============================================================
+
+function _getExportScale() {
+  const checked = document.querySelector('input[name="export-res"]:checked');
+  if (!checked) return 2;
+  if (checked.value === 'custom') {
+    const w = parseInt(document.getElementById('export-custom-w').value, 10) || 1920;
+    return Math.max(1, w / CANVAS_W);
+  }
+  return parseFloat(checked.value);
+}
+
+function bindExportModal() {
+  const modal   = document.getElementById('export-modal');
+  const openBtn = document.getElementById('btn-export-png');  // header "Export" button
+  const closeBtn = document.getElementById('export-modal-close');
+
+  function _updateResLabels() {
+    // Update size hints based on current CANVAS_W/H
+    const pairs = [[1,'res-1x'],[2,'res-2x'],[4,'res-4x']];
+    pairs.forEach(([s, id]) => {
+      const lbl = document.getElementById(id)?.closest('.export-res-opt')?.querySelector('em');
+      if (lbl) lbl.textContent = `${Math.round(CANVAS_W*s)}×${Math.round(CANVAS_H*s)}`;
+    });
+  }
+
+  function openExport() {
+    _updateResLabels();
+    modal.classList.remove('hidden');
+  }
+  function closeExport() { modal.classList.add('hidden'); }
+
+  openBtn.addEventListener('click', openExport);
+  closeBtn.addEventListener('click', closeExport);
+  modal.addEventListener('click', e => { if (e.target === modal) closeExport(); });
+
+  // Also wire up the "Export" button inside preview modal
+  const previewExportBtn = document.getElementById('preview-export-png');
+  if (previewExportBtn) previewExportBtn.addEventListener('click', () => {
+    document.getElementById('preview-modal').classList.add('hidden');
+    openExport();
+  });
+
+  // Download PNG — 1× free, 2×/4×/custom requires pro
+  document.getElementById('export-dl-png').addEventListener('click', () => {
+    const scale = _getExportScale();
+    if (scale > 1 && !requirePro('Hi-res PNG export')) return;
+    exportPng(scale);
+  });
+
+  // Copy PNG to clipboard — pro only
+  document.getElementById('export-copy-png').addEventListener('click', async () => {
+    if (!requirePro('Copy PNG to clipboard')) return;
+    const scale = _getExportScale();
+    try {
+      const dataUrl = await _makePngDataUrl(scale);
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      showToast('PNG copied to clipboard', 'success');
+    } catch (err) {
+      showToast('Copy failed — try a different browser', 'error');
+    }
+  });
+
+  // Download SVG — pro only (handled inside exportSvg)
+  document.getElementById('export-dl-svg').addEventListener('click', exportSvg);
+
+  // Copy SVG code to clipboard — pro only
+  document.getElementById('export-copy-svg').addEventListener('click', () => {
+    if (!requirePro('Copy SVG to clipboard')) return;
+    const svgStr = getSvgString(1);
+    navigator.clipboard.writeText(svgStr)
+      .then(() => showToast('SVG code copied to clipboard', 'success'))
+      .catch(() => showToast('Copy failed', 'error'));
+  });
+
+  // Update lock indicators whenever modal opens
+  openBtn.addEventListener('click', _updateExportLockUI, { capture: true });
+
+  function _updateExportLockUI() {
+    const pro = isPro();
+    // 4× and custom labels get a lock icon when on free tier
+    ['res-4x', 'res-custom'].forEach(id => {
+      const el = document.getElementById(id)?.closest('.export-res-opt');
+      if (!el) return;
+      let lockSpan = el.querySelector('.res-lock');
+      if (!pro) {
+        if (!lockSpan) { lockSpan = document.createElement('span'); lockSpan.className = 'res-lock'; lockSpan.textContent = '🔒'; el.appendChild(lockSpan); }
+      } else {
+        lockSpan?.remove();
+      }
+    });
+    // Visually dim pro-only buttons
+    ['export-copy-png','export-dl-svg','export-copy-svg'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.toggle('btn-locked', !pro);
+    });
+  }
+  _updateExportLockUI();
+}
+
+// ============================================================
+// SHARE MODAL — URL-encoded design
+// ============================================================
+
+function _designToShareUrl() {
+  // Strip runtime-only fields and large cached SVG content before encoding
+  const stripped = JSON.parse(JSON.stringify(design));
+  stripped.emblems = (stripped.emblems || []).map(em => {
+    const copy = { ...em };
+    delete copy._svgContent;  // can be re-fetched or stored from icons list
+    return copy;
+  });
+  try {
+    const json = JSON.stringify(stripped);
+    // Base64-encode (URL safe) — no compression dep needed for typical designs
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    const url = new URL(window.location.href);
+    url.hash = 'd=' + b64;
+    return { url: url.toString(), bytes: b64.length };
+  } catch (e) {
+    return null;
+  }
+}
+
+function _loadDesignFromUrl() {
+  try {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#d=')) return false;
+    const b64 = hash.slice(3);
+    const json = decodeURIComponent(escape(atob(b64)));
+    const parsed = JSON.parse(json);
+    if (!parsed || !parsed.layers) return false;
+    Object.assign(design, parsed);
+    // Re-fetch any heraldic SVG content that was stripped
+    design.emblems.forEach(em => {
+      if (em.heraldic && !em._svgContent) {
+        fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
+          if (svg) { em._svgContent = svg; renderAll(); }
+        });
+      } else if (!em._svgContent && em.slug && !em.type) {
+        em._svgContent = getIconSvg(em.slug);
+      }
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function bindShareModal() {
+  const modal    = document.getElementById('share-modal');
+  const openBtn  = document.getElementById('btn-share');
+  const closeBtn = document.getElementById('share-modal-close');
+  const urlInput = document.getElementById('share-url-input');
+  const copyBtn  = document.getElementById('share-copy-link');
+  const sizeHint = document.getElementById('share-size-hint');
+  const nativeBtn = document.getElementById('share-native-btn');
+
+  function openShare() {
+    if (!requirePro('Share design links')) return;
+    const result = _designToShareUrl();
+    if (result) {
+      urlInput.value = result.url;
+      const kb = (result.bytes / 1024).toFixed(1);
+      sizeHint.textContent = `Link encodes the full design (${kb} KB). Works best for simple flags — complex designs may produce very long URLs.`;
+    } else {
+      urlInput.value = '';
+      sizeHint.textContent = 'Could not generate link — design may be too complex.';
+    }
+    if (navigator.share) nativeBtn.style.display = '';
+    modal.classList.remove('hidden');
+  }
+  function closeShare() { modal.classList.add('hidden'); }
+
+  openBtn.addEventListener('click', openShare);
+  closeBtn.addEventListener('click', closeShare);
+  modal.addEventListener('click', e => { if (e.target === modal) closeShare(); });
+
+  // Wire up preview modal share button
+  const previewShareBtn = document.getElementById('preview-share-btn');
+  if (previewShareBtn) previewShareBtn.addEventListener('click', () => {
+    document.getElementById('preview-modal').classList.add('hidden');
+    openShare();
+  });
+
+  // Copy link
+  copyBtn.addEventListener('click', () => {
+    if (!urlInput.value) return;
+    navigator.clipboard.writeText(urlInput.value)
+      .then(() => { showToast('Link copied!', 'success'); copyBtn.textContent = '✓ Copied'; setTimeout(() => { copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy'; }, 2000); })
+      .catch(() => { urlInput.select(); document.execCommand('copy'); showToast('Link copied!', 'success'); });
+  });
+
+  // Select all on click for easy manual copy
+  urlInput.addEventListener('click', () => urlInput.select());
+
+  // Native share (mobile / Chromium)
+  nativeBtn.addEventListener('click', async () => {
+    try {
+      const dataUrl = await _makePngDataUrl(2);
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `${sanitizeFilename(design.name)}.png`, { type: 'image/png' });
+      await navigator.share({ title: design.name, text: 'Flag designed in Vexillum', files: [file] });
+    } catch {
+      showToast('Share cancelled', '');
+    }
+  });
+
+  // Copy image
+  document.getElementById('share-copy-image').addEventListener('click', async () => {
+    if (!requirePro('Copy image to clipboard')) return;
+    try {
+      const dataUrl = await _makePngDataUrl(2);
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      showToast('Image copied to clipboard', 'success');
+    } catch {
+      showToast('Copy failed — try downloading instead', 'error');
+    }
+  });
 }
 
 // ============================================================
@@ -1925,8 +3024,8 @@ function saveDesign() {
   if (existing !== -1) {
     saved[existing] = serializeDesign(design);
   } else {
-    if (saved.length >= MAX_FREE_SAVES) {
-      showToast(`Free tier: max ${MAX_FREE_SAVES} saved designs`, 'error');
+    if (false && saved.length >= MAX_FREE_SAVES && !isPro()) {
+      openUpgradeModal('Unlimited saved designs');
       return;
     }
     design.createdAt = design.createdAt || Date.now();
@@ -1986,8 +3085,9 @@ function loadDesign(saved) {
 
 // ---- Save Modal ----
 function bindSaveModal() {
-  document.getElementById('modal-close').addEventListener('click', closeSaveModal);
-  saveModal.addEventListener('click', e => { if (e.target === saveModal) closeSaveModal(); });
+  const mc = document.getElementById('modal-close');
+  if (mc) mc.addEventListener('click', closeSaveModal);
+  if (saveModal) saveModal.addEventListener('click', e => { if (e.target === saveModal) closeSaveModal(); });
 }
 
 function openSaveModal() {
@@ -2041,6 +3141,13 @@ function closeSaveModal() {
   saveModal.classList.add('hidden');
 }
 
+// ============================================================
+// ============================================================
+// PREVIEW MODAL
+// ============================================================
+
+let _previewSvgStr = '';    // cached SVG string for current preview
+
 function bindPreviewModal() {
   const btn   = document.getElementById('btn-preview');
   const modal = document.getElementById('preview-modal');
@@ -2048,42 +3155,305 @@ function bindPreviewModal() {
   const wrap  = document.getElementById('preview-flag-wrap');
   if (!btn || !modal || !wrap) return;
 
-  btn.addEventListener('click', () => {
-    // Render at 2× scale into the modal
-    const W = 720, H = 480;
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    svg.setAttribute('width', W);
-    svg.setAttribute('height', H);
-    svg.setAttribute('viewBox', '0 0 480 320');
-    svg.style.cssText = 'display:block;';
+  function openPreview() {
+    _previewSvgStr = getSvgString(1);
+    const div = document.createElement('div');
+    div.innerHTML = _previewSvgStr;
+    const svgEl = div.querySelector('svg');
+    if (!svgEl) { modal.classList.remove('hidden'); return; }
 
-    // White base
-    const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    base.setAttribute('width', 480); base.setAttribute('height', 320);
-    base.setAttribute('fill', 'white');
-    svg.appendChild(base);
-
-    // Render layers
-    design.layers.forEach(layer => {
-      if (!layer.visible) return;
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.innerHTML = renderLayer(layer);
-      svg.appendChild(g);
-    });
-    // Render emblems
-    design.emblems.forEach(em => renderEmblemEl(svg, em, false));
+    const previewW = Math.min(720, CANVAS_W * 1.5);
+    const previewH = Math.round(previewW / CANVAS_W * CANVAS_H);
+    svgEl.setAttribute('width', previewW);
+    svgEl.setAttribute('height', previewH);
+    svgEl.style.cssText = 'display:block;max-width:100%;border-radius:4px;';
 
     wrap.innerHTML = '';
-    wrap.appendChild(svg);
+    wrap.appendChild(svgEl);
     modal.classList.remove('hidden');
-  });
+  }
 
+  btn.addEventListener('click', openPreview);
   close.addEventListener('click', () => modal.classList.add('hidden'));
   modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
 
-  const exportBtn = document.getElementById('preview-export-png');
-  if (exportBtn) exportBtn.addEventListener('click', exportPng);
+  // preview-export-png and preview-share-btn are wired in bindExportModal / bindShareModal
+}
+
+// ============================================================
+// VEXILLOLOGY CHECKER
+// ============================================================
+
+const VEX_RULES = [
+  {
+    id: 'simple',
+    label: 'Keep it simple',
+    check(d) {
+      const total = d.layers.length + d.emblems.length;
+      if (total <= 4) return 'pass';
+      if (total <= 7) return 'warn';
+      return 'fail';
+    },
+    tip(d) {
+      const total = d.layers.length + d.emblems.length;
+      if (total <= 4) return 'Simple design — easy to reproduce.';
+      if (total <= 7) return 'Getting complex. Consider simplifying.';
+      return 'Too many elements — flags work best when simple.';
+    }
+  },
+  {
+    id: 'colours',
+    label: 'Limit colours (≤3)',
+    check(d) {
+      const cols = _countDesignColours(d);
+      if (cols <= 3) return 'pass';
+      if (cols <= 5) return 'warn';
+      return 'fail';
+    },
+    tip(d) {
+      const cols = _countDesignColours(d);
+      if (cols <= 3) return `${cols} colour${cols === 1 ? '' : 's'} — within the ideal range.`;
+      return `${cols} colours detected. Aim for 3 or fewer for maximum impact.`;
+    }
+  },
+  {
+    id: 'notext',
+    label: 'No text or seals',
+    check(d) {
+      return d.emblems.some(e => e.type === 'text') ? 'warn' : 'pass';
+    },
+    tip(d) {
+      return d.emblems.some(e => e.type === 'text')
+        ? 'Text is hard to read at small sizes. Consider a symbol instead.'
+        : 'No text — great for legibility at any size.';
+    }
+  },
+  {
+    id: 'distinctive',
+    label: 'Distinctive design',
+    check(d) {
+      if (d.layers.length === 0 && d.emblems.length === 0) return 'fail';
+      if (d.emblems.length > 0) return 'pass';
+      return 'warn';
+    },
+    tip(d) {
+      if (d.layers.length === 0 && d.emblems.length === 0) return 'Blank flag — add some design!';
+      if (d.emblems.length > 0) return 'Has a charge/symbol — helps make it distinctive.';
+      return 'Only stripes — consider adding a symbol or charge.';
+    }
+  },
+  {
+    id: 'contrast',
+    label: 'Good colour contrast',
+    check(d) {
+      // Check if any adjacent bands have low contrast
+      for (const layer of d.layers) {
+        if (layer.bands && layer.bands.length >= 2) {
+          for (let i = 0; i < layer.bands.length - 1; i++) {
+            if (_lowContrast(layer.bands[i].color, layer.bands[i+1].color)) return 'warn';
+          }
+        }
+      }
+      return 'pass';
+    },
+    tip(d) {
+      return 'Adjacent colours should contrast well for visibility.';
+    }
+  }
+];
+
+function _countDesignColours(d) {
+  const cols = new Set();
+  d.layers.forEach(l => {
+    if (l.bands) l.bands.forEach(b => cols.add(b.color.toLowerCase()));
+    if (l.color) cols.add(l.color.toLowerCase());
+  });
+  d.emblems.forEach(e => { if (e.fg) cols.add(e.fg.toLowerCase()); });
+  return cols.size;
+}
+
+function _lowContrast(hex1, hex2) {
+  const lum = h => {
+    const r = parseInt(h.slice(1,3),16)/255, g = parseInt(h.slice(3,5),16)/255, b = parseInt(h.slice(5,7),16)/255;
+    return 0.299*r + 0.587*g + 0.114*b;
+  };
+  return Math.abs(lum(hex1) - lum(hex2)) < 0.12;
+}
+
+function updateVexChecker() {
+  const items = document.getElementById('vex-checker-items');
+  const score = document.getElementById('vex-checker-score');
+  if (!items || !score) return;
+
+  const results = VEX_RULES.map(rule => ({
+    rule,
+    status: rule.check(design),
+    tip: rule.tip(design)
+  }));
+
+  const passes = results.filter(r => r.status === 'pass').length;
+  const total  = results.length;
+  const pct    = Math.round(passes / total * 100);
+  score.textContent = `${passes}/${total}`;
+  score.className = 'vex-score ' + (passes === total ? 'good' : passes >= total - 1 ? 'ok' : 'poor');
+
+  items.innerHTML = '';
+  results.forEach(({ status, tip }) => {
+    const row = document.createElement('div');
+    row.className = 'vex-item';
+    const dot = document.createElement('span');
+    dot.className = `vex-dot ${status}`;
+    const txt = document.createElement('span');
+    txt.textContent = tip;
+    row.appendChild(dot);
+    row.appendChild(txt);
+    items.appendChild(row);
+  });
+}
+
+
+function bindVexChecker() {
+  const toggle = document.getElementById('vex-checker-toggle');
+  const body   = document.getElementById('vex-checker-body');
+  if (!toggle || !body) return;
+  toggle.addEventListener('click', () => {
+    const open = !body.classList.contains('hidden');
+    body.classList.toggle('hidden', open);
+    toggle.classList.toggle('open', !open);
+    if (!open) updateVexChecker();
+  });
+}
+
+// ============================================================
+// FLAG TEMPLATES
+// ============================================================
+
+const FLAG_TEMPLATES = [
+  {
+    name: 'Blank Canvas',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [{ id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#ffffff',weight:1}] }], emblems: [] })
+  },
+  {
+    name: 'Tricolour H',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [{ id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#c0392b',weight:1},{color:'#ffffff',weight:1},{color:'#2c3e50',weight:1}] }], emblems: [] })
+  },
+  {
+    name: 'Tricolour V',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [{ id: uuid(), type:'vstripes', visible:true, expanded:false, bands:[{color:'#003082',weight:1},{color:'#ffffff',weight:1},{color:'#c0392b',weight:1}] }], emblems: [] })
+  },
+  {
+    name: 'Nordic Cross',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#006AA7',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'nordic', color:'#FECC02', opacity:100, params:{thickness:28,offset:35} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Saltire',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#003078',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'saltire', color:'#ffffff', opacity:100, params:{thickness:14} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Cross',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#ffffff',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'cross', color:'#c0392b', opacity:100, params:{thickness:28} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Chevron',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#009b3a',weight:1},{color:'#ffd700',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'chevron', color:'#003087', opacity:100, params:{depth:42,thickness:30} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Left Triangle',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#c0392b',weight:1},{color:'#ffffff',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'triangle', color:'#003087', opacity:100, params:{depth:40,side:0} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Quartered',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'vstripes', visible:true, expanded:false, bands:[{color:'#c0392b',weight:1},{color:'#003087',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'cross', color:'#ffffff', opacity:100, params:{thickness:12} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Canton',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#c0392b',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'canton', color:'#003087', opacity:100, params:{width:33,height:50} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Border',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#ffd700',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'border', color:'#003087', opacity:100, params:{thickness:20} }
+    ], emblems: [] })
+  },
+  {
+    name: 'Diagonal Split',
+    design: () => ({ ...newDesign(), flagShape: 'rect32', layers: [
+      { id: uuid(), type:'hstripes', visible:true, expanded:false, bands:[{color:'#c0392b',weight:1}] },
+      { id: uuid(), type:'overlay',  visible:true, expanded:false, shape:'triangle', color:'#003087', opacity:100, params:{depth:100,side:0} }
+    ], emblems: [] })
+  }
+];
+
+function buildTemplatesGrid() {
+  const grid = document.getElementById('templates-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  FLAG_TEMPLATES.forEach((tpl, i) => {
+    const card = document.createElement('div');
+    card.className = 'template-card';
+    card.title = tpl.name;
+
+    // Generate thumbnail
+    const d = tpl.design();
+    const thumb = makeThumbnail(d, 140, 93);
+    thumb.style.cssText = 'display:block;width:100%;height:auto;border-radius:4px 4px 0 0;';
+    card.appendChild(thumb);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'template-card-label';
+    lbl.textContent = tpl.name;
+    card.appendChild(lbl);
+
+    card.addEventListener('click', () => {
+      if (design.layers.length > 0 || design.emblems.length > 0) {
+        if (!confirm(`Load "${tpl.name}"? Your current design will be replaced.`)) return;
+      }
+      design = tpl.design();
+      design.name = tpl.name;
+      selectedEmblemId = null;
+      _multiSelect.clear();
+      _commitChange();
+      document.getElementById('templates-modal').classList.add('hidden');
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function bindTemplatesModal() {
+  const btn   = document.getElementById('btn-templates');
+  const modal = document.getElementById('templates-modal');
+  const close = document.getElementById('templates-close');
+  if (!btn || !modal) return;
+
+  btn.addEventListener('click', () => {
+    buildTemplatesGrid();
+    modal.classList.remove('hidden');
+  });
+  if (close) close.addEventListener('click', () => modal.classList.add('hidden'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
 }
 
 function bindFlagShapePicker() {

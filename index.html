@@ -2,10 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FlagBuilder — Flag Design Studio</title>
-  <meta name="description" content="Design beautiful flags with an intuitive layer system. Export SVG and PNG. Free to use. FlagBuilder.com">
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Quick Flags — Free Flag Design Studio</title>
+  <meta name="description" content="Design beautiful flags in seconds with an intuitive layer system. Export as SVG or PNG. Completely free.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="Quick Flags — Design Any Flag in Seconds">
+  <meta property="og:description" content="Free flag design studio. Layer stripes, overlays, and emblems — export as SVG or PNG in one click.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://quickflags.app">
+  <meta property="og:image" content="https://quickflags.app/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quick Flags — Design Any Flag in Seconds">
+  <meta name="twitter:description" content="Free flag design studio. Layer stripes, overlays, and emblems — export as SVG or PNG.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -15,9 +30,11 @@
        HEADER
        ============================================================ -->
   <header id="header">
-    <div id="logo">FLAGBUILDER</div>
+    <div id="logo">QUICK FLAGS</div>
+    <div id="header-tier-badge" class="header-tier-badge header-tier-free" title="Upgrade to Pro">FREE</div>
     <div class="nav-sep"></div>
     <a href="inspire.html" class="header-nav-link">Inspire</a>
+    <a href="learn.html" class="header-nav-link">Learn</a>
     <input id="design-name" type="text" value="Untitled Flag" spellcheck="false" autocomplete="off" title="Click to rename your design">
     <div class="header-spacer"></div>
     <button class="header-btn" id="btn-flag-shape" title="Change flag shape">
@@ -40,19 +57,31 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Save
     </button>
-    <button class="header-btn" id="btn-export-svg" title="Export as SVG vector file">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      SVG
-    </button>
     <button class="header-btn" id="btn-preview" title="Preview flag full size">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M9 15l6-6"/></svg>
       Preview
     </button>
-    <button class="header-btn primary" id="btn-export-png" title="Export as PNG image">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      Export PNG
+    <button class="header-btn" id="btn-templates" title="Flag templates">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="3" y="11" width="8" height="5" rx="1"/><rect x="13" y="11" width="8" height="5" rx="1"/><rect x="3" y="19" width="18" height="2" rx="1"/></svg>
+      Templates
+    </button>
+    <button class="header-btn" id="btn-share" title="Share your flag design">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share
+    </button>
+    <button class="header-btn primary" id="btn-export-png" title="Export options">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
     </button>
     <button class="dark-mode-toggle" id="btn-dark-mode" title="Dark mode">☾</button>
+    <!-- Mobile hamburger — hidden on desktop -->
+    <button id="btn-menu" class="header-btn mobile-menu-btn" title="Menu" aria-label="Open menu" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="3" y1="6"  x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
   </header>
 
   <!-- Flag shape picker popover (populated by JS) -->
@@ -94,40 +123,73 @@
     </div>
 
     <div id="layer-list"></div>
+
+    <!-- Vexillology design checker -->
+    <div id="vex-checker" class="vex-checker">
+      <button class="vex-checker-toggle" id="vex-checker-toggle">
+        <span>Design Check</span>
+        <span id="vex-checker-score" class="vex-score"></span>
+        <span class="vex-chevron">▾</span>
+      </button>
+      <div id="vex-checker-body" class="vex-checker-body hidden">
+        <div id="vex-checker-items"></div>
+      </div>
+    </div>
   </aside>
 
   <!-- ============================================================
        CENTRE — Canvas
        ============================================================ -->
-  <main id="canvas-area">
-    <!-- canvas-center keeps the flag and its controls glued together in the centre -->
-    <div id="canvas-center">
-      <div id="canvas-wrap">
-        <svg id="flag-svg"
-             xmlns="http://www.w3.org/2000/svg"
-             viewBox="0 0 480 320"
-             width="480" height="320">
-          <!-- Layers and emblems rendered here by JS -->
-        </svg>
-      </div>
-
-      <!-- Emblem property bar (shown when emblem selected) -->
-      <div id="emblem-controls">
+  <!-- Emblem property toolbar — fixed to bottom of viewport (outside canvas-area to avoid filter containing-block issue) -->
+  <div id="emblem-controls">
         <div class="ec-group">
           <span class="ec-lbl" title="Size">⤢</span>
           <input id="ec-size" type="range" min="5" max="80" step="1" value="20" title="Size">
-          <span id="ec-size-val" class="ec-val">20</span>
+          <input id="ec-size-val" type="number" class="ec-val ec-num-input" value="20" min="5" max="80" title="Size %">
         </div>
         <div class="ec-sep"></div>
         <div class="ec-group">
           <span class="ec-lbl" title="Rotate">↻</span>
           <input id="ec-rotate" type="range" min="-180" max="180" step="1" value="0" title="Rotate">
-          <span id="ec-rotate-val" class="ec-val">0°</span>
+          <input id="ec-rotate-val" type="number" class="ec-val ec-num-input" value="0" min="-180" max="180" title="Angle °">
         </div>
         <div class="ec-sep"></div>
         <div class="ec-group">
           <button class="ec-flip-btn" id="ec-flip-h" title="Flip horizontal">↔</button>
           <button class="ec-flip-btn" id="ec-flip-v" title="Flip vertical">↕</button>
+        </div>
+        <div class="ec-sep"></div>
+        <div class="ec-group" id="ec-stretch-group">
+          <span class="ec-lbl" title="Width scale">W</span>
+          <input id="ec-scale-x" type="range" min="25" max="500" step="5" value="100" title="Width scale %">
+          <input id="ec-scale-x-val" type="number" class="ec-val ec-num-input" value="100" min="25" max="500" title="Width %">
+          <span class="ec-lbl" style="margin-left:3px;" title="Height scale">H</span>
+          <input id="ec-scale-y" type="range" min="25" max="500" step="5" value="100" title="Height scale %">
+          <input id="ec-scale-y-val" type="number" class="ec-val ec-num-input" value="100" min="25" max="500" title="Height %">
+        </div>
+        <div class="ec-sep"></div>
+        <div class="ec-group">
+          <span class="ec-lbl" title="Opacity">◑</span>
+          <input id="ec-opacity" type="range" min="5" max="100" step="5" value="100" title="Opacity">
+          <input id="ec-opacity-val" type="number" class="ec-val ec-num-input" value="100" min="5" max="100" title="Opacity %">
+        </div>
+        <div class="ec-sep"></div>
+        <div class="ec-group" id="ec-align-group">
+          <button class="ec-flip-btn ec-align-btn" id="ec-align-left"   title="Align left edge"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="2" height="12" fill="currentColor"/><rect x="3" y="2" width="7" height="3" fill="currentColor"/><rect x="3" y="7" width="5" height="3" fill="currentColor"/></svg></button>
+          <button class="ec-flip-btn ec-align-btn" id="ec-align-ch"     title="Centre horizontally"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="5" y="0" width="2" height="12" fill="currentColor"/><rect x="2" y="2" width="8" height="3" fill="currentColor"/><rect x="3" y="7" width="6" height="3" fill="currentColor"/></svg></button>
+          <button class="ec-flip-btn ec-align-btn" id="ec-align-right"  title="Align right edge"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="10" y="0" width="2" height="12" fill="currentColor"/><rect x="2" y="2" width="7" height="3" fill="currentColor"/><rect x="4" y="7" width="5" height="3" fill="currentColor"/></svg></button>
+          <button class="ec-flip-btn ec-align-btn" id="ec-align-top"    title="Align top edge" style="margin-left:3px;"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="12" height="2" fill="currentColor"/><rect x="2" y="3" width="3" height="7" fill="currentColor"/><rect x="7" y="3" width="3" height="5" fill="currentColor"/></svg></button>
+          <button class="ec-flip-btn ec-align-btn" id="ec-align-cv"     title="Centre vertically"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="5" width="12" height="2" fill="currentColor"/><rect x="2" y="1" width="3" height="9" fill="currentColor"/><rect x="7" y="2" width="3" height="7" fill="currentColor"/></svg></button>
+          <button class="ec-flip-btn ec-align-btn" id="ec-align-bottom" title="Align bottom edge"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="10" width="12" height="2" fill="currentColor"/><rect x="2" y="2" width="3" height="7" fill="currentColor"/><rect x="7" y="4" width="3" height="5" fill="currentColor"/></svg></button>
+          <button class="ec-flip-btn ec-align-btn" id="ec-dist-h"       title="Distribute evenly horizontal" style="margin-left:3px;display:none;"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="2" height="12" fill="currentColor"/><rect x="10" y="0" width="2" height="12" fill="currentColor"/><rect x="4" y="2" width="4" height="8" fill="currentColor"/></svg></button>
+          <button class="ec-flip-btn ec-align-btn" id="ec-dist-v"       title="Distribute evenly vertical" style="display:none;"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="12" height="2" fill="currentColor"/><rect x="0" y="10" width="12" height="2" fill="currentColor"/><rect x="2" y="4" width="8" height="4" fill="currentColor"/></svg></button>
+        </div>
+        <div class="ec-sep"></div>
+        <div class="ec-group" id="ec-stroke-group">
+          <span class="ec-lbl" title="Outline colour">⬡</span>
+          <input id="ec-stroke-color" type="color" value="#000000" title="Outline colour">
+          <input id="ec-stroke-width" type="range" min="0" max="20" step="1" value="0" title="Outline width">
+          <input id="ec-stroke-width-val" type="number" class="ec-val ec-num-input" value="0" min="0" max="20" title="Outline width px">
         </div>
         <div class="ec-sep"></div>
         <div class="ec-group" id="ec-gameicon-controls">
@@ -157,8 +219,21 @@
           <input id="ec-text-arc" type="range" min="-100" max="100" step="5" value="0" title="Text arc/bend">
           <span id="ec-arc-val" class="ec-val">0</span>
         </div>
+        <button class="ec-flip-btn" id="ec-group" title="Group selected icons (Ctrl+G)" style="display:none;margin-left:auto;font-size:10px;width:auto;padding:0 5px;">⛶ Group</button>
+        <button class="ec-flip-btn" id="ec-ungroup" title="Ungroup" style="display:none;font-size:10px;width:auto;padding:0 5px;">⛶ Ungroup</button>
         <button class="ec-flip-btn" id="ec-duplicate" title="Duplicate emblem (Ctrl+D)" style="margin-left:auto;width:22px;height:22px;">⊕</button>
         <button class="ec-del-btn" id="ec-delete" title="Remove emblem (Del)" style="margin-left:4px;">✕</button>
+  </div><!-- /#emblem-controls -->
+
+  <main id="canvas-area">
+    <div id="canvas-center">
+      <div id="canvas-wrap">
+        <svg id="flag-svg"
+             xmlns="http://www.w3.org/2000/svg"
+             viewBox="0 0 480 320"
+             width="480" height="320">
+          <!-- Layers and emblems rendered here by JS -->
+        </svg>
       </div>
     </div><!-- /#canvas-center -->
   </main>
@@ -199,6 +274,37 @@
     </div>
   </aside>
 
+  <!-- Overlay quick-edit panel — appears when an overlay is tapped on canvas -->
+  <div id="overlay-quickedit" class="overlay-quickedit hidden">
+    <div class="oqe-header">
+      <span class="oqe-title" id="oqe-title">Overlay</span>
+      <button class="oqe-close" id="oqe-close" title="Close">×</button>
+    </div>
+    <div class="oqe-body" id="oqe-body">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- Mobile panel tab bar — hidden on desktop -->
+  <nav id="mobile-nav">
+    <button class="mobile-nav-btn active" data-panel="canvas" id="mnav-canvas">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <span>Canvas</span>
+    </button>
+    <button class="mobile-nav-btn" data-panel="layers" id="mnav-layers">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <span>Layers</span>
+    </button>
+    <button class="mobile-nav-btn" data-panel="icons" id="mnav-icons">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Emblems</span>
+    </button>
+    <button class="mobile-nav-btn" id="mnav-export" data-action="export">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Export</span>
+    </button>
+  </nav>
+
 </div><!-- #app -->
 
 <!-- ============================================================
@@ -218,29 +324,190 @@
 </div>
 
 <!-- Preview Modal -->
-<div id="preview-modal" class="modal-overlay hidden">
-  <div class="modal" style="position:relative;padding:20px;">
-    <button id="preview-close" class="modal-close" title="Close">×</button>
-    <h2 style="margin-bottom:12px;">Preview</h2>
-    <div id="preview-flag-wrap"></div>
-    <div class="preview-actions" style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
-      <button class="header-btn primary" id="preview-export-png">Export PNG</button>
+<!-- Export Modal -->
+<div id="export-modal" class="modal-overlay hidden">
+  <div class="modal export-modal-inner" style="position:relative;padding:24px;max-width:420px;width:92vw;">
+    <button id="export-modal-close" class="modal-close" title="Close">×</button>
+    <h2 style="margin-bottom:16px;">Export Flag</h2>
+
+    <!-- PNG Section -->
+    <div class="export-section">
+      <div class="export-section-title">PNG Image</div>
+      <div class="export-res-group">
+        <label class="export-res-opt">
+          <input type="radio" name="export-res" value="1" id="res-1x"> <span>1× <em>480×320</em></span>
+        </label>
+        <label class="export-res-opt">
+          <input type="radio" name="export-res" value="2" id="res-2x" checked> <span>2× <em>960×640</em></span>
+        </label>
+        <label class="export-res-opt">
+          <input type="radio" name="export-res" value="4" id="res-4x"> <span>4× <em>1920×1280</em></span>
+        </label>
+        <label class="export-res-opt" id="res-custom-label">
+          <input type="radio" name="export-res" value="custom" id="res-custom"> <span>Custom&nbsp;<input id="export-custom-w" type="number" class="export-custom-w" value="1920" min="100" max="9999" title="Width px">&nbsp;px wide</span>
+        </label>
+      </div>
+      <div class="export-row" style="margin-top:10px;">
+        <button class="header-btn primary" id="export-dl-png">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PNG
+        </button>
+        <button class="header-btn" id="export-copy-png" title="Copy PNG to clipboard">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy PNG
+        </button>
+      </div>
+    </div>
+
+    <div class="export-divider"></div>
+
+    <!-- SVG Section -->
+    <div class="export-section">
+      <div class="export-section-title">SVG Vector</div>
+      <p class="export-hint">Lossless at any size. Perfect for print or further editing.</p>
+      <div class="export-row">
+        <button class="header-btn" id="export-dl-svg">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download SVG
+        </button>
+        <button class="header-btn" id="export-copy-svg" title="Copy SVG code to clipboard">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy SVG
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- Share Modal -->
+<div id="share-modal" class="modal-overlay hidden">
+  <div class="modal share-modal-inner" style="position:relative;padding:24px;max-width:460px;width:92vw;">
+    <button id="share-modal-close" class="modal-close" title="Close">×</button>
+    <h2 style="margin-bottom:6px;">Share Design</h2>
+    <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Anyone with the link can open and remix your flag — no account needed.</p>
+
+    <div class="export-section">
+      <div class="export-section-title">Share Link</div>
+      <div class="share-link-row">
+        <input id="share-url-input" type="text" class="share-url-input" readonly placeholder="Generating link…">
+        <button class="header-btn" id="share-copy-link" title="Copy link">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+      <p class="export-hint" id="share-size-hint" style="margin-top:6px;"></p>
+    </div>
+
+    <div class="export-divider"></div>
+
+    <div class="export-section">
+      <div class="export-section-title">Share as Image</div>
+      <div class="export-row">
+        <button class="header-btn" id="share-native-btn" style="display:none;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share…
+        </button>
+        <button class="header-btn" id="share-copy-image">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Copy Image
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="preview-modal" class="modal-overlay hidden">
+  <div class="modal preview-modal-inner" style="position:relative;padding:20px;">
+    <button id="preview-close" class="modal-close" title="Close">×</button>
+    <h2 style="margin-bottom:12px;">Preview</h2>
+    <div id="preview-flag-wrap"></div>
+    <div class="preview-actions" style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="header-btn primary" id="preview-export-png">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="header-btn" id="preview-share-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Templates Modal -->
+<div id="templates-modal" class="modal-overlay hidden">
+  <div class="modal" style="position:relative;padding:20px;max-width:760px;width:90vw;">
+    <button id="templates-close" class="modal-close" title="Close">×</button>
+    <h2 style="margin-bottom:4px;">Flag Templates</h2>
+    <p style="font-size:11px;color:var(--text-2);margin-bottom:14px;">Click a template to load it. Your current design will be replaced.</p>
+    <div id="templates-grid" class="templates-grid"></div>
+  </div>
+</div>
+
+<!-- Upgrade modal removed — all features are free -->
+
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- Mobile dropdown menu — outside #app so it doesn't affect the grid -->
+<div id="header-menu" class="header-menu" aria-hidden="true">
+  <button class="hm-item" data-target="btn-flag-shape">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+    Flag Shape
+  </button>
+  <button class="hm-item" data-target="btn-templates">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="3" y="11" width="8" height="5" rx="1"/><rect x="13" y="11" width="8" height="5" rx="1"/></svg>
+    Templates
+  </button>
+  <button class="hm-item" data-target="btn-save">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    Save
+  </button>
+  <button class="hm-item" data-target="btn-open">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+    Open Saved
+  </button>
+  <div class="hm-sep"></div>
+  <button class="hm-item" data-target="btn-preview">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M9 15l6-6"/></svg>
+    Preview
+  </button>
+  <button class="hm-item" data-target="btn-share">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    Share
+  </button>
+  <button class="hm-item" data-target="btn-export-png">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export
+  </button>
+  <div class="hm-sep"></div>
+  <a href="inspire.html" class="hm-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    Inspire
+  </a>
+  <a href="learn.html" class="hm-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Learn
+  </a>
+  <div class="hm-sep"></div>
+  <button class="hm-item" data-target="btn-dark-mode">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    Dark Mode
+  </button>
+</div>
+<div id="header-menu-backdrop" class="header-menu-backdrop"></div>
 
 <!-- ============================================================
      SCRIPTS
      ============================================================ -->
-<script src="js/icon-data.js"></script>
-<script src="js/icons.js"></script>
-<script src="js/heraldic-icons.js"></script>
-<script src="js/palettes.js"></script>
-<script src="js/renderer.js"></script>
-<script src="js/app.js"></script>
+<script src="js/icon-data.js?v=5"></script>
+<script src="js/icons.js?v=5"></script>
+<script src="js/heraldic-icons.js?v=5"></script>
+<script src="js/palettes.js?v=5"></script>
+<script src="js/renderer.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
+
+<div id="site-credit">Icons by <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a> (CC BY 3.0)</div>
 
 </body>
 </html>

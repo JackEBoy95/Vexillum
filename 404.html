@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found — Quick Flags</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    html, body {
+      overflow: auto;
+      background: var(--canvas-bg);
+      height: 100%;
+    }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      text-align: center;
+    }
+    .flag-404 {
+      width: 200px;
+      height: 133px;
+      border: 3px solid var(--near-black);
+      border-radius: 4px;
+      box-shadow: 6px 6px 0 var(--near-black);
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .flag-404-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: var(--near-black);
+    }
+    .flag-404-bottom {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 50%;
+      background: var(--canvas-bg);
+    }
+    .flag-404-text {
+      position: relative;
+      z-index: 2;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 64px;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .flag-404-text span:first-child { color: var(--canvas-bg); }
+    .flag-404-text span:last-child  { color: var(--near-black); }
+    .headline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(32px, 6vw, 52px);
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .sub {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 380px;
+      line-height: 1.65;
+      margin-bottom: 36px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-primary {
+      padding: 12px 24px;
+      background: var(--near-black);
+      color: var(--panel-bg, #fff);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 2px solid var(--near-black);
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn-primary:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
+    .btn-secondary {
+      padding: 12px 24px;
+      background: transparent;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 2px solid var(--border, #ccc);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .btn-secondary:hover { border-color: var(--near-black); background: var(--hover); }
+    .logo-link {
+      position: fixed;
+      top: 20px;
+      left: 24px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: var(--text);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="logo-link">QUICK FLAGS</a>
+
+<div class="page">
+  <div class="flag-404">
+    <div class="flag-404-top"></div>
+    <div class="flag-404-bottom"></div>
+    <div class="flag-404-text">
+      <span>40</span><span>4</span>
+    </div>
+  </div>
+
+  <h1 class="headline">Flag Not Found</h1>
+  <p class="sub">This page doesn't exist — but your next flag does. Head back to the editor and start designing.</p>
+
+  <div class="btn-row">
+    <a href="index.html" class="btn-primary">Open the Editor</a>
+    <a href="inspire.html" class="btn-secondary">Browse Gallery</a>
+  </div>
+</div>
+
+</body>
+</html>

@@ -35,7 +35,20 @@ const BASIC_SHAPES = {
   octagon:    { label: 'Octagon',     path: '<polygon points="30,4 70,4 96,30 96,70 70,96 30,96 4,70 4,30"/>' },
   ring:       { label: 'Ring',        path: '<path fill-rule="evenodd" d="M50,6 A44,44 0 1,0 50,94 A44,44 0 1,0 50,6 M50,24 A26,26 0 1,1 50,76 A26,26 0 1,1 50,24"/>' },
   semicircle: { label: 'Semicircle',  path: '<path d="M5,52 A45,45 0 0,1 95,52 Z"/>' },
-  heart:      { label: 'Heart',       path: '<path d="M50,80 C30,70 5,55 5,38 C5,18 20,8 35,8 C45,8 50,15 50,22 C50,15 55,8 65,8 C80,8 95,18 95,38 C95,55 70,70 50,80 Z"/>' },
+  heart:      { label: 'Heart',        path: '<path d="M50,80 C30,70 5,55 5,38 C5,18 20,8 35,8 C45,8 50,15 50,22 C50,15 55,8 65,8 C80,8 95,18 95,38 C95,55 70,70 50,80 Z"/>' },
+  oval:       { label: 'Oval',         path: '<ellipse cx="50" cy="50" rx="46" ry="30"/>' },
+  wideoval:   { label: 'Wide Oval',    path: '<ellipse cx="50" cy="50" rx="46" ry="20"/>' },
+  cloud:      { label: 'Cloud',        path: '<path d="M18,72 Q5,72 5,58 Q5,46 16,44 Q14,28 26,22 Q37,15 46,25 Q50,12 60,12 Q74,10 78,24 Q87,20 92,30 Q98,30 98,42 Q98,56 84,56 Q88,66 80,70 Q72,76 62,70 Q56,80 42,78 Q26,78 18,72 Z"/>' },
+  starburst4: { label: '4pt Star',     path: '<polygon points="50,2 57,43 98,50 57,57 50,98 43,57 2,50 43,43"/>' },
+  crown:      { label: 'Crown',        path: '<path d="M5,80 L5,62 L25,30 L40,52 L50,15 L60,52 L75,30 L95,62 L95,80 Z"/>' },
+  teardrop:   { label: 'Teardrop',     path: '<path d="M50,5 C72,5 88,25 88,45 C88,68 65,88 50,95 C35,88 12,68 12,45 C12,25 28,5 50,5 Z"/>' },
+  lightning:  { label: 'Lightning ⚡',  path: '<polygon points="60,4 28,52 50,52 40,96 74,44 50,44"/>' },
+  arrowup:    { label: 'Arrow ↑',      path: '<path d="M37,95 L37,38 L18,38 L50,5 L82,38 L63,38 L63,95 Z"/>' },
+  arrowdown:  { label: 'Arrow ↓',      path: '<path d="M37,5 L37,62 L18,62 L50,95 L82,62 L63,62 L63,5 Z"/>' },
+  shieldemb:  { label: 'Shield',       path: '<path d="M10,8 L90,8 L90,58 C90,82 70,94 50,97 C30,94 10,82 10,58 Z"/>' },
+  diamondthin:{ label: 'Tall Diamond', path: '<polygon points="50,3 72,50 50,97 28,50"/>' },
+  wavyband:   { label: 'Wavy Band',    path: '<path d="M0,50 Q6.25,20 12.5,50 Q18.75,80 25,50 Q31.25,20 37.5,50 Q43.75,80 50,50 Q56.25,20 62.5,50 Q68.75,80 75,50 Q81.25,20 87.5,50 Q93.75,80 100,50 L100,65 Q93.75,95 87.5,65 Q81.25,35 75,65 Q68.75,95 62.5,65 Q56.25,35 50,65 Q43.75,95 37.5,65 Q31.25,35 25,65 Q18.75,95 12.5,65 Q6.25,35 0,65 Z"/>', defaultScaleX: 5, defaultScaleY: 0.6 },
+  zigzagband: { label: 'Zigzag Band',  path: '<polygon points="0,42 10,22 20,42 30,22 40,42 50,22 60,42 70,22 80,42 90,22 100,42 100,58 90,78 80,58 70,78 60,58 50,78 40,58 30,78 20,58 10,78 0,58"/>', defaultScaleX: 5, defaultScaleY: 0.6 },
 };
 
 // ---- Flag shape definitions ----
@@ -82,6 +95,46 @@ const FLAG_SHAPES = {
     clip: null,
     icon: `<rect x="5" y="5" width="30" height="30" rx="1"/>`,
   },
+  birdsmouth: {
+    label: "Bird's\nMouth", w: 480, h: 320, dispW: 480, dispH: 320,
+    clip: '0,0 480,0 480,320 0,320 60,160',
+    icon: `<polygon points="0,5 40,5 40,35 0,35 5,20"/>`,
+  },
+  dovetail: {
+    label: 'Dovetail', w: 480, h: 320, dispW: 480, dispH: 320,
+    clip: '0,0 480,0 400,160 480,320 0,320',
+    icon: `<polygon points="0,5 40,5 33,20 40,35 0,35"/>`,
+  },
+  oriflamme: {
+    label: 'Oriflamme', w: 480, h: 320, dispW: 480, dispH: 320,
+    clip: '0,0 440,0 480,80 440,160 480,240 440,320 0,320',
+    icon: `<polygon points="0,5 36,5 40,12 36,20 40,28 36,35 0,35"/>`,
+  },
+  banner: {
+    label: 'Banner\n(Tall)', w: 300, h: 480, dispW: 300, dispH: 480,
+    clip: null,
+    icon: `<rect x="8" y="2" width="24" height="36" rx="1"/>`,
+  },
+  lozenge: {
+    label: 'Lozenge', w: 480, h: 480, dispW: 360, dispH: 360,
+    clip: '240,0 480,240 240,480 0,240',
+    icon: `<polygon points="20,5 35,20 20,35 5,20"/>`,
+  },
+  longpennant: {
+    label: 'Long\nPennant', w: 600, h: 180, dispW: 480, dispH: 144,
+    clip: '0,0 600,90 0,180',
+    icon: `<polygon points="0,5 40,20 0,35"/>`,
+  },
+  curvedshield: {
+    label: 'Curved\nShield', w: 480, h: 440, dispW: 444, dispH: 408,
+    clipD: 'M 0,0 L 480,0 L 480,260 Q 480,420 240,440 Q 0,420 0,260 Z',
+    icon: `<path d="M2,5 L38,5 L38,22 Q38,38 20,40 Q2,38 2,22 Z"/>`,
+  },
+  heater: {
+    label: 'Heater\nShield', w: 480, h: 460, dispW: 430, dispH: 414,
+    clipD: 'M 0,0 L 480,0 L 480,220 C 480,360 310,430 240,460 C 170,430 0,360 0,220 Z',
+    icon: `<path d="M2,5 L38,5 L38,18 C38,30 25,37 20,39 C15,37 2,30 2,18 Z"/>`,
+  },
 };
 
 const SHAPES = {
@@ -117,7 +170,8 @@ const SHAPES = {
     render(c, p) {
       const t = p.thickness ?? 15;
       const diag = Math.sqrt(CANVAS_W * CANVAS_W + CANVAS_H * CANVAS_H);
-      const angle1 = Math.atan2(CANVAS_H, CANVAS_W) * 180 / Math.PI;
+      // angle from vertical to the flag diagonal — atan2(W,H) not atan2(H,W)
+      const angle1 = Math.atan2(CANVAS_W, CANVAS_H) * 180 / Math.PI;
       return `
         <g opacity="${c.opacity/100}">
           <rect x="${CANVAS_W/2 - t/2}" y="${CANVAS_H/2 - diag/2}"
@@ -255,13 +309,142 @@ const SHAPES = {
         <rect x="${CANVAS_W - t}" y="${t}" width="${t}" height="${CANVAS_H - t * 2}" fill="${c.color}" opacity="${op}"/>`;
     }
   },
+
+  // Wavy horizontal band
+  wavyh: {
+    label: 'Wavy Band',
+    params: {
+      position:  { label: 'Position %',  min: 0,  max: 85, default: 40 },
+      thickness: { label: 'Thickness %', min: 3,  max: 40, default: 15 },
+      waves:     { label: 'Waves',       min: 2,  max: 12, default: 5, step: 1 },
+    },
+    render(c, p) {
+      const cy  = (p.position  ?? 40) / 100 * CANVAS_H;
+      const t   = (p.thickness ?? 15) / 100 * CANVAS_H;
+      const n   = Math.max(2, Math.round(p.waves ?? 5));
+      const step = CANVAS_W / (n * 2); // each half-wave is one segment
+      const amp  = t * 0.55;
+      // True sine-wave: alternate control points above/below the centre line
+      let top = `M 0,${cy}`;
+      for (let i = 0; i < n * 2; i++) {
+        const dir = i % 2 === 0 ? -1 : 1; // alternate up/down
+        const xm = (i + 0.5) * step;
+        const xe = (i + 1)   * step;
+        top += ` Q ${xm},${cy + dir * amp} ${xe},${cy}`;
+      }
+      let bot = `L ${CANVAS_W},${cy + t}`;
+      for (let i = n * 2 - 1; i >= 0; i--) {
+        const dir = i % 2 === 0 ? -1 : 1;
+        const xm = (i + 0.5) * step;
+        const xs = i * step;
+        bot += ` Q ${xm},${cy + t + dir * amp} ${xs},${cy + t}`;
+      }
+      return `<path d="${top} ${bot} Z" fill="${c.color}" opacity="${c.opacity/100}"/>`;
+    }
+  },
+
+  // Zigzag horizontal band
+  zigzagh: {
+    label: 'Zigzag Band',
+    params: {
+      position:  { label: 'Position %',  min: 0,  max: 85, default: 40 },
+      thickness: { label: 'Thickness %', min: 3,  max: 40, default: 15 },
+      teeth:     { label: 'Teeth',       min: 2,  max: 16, default: 6, step: 1 },
+    },
+    render(c, p) {
+      const cy  = (p.position  ?? 40) / 100 * CANVAS_H;
+      const t   = (p.thickness ?? 15) / 100 * CANVAS_H;
+      const n   = Math.max(2, Math.round(p.teeth ?? 6));
+      const step = CANVAS_W / n;
+      const amp  = t * 0.45;
+      let pts = `0,${cy}`;
+      for (let i = 0; i < n; i++) {
+        pts += ` ${(i + 0.5) * step},${cy - amp} ${(i + 1) * step},${cy}`;
+      }
+      pts += ` ${CANVAS_W},${cy + t}`;
+      for (let i = n - 1; i >= 0; i--) {
+        pts += ` ${(i + 0.5) * step},${cy + t + amp} ${i * step},${cy + t}`;
+      }
+      return `<polygon points="${pts}" fill="${c.color}" opacity="${c.opacity/100}"/>`;
+    }
+  },
+
+  rhombus: {
+    label: 'Rhombus',
+    params: {
+      width:   { label: 'Width %',    min: 20, max: 95, default: 60 },
+      height:  { label: 'Height %',   min: 20, max: 95, default: 80 },
+      offsetX: { label: 'Shift X',    min: -40, max: 40, default: 0 },
+      offsetY: { label: 'Shift Y',    min: -40, max: 40, default: 0 },
+    },
+    render(c, p) {
+      const W = CANVAS_W, H = CANVAS_H;
+      const w  = (p.width   ?? 60) / 100 * W;
+      const h  = (p.height  ?? 80) / 100 * H;
+      const cx = W / 2 + (p.offsetX ?? 0) / 100 * W;
+      const cy = H / 2 + (p.offsetY ?? 0) / 100 * H;
+      const pts = `${cx},${cy - h/2} ${cx + w/2},${cy} ${cx},${cy + h/2} ${cx - w/2},${cy}`;
+      return `<polygon points="${pts}" fill="${c.color}" opacity="${c.opacity/100}"/>`;
+    }
+  },
+
+  crescent: {
+    label: 'Crescent',
+    params: {
+      size:    { label: 'Size %',      min: 10, max: 55, default: 28 },
+      gap:     { label: 'Gap',         min: 5,  max: 95, default: 60 },
+      rotate:  { label: 'Rotation °',  min: 0,  max: 359, default: 0 },
+      offsetX: { label: 'Position X',  min: -40, max: 40, default: 0 },
+      offsetY: { label: 'Position Y',  min: -40, max: 40, default: 0 },
+    },
+    render(c, p) {
+      const W = CANVAS_W, H = CANVAS_H;
+      const R      = (p.size ?? 28) / 100 * Math.min(W, H) / 2;
+      const gap    = (p.gap  ?? 60) / 100;
+      const rot    = (p.rotate ?? 0) * Math.PI / 180;
+      const cx     = W / 2 + (p.offsetX ?? 0) / 100 * W;
+      const cy     = H / 2 + (p.offsetY ?? 0) / 100 * H;
+      const innerR = R * 0.92;
+      const d      = R * gap * 1.05;
+      const ix     = cx + d * Math.cos(rot);
+      const iy     = cy + d * Math.sin(rot);
+      const mid    = `cm-${c.id || 'x'}`;
+      return `<defs><mask id="${mid}"><circle cx="${cx}" cy="${cy}" r="${R}" fill="white"/><circle cx="${ix.toFixed(2)}" cy="${iy.toFixed(2)}" r="${innerR.toFixed(2)}" fill="black"/></mask></defs><circle cx="${cx}" cy="${cy}" r="${R.toFixed(2)}" fill="${c.color}" opacity="${c.opacity/100}" mask="url(#${mid})"/>`;
+    }
+  },
+
+  star: {
+    label: 'Star',
+    params: {
+      points:  { label: 'Points',        min: 4,  max: 12, default: 5, step: 1 },
+      size:    { label: 'Size %',        min: 5,  max: 70, default: 25 },
+      inner:   { label: 'Inner radius %', min: 15, max: 75, default: 40 },
+      offsetX: { label: 'Position X',    min: -40, max: 40, default: 0 },
+      offsetY: { label: 'Position Y',    min: -40, max: 40, default: 0 },
+    },
+    render(c, p) {
+      const W = CANVAS_W, H = CANVAS_H;
+      const n      = Math.max(4, Math.round(p.points ?? 5));
+      const outerR = (p.size  ?? 25) / 100 * Math.min(W, H) / 2;
+      const innerR = outerR * (p.inner ?? 40) / 100;
+      const cx     = W / 2 + (p.offsetX ?? 0) / 100 * W;
+      const cy     = H / 2 + (p.offsetY ?? 0) / 100 * H;
+      let pts = '';
+      for (let i = 0; i < n * 2; i++) {
+        const r     = i % 2 === 0 ? outerR : innerR;
+        const angle = (i * Math.PI / n) - Math.PI / 2;
+        pts += `${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)} `;
+      }
+      return `<polygon points="${pts.trim()}" fill="${c.color}" opacity="${c.opacity/100}"/>`;
+    }
+  },
 };
 
 // ---- Main render function ----
 // Writes into an existing <svg> element.
 // emblems: array of Emblem objects (rendered by emblem layer separately)
 
-function renderFlag(svgEl, design, selectedEmblemId = null) {
+function renderFlag(svgEl, design, selectedEmblemId = null, multiSelectIds = null) {
   // Determine active flag shape
   const shapeId = design.flagShape || 'rect32';
   const shape = FLAG_SHAPES[shapeId] || FLAG_SHAPES.rect32;
@@ -299,12 +482,19 @@ function renderFlag(svgEl, design, selectedEmblemId = null) {
     poly.setAttribute('points', shape.clip);
     clipEl.appendChild(poly);
     defs.appendChild(clipEl);
+  } else if (shape.clipD) {
+    const clipEl = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+    clipEl.setAttribute('id', 'flag-shape-clip');
+    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pathEl.setAttribute('d', shape.clipD);
+    clipEl.appendChild(pathEl);
+    defs.appendChild(clipEl);
   }
 
   // Create clipped group for all content
   const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   group.classList.add('render-group');
-  if (shape.clip) group.setAttribute('clip-path', 'url(#flag-shape-clip)');
+  if (shape.clip || shape.clipD) group.setAttribute('clip-path', 'url(#flag-shape-clip)');
 
   // White base rect
   const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -324,7 +514,9 @@ function renderFlag(svgEl, design, selectedEmblemId = null) {
 
   // Render emblems into the clipped group
   design.emblems.forEach(emblem => {
-    renderEmblemEl(group, emblem, emblem.id === selectedEmblemId);
+    const isSel      = emblem.id === selectedEmblemId;
+    const isMultiSel = multiSelectIds ? multiSelectIds.has(emblem.id) : false;
+    renderEmblemEl(group, emblem, isSel, isMultiSel);
   });
 
   svgEl.appendChild(group);
@@ -337,50 +529,145 @@ function renderLayer(layer) {
   return '';
 }
 
+function _patternDef(id, type, color, bg) {
+  // Returns an SVG <pattern> definition string for hatch/dots/checker fills
+  const c = color, b = bg || 'transparent';
+  if (type === 'hatch45') return `<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(0)"><rect width="8" height="8" fill="${b}"/><line x1="0" y1="0" x2="8" y2="8" stroke="${c}" stroke-width="2"/></pattern>`;
+  if (type === 'hatch-h') return `<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${b}"/><line x1="0" y1="4" x2="8" y2="4" stroke="${c}" stroke-width="2"/></pattern>`;
+  if (type === 'hatch-v') return `<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${b}"/><line x1="4" y1="0" x2="4" y2="8" stroke="${c}" stroke-width="2"/></pattern>`;
+  if (type === 'crosshatch') return `<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${b}"/><line x1="0" y1="0" x2="8" y2="8" stroke="${c}" stroke-width="1.5"/><line x1="8" y1="0" x2="0" y2="8" stroke="${c}" stroke-width="1.5"/></pattern>`;
+  if (type === 'dots')  return `<pattern id="${id}" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="${b}"/><circle cx="5" cy="5" r="2.5" fill="${c}"/></pattern>`;
+  if (type === 'checker') return `<pattern id="${id}" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="${b}"/><rect x="0" y="0" width="8" height="8" fill="${c}"/><rect x="8" y="8" width="8" height="8" fill="${c}"/></pattern>`;
+  return null;
+}
+
 function renderStripes(layer, vertical) {
   const bands = layer.bands || [];
   if (!bands.length) return '';
   const total = bands.reduce((s, b) => s + (b.weight || 1), 0);
+  let defs = '';
   let out = '';
   let pos = 0;
-  bands.forEach(band => {
+  bands.forEach((band, i) => {
     const size = (band.weight || 1) / total;
+    let fill = band.color;
+    if (band.gradient && band.gradientEnd) {
+      const gradId = `stripe-grad-${layer.id}-${i}`;
+      const [x1,y1,x2,y2] = vertical ? ['0%','0%','0%','100%'] : ['0%','0%','100%','0%'];
+      defs += `<linearGradient id="${gradId}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">
+        <stop offset="0%" stop-color="${band.color}"/>
+        <stop offset="100%" stop-color="${band.gradientEnd}"/>
+      </linearGradient>`;
+      fill = `url(#${gradId})`;
+    } else if (band.pattern && band.pattern !== 'solid') {
+      const patId = `stripe-pat-${layer.id}-${i}`;
+      const patDef = _patternDef(patId, band.pattern, band.color, band.patternBg || 'transparent');
+      if (patDef) { defs += patDef; fill = `url(#${patId})`; }
+    }
     if (vertical) {
       const x = pos * CANVAS_W;
       const w = size * CANVAS_W;
-      out += `<rect x="${x}" y="0" width="${w}" height="${CANVAS_H}" fill="${band.color}"/>`;
+      out += `<rect x="${x}" y="0" width="${w}" height="${CANVAS_H}" fill="${fill}"/>`;
     } else {
       const y = pos * CANVAS_H;
       const h = size * CANVAS_H;
-      out += `<rect x="0" y="${y}" width="${CANVAS_W}" height="${h}" fill="${band.color}"/>`;
+      out += `<rect x="0" y="${y}" width="${CANVAS_W}" height="${h}" fill="${fill}"/>`;
     }
     pos += size;
   });
-  return out;
+  return defs ? `<defs>${defs}</defs>${out}` : out;
 }
 
 function renderOverlay(layer) {
   const shape = SHAPES[layer.shape];
   if (!shape) return '';
-  return shape.render(
-    { color: layer.color || '#ffffff', color2: layer.color2 || '#000000', opacity: layer.opacity ?? 100 },
+  const content = shape.render(
+    { color: layer.color || '#ffffff', color2: layer.color2 || '#000000', opacity: layer.opacity ?? 100, id: layer.id },
     layer.params || {}
   );
+  const region = layer.clipRegion;
+  if (!region || region === 'full') return content;
+  const clipId  = `cr-${layer.id}`;
+  const clipDef = _clipRegionPath(region, CANVAS_W, CANVAS_H);
+  if (!clipDef) return content;
+  return `<defs><clipPath id="${clipId}"><path d="${clipDef}"/></clipPath></defs><g clip-path="url(#${clipId})">${content}</g>`;
+}
+
+function _clipRegionPath(region, W, H) {
+  const hw = W / 2, hh = H / 2;
+  switch (region) {
+    case 'top':    return `M0,0 L${W},0 L${W},${hh} L0,${hh} Z`;
+    case 'bottom': return `M0,${hh} L${W},${hh} L${W},${H} L0,${H} Z`;
+    case 'left':   return `M0,0 L${hw},0 L${hw},${H} L0,${H} Z`;
+    case 'right':  return `M${hw},0 L${W},0 L${W},${H} L${hw},${H} Z`;
+    case 'tl':     return `M0,0 L${hw},0 L${hw},${hh} L0,${hh} Z`;
+    case 'tr':     return `M${hw},0 L${W},0 L${W},${hh} L${hw},${hh} Z`;
+    case 'bl':     return `M0,${hh} L${hw},${hh} L${hw},${H} L0,${H} Z`;
+    case 'br':     return `M${hw},${hh} L${W},${hh} L${W},${H} L${hw},${H} Z`;
+    default:       return null;
+  }
 }
 
 // ---- Emblem rendering ----
 // emblem.x/y are % of canvas; emblem.size is % of canvas width
 
-function renderEmblemEl(svgEl, emblem, selected) {
+function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
   if (emblem.hidden) return;
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   g.classList.add('render-emblem');
   g.dataset.emblemId = emblem.id;
+  if (emblem.opacity != null && emblem.opacity < 100) {
+    g.setAttribute('opacity', emblem.opacity / 100);
+  }
 
-  const px = emblem.x / 100 * CANVAS_W;
-  const py = emblem.y / 100 * CANVAS_H;
-  const sz = emblem.size / 100 * CANVAS_W;
-  const half = sz / 2;
+  const px    = emblem.x / 100 * CANVAS_W;
+  const py    = emblem.y / 100 * CANVAS_H;
+  const sz    = emblem.size / 100 * CANVAS_W;
+  const sxm   = emblem.scaleX || 1;   // width multiplier
+  const sym   = emblem.scaleY || 1;   // height multiplier
+  const w     = sz * sxm;             // actual display width
+  const h     = sz * sym;             // actual display height
+  const half  = sz / 2;               // kept for backward compat (uniform handles)
+  const halfW = w / 2;
+  const halfH = h / 2;
+
+  // ---- Group emblem — render children as a unit ----
+  if (emblem.type === 'group' && Array.isArray(emblem.children)) {
+    emblem.children.forEach(child => _renderGroupChild(g, child));
+
+    // Bounding box for hitbox + selection
+    const bounds = emblem.children.filter(c => !c.hidden).map(c => {
+      const cx = c.x / 100 * CANVAS_W;
+      const cy = c.y / 100 * CANVAS_H;
+      const h  = (c.size / 100 * CANVAS_W) / 2;
+      return { x1: cx - h, y1: cy - h, x2: cx + h, y2: cy + h };
+    });
+    if (bounds.length > 0) {
+      const bx1 = Math.min(...bounds.map(b => b.x1));
+      const by1 = Math.min(...bounds.map(b => b.y1));
+      const bx2 = Math.max(...bounds.map(b => b.x2));
+      const by2 = Math.max(...bounds.map(b => b.y2));
+      const hitbox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      hitbox.setAttribute('x', bx1); hitbox.setAttribute('y', by1);
+      hitbox.setAttribute('width', bx2 - bx1); hitbox.setAttribute('height', by2 - by1);
+      hitbox.setAttribute('fill', 'transparent');
+      hitbox.classList.add('emblem-hitbox');
+      g.appendChild(hitbox);
+      if (selected || multiSelected) {
+        const selR = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        selR.setAttribute('x', bx1 - 2); selR.setAttribute('y', by1 - 2);
+        selR.setAttribute('width', bx2 - bx1 + 4); selR.setAttribute('height', by2 - by1 + 4);
+        selR.setAttribute('fill', 'none');
+        selR.setAttribute('stroke', selected ? '#2563EB' : '#06B6D4');
+        selR.setAttribute('stroke-width', '1.5');
+        selR.setAttribute('stroke-dasharray', '5 3');
+        selR.style.pointerEvents = 'none';
+        g.appendChild(selR);
+      }
+    }
+    svgEl.appendChild(g);
+    return;
+  }
 
   // Build transform: translate to position, rotate, then flip
   const sx = emblem.flipX ? -1 : 1;
@@ -393,18 +680,36 @@ function renderEmblemEl(svgEl, emblem, selected) {
     const shapeDef = BASIC_SHAPES[emblem.shapeKey];
     if (shapeDef) {
       const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      icon.setAttribute('x', -half);
-      icon.setAttribute('y', -half);
-      icon.setAttribute('width', sz);
-      icon.setAttribute('height', sz);
+      icon.setAttribute('x', -halfW);
+      icon.setAttribute('y', -halfH);
+      icon.setAttribute('width', w);
+      icon.setAttribute('height', h);
       icon.setAttribute('viewBox', '0 0 100 100');
+      icon.setAttribute('preserveAspectRatio', 'none');
+      icon.setAttribute('overflow', 'visible');
       icon.setAttribute('fill', emblem.fg || '#ffffff');
+      if (emblem.strokeColor && emblem.strokeWidth > 0) {
+        // Scale stroke width to viewBox units so it looks consistent at any size
+        const sw = (emblem.strokeWidth / Math.min(w, h)) * 100;
+        icon.setAttribute('stroke', emblem.strokeColor);
+        icon.setAttribute('stroke-width', sw);
+        icon.setAttribute('paint-order', 'stroke fill');
+      }
       icon.innerHTML = shapeDef.path;
       g.appendChild(icon);
     }
-    const hitbox = _makeHitbox(half, sz);
+    const hitbox = _makeHitbox(halfW, halfH);
     g.appendChild(hitbox);
-    if (selected) _appendEmblemHandles(g, half);
+    if (multiSelected && !selected) {
+      const msRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      msRect.setAttribute('x', -halfW); msRect.setAttribute('y', -halfH);
+      msRect.setAttribute('width', w); msRect.setAttribute('height', h);
+      msRect.setAttribute('fill', 'none'); msRect.setAttribute('stroke', '#06B6D4');
+      msRect.setAttribute('stroke-width', '1.5'); msRect.setAttribute('stroke-dasharray', '4 3');
+      msRect.style.pointerEvents = 'none';
+      g.appendChild(msRect);
+    }
+    if (selected) _appendEmblemHandles(g, halfW, halfH);
     svgEl.appendChild(g);
     return;
   }
@@ -412,14 +717,15 @@ function renderEmblemEl(svgEl, emblem, selected) {
   // Text emblem — render as SVG text
   if (emblem.type === 'text') {
     _renderTextContent(g, emblem, sz);
-    const estW = Math.max(sz, (emblem.text || '').length * sz * 0.55);
+    const estW = Math.max(w, (emblem.text || '').length * sz * 0.55);
+    const estH = h;
     const hitbox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    hitbox.setAttribute('x', -estW/2); hitbox.setAttribute('y', -sz/2);
-    hitbox.setAttribute('width', estW); hitbox.setAttribute('height', sz);
+    hitbox.setAttribute('x', -estW/2); hitbox.setAttribute('y', -estH/2);
+    hitbox.setAttribute('width', estW); hitbox.setAttribute('height', estH);
     hitbox.setAttribute('fill', 'transparent');
     hitbox.classList.add('emblem-hitbox');
     g.appendChild(hitbox);
-    if (selected) _appendEmblemHandles(g, half);
+    if (selected) _appendEmblemHandles(g, estW/2, estH/2);
     svgEl.appendChild(g);
     return;
   }
@@ -427,8 +733,8 @@ function renderEmblemEl(svgEl, emblem, selected) {
   // Background rect
   if (emblem.bg && emblem.bg !== 'transparent') {
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bg.setAttribute('x', -half); bg.setAttribute('y', -half);
-    bg.setAttribute('width', sz); bg.setAttribute('height', sz);
+    bg.setAttribute('x', -halfW); bg.setAttribute('y', -halfH);
+    bg.setAttribute('width', w); bg.setAttribute('height', h);
     bg.setAttribute('fill', emblem.bg);
     g.appendChild(bg);
   }
@@ -446,45 +752,130 @@ function renderEmblemEl(svgEl, emblem, selected) {
     div.innerHTML = svgSrc;
     const inner = div.querySelector('svg');
     if (inner) {
+      // Strip Inkscape/RDF metadata — it contains undeclared namespace prefixes
+      // (rdf:RDF, dc:, cc:) that break XMLSerializer → DOMParser round-trips
+      inner.querySelectorAll('metadata, sodipodi\\:namedview').forEach(el => el.remove());
       const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      icon.setAttribute('x', -half); icon.setAttribute('y', -half);
-      icon.setAttribute('width', sz); icon.setAttribute('height', sz);
+      icon.setAttribute('x', -halfW); icon.setAttribute('y', -halfH);
+      icon.setAttribute('width', w); icon.setAttribute('height', h);
       const vb = inner.getAttribute('viewBox') ||
         `0 0 ${inner.getAttribute('width') || 512} ${inner.getAttribute('height') || 512}`;
       icon.setAttribute('viewBox', vb);
+      icon.setAttribute('preserveAspectRatio', 'none');
+      icon.setAttribute('overflow', 'visible');
       icon.innerHTML = inner.innerHTML;
       if (!emblem.heraldic) icon.setAttribute('fill', emblem.fg || '#ffffff');
+      if (emblem.strokeColor && emblem.strokeWidth > 0) {
+        icon.setAttribute('stroke', emblem.strokeColor);
+        icon.setAttribute('stroke-width', emblem.strokeWidth);
+        icon.setAttribute('paint-order', 'stroke fill');
+      }
       g.appendChild(icon);
     }
   }
 
-  const hitbox = _makeHitbox(half, sz);
+  const hitbox = _makeHitbox(halfW, halfH);
   g.appendChild(hitbox);
-  if (selected) _appendEmblemHandles(g, half);
+  if (multiSelected && !selected) {
+    const msRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    msRect.setAttribute('x', -halfW); msRect.setAttribute('y', -halfH);
+    msRect.setAttribute('width', w); msRect.setAttribute('height', h);
+    msRect.setAttribute('fill', 'none');
+    msRect.setAttribute('stroke', '#06B6D4');
+    msRect.setAttribute('stroke-width', '1.5');
+    msRect.setAttribute('stroke-dasharray', '4 3');
+    msRect.style.pointerEvents = 'none';
+    g.appendChild(msRect);
+  }
+  if (selected) _appendEmblemHandles(g, halfW, halfH);
   svgEl.appendChild(g);
 }
 
 // ---- Transparent hitbox for mouse events ----
-function _makeHitbox(half, sz) {
+function _makeHitbox(halfW, halfH) {
+  if (halfH === undefined) halfH = halfW;
   const h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  h.setAttribute('x', -half); h.setAttribute('y', -half);
-  h.setAttribute('width', sz); h.setAttribute('height', sz);
+  h.setAttribute('x', -halfW); h.setAttribute('y', -halfH);
+  h.setAttribute('width', halfW * 2); h.setAttribute('height', halfH * 2);
   h.setAttribute('fill', 'transparent');
   h.classList.add('emblem-hitbox');
   return h;
 }
 
+// ---- Render a single emblem as a group child (no data-emblem-id, no handles) ----
+function _renderGroupChild(parentG, child) {
+  if (child.hidden) return;
+  const px   = child.x    / 100 * CANVAS_W;
+  const py   = child.y    / 100 * CANVAS_H;
+  const sz   = child.size / 100 * CANVAS_W;
+  const half = sz / 2;
+  const sx   = child.flipX ? -1 : 1;
+  const sy   = child.flipY ? -1 : 1;
+
+  const cg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  cg.classList.add('group-child');
+  cg.setAttribute('transform', `translate(${px},${py}) rotate(${child.rotate||0}) scale(${sx},${sy})`);
+
+  if (child.type === 'shape') {
+    const shapeDef = BASIC_SHAPES[child.shapeKey];
+    if (shapeDef) {
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('x', -half); icon.setAttribute('y', -half);
+      icon.setAttribute('width', sz); icon.setAttribute('height', sz);
+      icon.setAttribute('viewBox', '0 0 100 100');
+      icon.setAttribute('fill', child.fg || '#ffffff');
+      icon.innerHTML = shapeDef.path;
+      cg.appendChild(icon);
+    }
+  } else if (child.type === 'text') {
+    _renderTextContent(cg, child, sz);
+  } else {
+    if (child.bg && child.bg !== 'transparent') {
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bg.setAttribute('x', -half); bg.setAttribute('y', -half);
+      bg.setAttribute('width', sz); bg.setAttribute('height', sz);
+      bg.setAttribute('fill', child.bg);
+      cg.appendChild(bg);
+    }
+    if (child._svgContent) {
+      let svgSrc = child._svgContent;
+      if (child.heraldic && child.heraldColours && Object.keys(child.heraldColours).length > 0) {
+        svgSrc = _applyHeraldicColourMap(svgSrc, child.heraldColours);
+      }
+      const div = document.createElement('div');
+      div.innerHTML = svgSrc;
+      const inner = div.querySelector('svg');
+      if (inner) {
+        inner.querySelectorAll('metadata, sodipodi\\:namedview').forEach(el => el.remove());
+        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        icon.setAttribute('x', -half); icon.setAttribute('y', -half);
+        icon.setAttribute('width', sz); icon.setAttribute('height', sz);
+        const vb = inner.getAttribute('viewBox') ||
+          `0 0 ${inner.getAttribute('width')||512} ${inner.getAttribute('height')||512}`;
+        icon.setAttribute('viewBox', vb);
+        icon.innerHTML = inner.innerHTML;
+        if (!child.heraldic) icon.setAttribute('fill', child.fg || '#ffffff');
+        cg.appendChild(icon);
+      }
+    }
+  }
+  parentG.appendChild(cg);
+}
+
 // ---- MS Word-style selection handles ----
 // Renders: dashed outline + 4 corner resize handles + 1 rotation handle
-function _appendEmblemHandles(g, half) {
-  const HS = Math.max(4, Math.min(7, half * 0.12)); // handle half-size (4–7px)
-  const RC = Math.max(4, Math.min(6, half * 0.1));  // rotation circle radius
-  const RO = Math.max(16, half * 0.25 + 10);        // rotation handle offset above emblem
+// halfW / halfH define the rectangle (halfH defaults to halfW for squares)
+function _appendEmblemHandles(g, halfW, halfH) {
+  if (halfH === undefined) halfH = halfW;
+  const minH = Math.min(halfW, halfH);
+  const HS = Math.max(4, Math.min(7, minH * 0.12)); // handle half-size (4–7px)
+  const RC = Math.max(4, Math.min(6, minH * 0.1));  // rotation circle radius
+  const RO = Math.max(16, halfH * 0.25 + 10);       // rotation handle offset above emblem
 
-  // Dashed blue selection outline
+  // Dashed blue selection outline (rectangular)
   const sel = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  sel.setAttribute('x', -half); sel.setAttribute('y', -half);
-  sel.setAttribute('width', half * 2); sel.setAttribute('height', half * 2);
+  sel.setAttribute('x', -halfW); sel.setAttribute('y', -halfH);
+  sel.setAttribute('width', halfW * 2); sel.setAttribute('height', halfH * 2);
   sel.setAttribute('fill', 'none');
   sel.setAttribute('stroke', '#2563EB');
   sel.setAttribute('stroke-width', '1.5');
@@ -492,17 +883,17 @@ function _appendEmblemHandles(g, half) {
   sel.style.pointerEvents = 'none';
   g.appendChild(sel);
 
-  // Rotation connector line
+  // Rotation connector line (from top center)
   const rotLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  rotLine.setAttribute('x1', 0); rotLine.setAttribute('y1', -half);
-  rotLine.setAttribute('x2', 0); rotLine.setAttribute('y2', -(half + RO));
+  rotLine.setAttribute('x1', 0); rotLine.setAttribute('y1', -halfH);
+  rotLine.setAttribute('x2', 0); rotLine.setAttribute('y2', -(halfH + RO));
   rotLine.setAttribute('stroke', '#2563EB'); rotLine.setAttribute('stroke-width', '1.5');
   rotLine.style.pointerEvents = 'none';
   g.appendChild(rotLine);
 
   // Rotation handle circle
   const rotH = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  rotH.setAttribute('cx', 0); rotH.setAttribute('cy', -(half + RO));
+  rotH.setAttribute('cx', 0); rotH.setAttribute('cy', -(halfH + RO));
   rotH.setAttribute('r', RC);
   rotH.setAttribute('fill', 'white'); rotH.setAttribute('stroke', '#2563EB');
   rotH.setAttribute('stroke-width', '1.5');
@@ -511,16 +902,16 @@ function _appendEmblemHandles(g, half) {
   rotH.style.cursor = 'grab';
   g.appendChild(rotH);
 
-  // 4 corner resize handles
+  // 4 corner resize handles (placed at actual rectangle corners)
   const corners = [
-    { key: 'resize-tl', dx: -1, dy: -1, cur: 'nwse-resize' },
-    { key: 'resize-tr', dx:  1, dy: -1, cur: 'nesw-resize' },
-    { key: 'resize-bl', dx: -1, dy:  1, cur: 'nesw-resize' },
-    { key: 'resize-br', dx:  1, dy:  1, cur: 'nwse-resize' },
+    { key: 'resize-tl', cx: -halfW, cy: -halfH, cur: 'nwse-resize' },
+    { key: 'resize-tr', cx:  halfW, cy: -halfH, cur: 'nesw-resize' },
+    { key: 'resize-bl', cx: -halfW, cy:  halfH, cur: 'nesw-resize' },
+    { key: 'resize-br', cx:  halfW, cy:  halfH, cur: 'nwse-resize' },
   ];
-  corners.forEach(({ key, dx, dy, cur }) => {
+  corners.forEach(({ key, cx, cy, cur }) => {
     const h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    h.setAttribute('x', dx * half - HS); h.setAttribute('y', dy * half - HS);
+    h.setAttribute('x', cx - HS); h.setAttribute('y', cy - HS);
     h.setAttribute('width', HS * 2); h.setAttribute('height', HS * 2);
     h.setAttribute('fill', 'white'); h.setAttribute('stroke', '#2563EB');
     h.setAttribute('stroke-width', '1.5'); h.setAttribute('rx', '1.5');
@@ -548,12 +939,21 @@ function _applyHeraldicColourMap(svgStr, colourMap) {
 function makeThumbnail(des) {
   const shapeId = des.flagShape || 'rect32';
   const shape = FLAG_SHAPES[shapeId] || FLAG_SHAPES.rect32;
+  // renderLayer() uses global CANVAS_W/H — save and override so overlays
+  // render correctly for this design's flag shape, then restore.
+  const savedW = CANVAS_W, savedH = CANVAS_H;
+  CANVAS_W = shape.w; CANVAS_H = shape.h;
+
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', `0 0 ${shape.w} ${shape.h}`);
   svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-  if (shape.clip) {
+  if (shape.clip || shape.clipD) {
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    defs.innerHTML = `<clipPath id="thumb-clip"><polygon points="${shape.clip}"/></clipPath>`;
+    if (shape.clip) {
+      defs.innerHTML = `<clipPath id="thumb-clip"><polygon points="${shape.clip}"/></clipPath>`;
+    } else {
+      defs.innerHTML = `<clipPath id="thumb-clip"><path d="${shape.clipD}"/></clipPath>`;
+    }
     svg.appendChild(defs);
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('clip-path', 'url(#thumb-clip)');
@@ -572,6 +972,8 @@ function makeThumbnail(des) {
       svg.appendChild(g);
     });
   }
+
+  CANVAS_W = savedW; CANVAS_H = savedH;
   return svg;
 }
 
@@ -581,6 +983,14 @@ function _renderTextContent(g, emblem, sz) {
   const font     = emblem.fontFamily || 'Bebas Neue';
   const fill     = emblem.fg || '#ffffff';
   const arc      = emblem.textArc || 0;
+
+  const applyTextStroke = el => {
+    if (emblem.strokeColor && emblem.strokeWidth > 0) {
+      el.setAttribute('stroke', emblem.strokeColor);
+      el.setAttribute('stroke-width', emblem.strokeWidth);
+      el.setAttribute('paint-order', 'stroke fill');
+    }
+  };
 
   if (arc === 0) {
     // Straight text
@@ -592,6 +1002,7 @@ function _renderTextContent(g, emblem, sz) {
     text.setAttribute('fill', fill);
     text.setAttribute('font-weight', '700');
     text.textContent = emblem.text || '';
+    applyTextStroke(text);
     g.appendChild(text);
   } else {
     // Curved text using textPath
@@ -620,6 +1031,7 @@ function _renderTextContent(g, emblem, sz) {
     textEl.setAttribute('font-family', font);
     textEl.setAttribute('font-size', fontSize);
     textEl.setAttribute('font-weight', '700');
+    applyTextStroke(textEl);
 
     const tPath = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
     tPath.setAttribute('href', `#${pathId}`);
