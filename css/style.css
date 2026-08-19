@@ -1423,6 +1423,8 @@ body.dark-mode .icon-cell:hover:not(.heraldic-cell) svg {
   box-shadow: var(--shadow-lg);
 }
 .shape-picker-pop.hidden { display: none; }
+.shape-picker-backdrop { position: fixed; inset: 0; z-index: 499; }
+.shape-picker-backdrop.hidden { display: none; }
 .shape-picker-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

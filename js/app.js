@@ -3505,9 +3505,17 @@ function bindFlagShapePicker() {
   pop.appendChild(title);
   pop.appendChild(grid);
 
+  const pickerBd = document.createElement('div');
+  pickerBd.className = 'shape-picker-backdrop hidden';
+  document.body.appendChild(pickerBd);
+
+  function closePicker() {
+    pop.classList.add('hidden');
+    pickerBd.classList.add('hidden');
+  }
+
   function openShapePicker() {
-    if (!pop.classList.contains('hidden')) { pop.classList.add('hidden'); return; }
-    _shapePickerOpenTime = Date.now();
+    if (!pop.classList.contains('hidden')) { closePicker(); return; }
     const r = btn.getBoundingClientRect();
     if (r.width === 0) {
       pop.style.left      = '50%';
@@ -3521,6 +3529,7 @@ function bindFlagShapePicker() {
       pop.style.transform = '';
     }
     pop.classList.remove('hidden');
+    pickerBd.classList.remove('hidden');
   }
   window._openShapePicker = openShapePicker;
 
@@ -3529,10 +3538,7 @@ function bindFlagShapePicker() {
     openShapePicker();
   });
 
-  document.addEventListener('click', e => {
-    if (Date.now() - _shapePickerOpenTime < 400) return;
-    if (!pop.contains(e.target) && e.target !== btn) pop.classList.add('hidden');
-  });
+  pickerBd.addEventListener('click', closePicker);
 }
 
 function applyFlagShape(shapeId) {
@@ -3561,8 +3567,8 @@ function randomFlag() {
       { shape: 'chevron',  params: { depth: 30 + Math.floor(Math.random() * 30), thickness: 20 + Math.floor(Math.random() * 25) } },
       { shape: 'triangle', params: { depth: 30 + Math.floor(Math.random() * 50), side: 0 } },
       { shape: 'canton',   params: { width: 28 + Math.floor(Math.random() * 15), height: 40 + Math.floor(Math.random() * 20) } },
-      { shape: 'hbar',     params: { thickness: 15 + Math.floor(Math.random() * 20) } },
-      { shape: 'vbar',     params: { thickness: 15 + Math.floor(Math.random() * 20) } },
+      { shape: 'hband',    params: { thickness: 15 + Math.floor(Math.random() * 20) } },
+      { shape: 'vband',    params: { thickness: 15 + Math.floor(Math.random() * 20) } },
     ];
     const pick = opts[Math.floor(Math.random() * opts.length)];
     const overlayColor = cols.find(c => c !== bands[0].color) || '#FFFFFF';
