@@ -1388,18 +1388,49 @@ function extractHeraldicColours(svgStr) {
   return [...seen].slice(0, 5);
 }
 
-// Returns the most-used non-black/white fill in an SVG — used as the default tint colour
+// Returns the most-used non-black/white fill in an SVG
 function detectPrimaryHeraldicColour(svgStr) {
   const re = /fill\s*[=:]\s*"?\s*(#[0-9a-fA-F]{6})/gi;
-  const EXCLUDE = new Set(['#000000','#1c1c1c','#ffffff','#eeeeee','#f0f0f0','#fefefe','#fdfdfd']);
+  const NEUTRALS = new Set(['#000000','#1c1c1c','#111111','#ffffff','#eeeeee','#f0f0f0','#fefefe','#fdfdfd','#cccccc','#c8c8c8','#d0d0d0','#bbbbbb']);
   const counts = {};
   let m;
   while ((m = re.exec(svgStr)) !== null) {
     const c = m[1].toLowerCase();
-    if (!EXCLUDE.has(c)) counts[c] = (counts[c] || 0) + 1;
+    if (!NEUTRALS.has(c)) counts[c] = (counts[c] || 0) + 1;
   }
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   return sorted[0]?.[0] || null;
+}
+
+function _hexHue(hex) {
+  const r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  if (max === min) return -1;
+  const d = max - min;
+  let h;
+  if (max === r) h = ((g - b) / d + 6) % 6;
+  else if (max === g) h = (b - r) / d + 2;
+  else h = (r - g) / d + 4;
+  return h * 60;
+}
+
+// True when all chromatic fills in the SVG share roughly the same hue — i.e. it's a
+// single-tincture DrawShield charge where auto-tinting makes sense.
+function isMonoTinctureSvg(svgStr) {
+  const re = /fill\s*[=:]\s*"?\s*(#[0-9a-fA-F]{6})/gi;
+  const NEUTRALS = new Set(['#000000','#1c1c1c','#111111','#ffffff','#eeeeee','#f0f0f0','#fefefe','#fdfdfd','#cccccc','#c8c8c8','#d0d0d0','#bbbbbb']);
+  const hues = [];
+  let m;
+  while ((m = re.exec(svgStr)) !== null) {
+    const c = m[1].toLowerCase();
+    if (NEUTRALS.has(c)) continue;
+    const h = _hexHue(c);
+    if (h >= 0) hues.push(h);
+  }
+  if (hues.length === 0) return true;
+  const minH = Math.min(...hues), maxH = Math.max(...hues);
+  const range = Math.min(maxH - minH, minH + 360 - maxH);
+  return range < 55;
 }
 
 // Apply a colour remap {originalHex: newHex} to an SVG string
@@ -1418,6 +1449,9 @@ function applyHeraldicColourMap(svgStr, colourMap) {
 async function placeHeraldicEmblem(slug, label, catId, x, y) {
   const svgContent = await fetchHeraldicSvg(catId, slug);
   if (!svgContent) { showToast('Could not load heraldic icon — check your connection'); return; }
+  // Mono-tincture SVGs (single hue family) auto-tint to a nice heraldic Or gold.
+  // Multi-tincture SVGs (bagpipe red+grey, octopus etc.) show their original colours.
+  const tintColor = isMonoTinctureSvg(svgContent) ? '#d4a017' : null;
   const emblem = {
     id: uuid(),
     slug: `heraldic:${catId}/${slug}`,
@@ -1439,7 +1473,7 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
     strokeWidth: 0,
     fg: '#ffffff',
     bg: 'transparent',
-    tintColor: null,
+    tintColor,
     _svgContent: svgContent,
   };
   design.emblems.push(emblem);
@@ -1821,8 +1855,8 @@ function buildHeraldSwatches(emblem) {
   const input = document.createElement('input');
   input.type = 'color';
   input.className = 'ec-herald-swatch';
-  // Suggest the primary colour from the SVG but don't apply until user picks
-  const suggested = (emblem.tintColor) || (emblem._svgContent ? detectPrimaryHeraldicColour(emblem._svgContent) : null) || '#ffff00';
+  // Seed picker with current tint or detected primary (so user has a sensible starting point)
+  const suggested = emblem.tintColor || (emblem._svgContent ? detectPrimaryHeraldicColour(emblem._svgContent) : null) || '#d4a017';
   input.value = suggested;
   input.title = emblem.tintColor ? 'Tint colour' : 'Apply tint colour (currently showing original colours)';
   input.addEventListener('input', e => {
