@@ -1449,6 +1449,30 @@ function applyHeraldicColourMap(svgStr, colourMap) {
 async function placeHeraldicEmblem(slug, label, catId, x, y) {
   const svgContent = await fetchHeraldicSvg(catId, slug);
   if (!svgContent) { showToast('Could not load heraldic icon — check your connection'); return; }
+  // Detect natural aspect ratio so the emblem box matches the SVG's proportions
+  let scaleX = 1, scaleY = 1;
+  try {
+    const tmpDiv = document.createElement('div');
+    tmpDiv.innerHTML = svgContent;
+    const svgEl = tmpDiv.querySelector('svg');
+    if (svgEl) {
+      let svgW, svgH;
+      const vb = svgEl.getAttribute('viewBox');
+      if (vb) {
+        const p = vb.trim().split(/[\s,]+/);
+        svgW = parseFloat(p[2]); svgH = parseFloat(p[3]);
+      } else {
+        svgW = parseFloat(svgEl.getAttribute('width'));
+        svgH = parseFloat(svgEl.getAttribute('height'));
+      }
+      if (svgW > 0 && svgH > 0) {
+        const ar = svgW / svgH;
+        if (ar < 0.95) { scaleX = ar; }        // taller than wide
+        else if (ar > 1.05) { scaleY = 1 / ar; } // wider than tall
+      }
+    }
+  } catch(e) {}
+
   // Default to heraldic Or — user can swap to any tincture or reset to original SVG colours
   const tintColor = '#c8960c';
   const emblem = {
@@ -1465,8 +1489,8 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
     rotate: 0,
     flipX: false,
     flipY: false,
-    scaleX: 1,
-    scaleY: 1,
+    scaleX,
+    scaleY,
     opacity: 100,
     strokeColor: '#000000',
     strokeWidth: 0,
@@ -1861,49 +1885,48 @@ function buildHeraldSwatches(emblem) {
   const container = document.getElementById('ec-herald-swatches');
   container.innerHTML = '';
 
-  function applyTint(color) {
-    emblem.tintColor = color;
-    input.value = color;
-    renderAll();
-  }
-
-  // Heraldic tincture presets
-  const presets = document.createElement('div');
-  presets.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;';
-  HERALDIC_TINCTURES.forEach(t => {
-    const btn = document.createElement('button');
-    btn.title = t.name;
-    btn.style.cssText = `width:20px;height:20px;border-radius:50%;background:${t.color};border:2px solid rgba(255,255,255,0.25);cursor:pointer;padding:0;flex-shrink:0;`;
-    if (t.name === 'Sable') btn.style.border = '2px solid rgba(255,255,255,0.5)';
-    btn.addEventListener('click', () => applyTint(t.color));
-    presets.appendChild(btn);
-  });
-  container.appendChild(presets);
-
-  // Custom colour picker + reset
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:6px;';
-
+  // Custom colour picker
   const input = document.createElement('input');
   input.type = 'color';
   input.className = 'ec-herald-swatch';
   input.value = emblem.tintColor || '#c8960c';
   input.title = 'Custom tint colour';
-  input.addEventListener('input', e => applyTint(e.target.value));
-  row.appendChild(input);
+  input.addEventListener('input', e => {
+    emblem.tintColor = e.target.value;
+    renderAll();
+  });
+  container.appendChild(input);
 
+  // Heraldic tincture presets — flat flex children
+  HERALDIC_TINCTURES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.title = t.name;
+    btn.style.cssText = `width:18px;height:18px;border-radius:50%;background:${t.color};border:2px solid rgba(255,255,255,0.3);cursor:pointer;padding:0;flex-shrink:0;`;
+    btn.addEventListener('click', () => {
+      emblem.tintColor = t.color;
+      input.value = t.color;
+      renderAll();
+    });
+    container.appendChild(btn);
+  });
+
+  // Separator
+  const sep = document.createElement('span');
+  sep.style.cssText = 'width:1px;height:16px;background:rgba(255,255,255,0.15);flex-shrink:0;';
+  container.appendChild(sep);
+
+  // Reset to original SVG colours
   const resetBtn = document.createElement('button');
   resetBtn.textContent = '↺';
   resetBtn.title = 'Restore original colours';
   resetBtn.className = 'icon-btn';
-  resetBtn.style.cssText = 'font-size:13px;width:22px;height:22px;';
+  resetBtn.style.cssText = 'font-size:13px;width:22px;height:22px;flex-shrink:0;';
   resetBtn.addEventListener('click', () => {
     emblem.tintColor = null;
     input.value = '#c8960c';
     renderAll();
   });
-  row.appendChild(resetBtn);
-  container.appendChild(row);
+  container.appendChild(resetBtn);
 }
 
 function bindEmblemControls() {
