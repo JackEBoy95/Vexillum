@@ -909,7 +909,12 @@ function bindIconPanel() {
 
   iconSearch.addEventListener('input', e => {
     iconSearchQuery = e.target.value.trim().toLowerCase();
-    loadHeraldGrid(activeHeraldCat);
+    if (iconSearchQuery) {
+      loadSearchResults();
+    } else {
+      if (activeHeraldCat === '__shapes__') loadShapesGrid();
+      else loadHeraldGrid(activeHeraldCat);
+    }
   });
 
   // Text add button
@@ -1063,6 +1068,106 @@ function loadIconGrid(category) {
   renderBatch();
 }
 
+function loadSearchResults() {
+  iconGrid.innerHTML = '';
+  const words = iconSearchQuery.split(/\s+/).filter(Boolean);
+  if (!words.length) return;
+
+  // Match regular (non-heraldic) icons
+  const regularMatches = ICON_LIST.filter(icon =>
+    words.every(w => icon.label.toLowerCase().includes(w))
+  );
+
+  // Match heraldic icons across all categories
+  const heraldMatches = [];
+  HERALDIC_CATEGORIES.forEach(hcat => {
+    hcat.icons.forEach(raw => {
+      const colonIdx = raw.indexOf(':');
+      const fetchCat = colonIdx !== -1 ? raw.slice(0, colonIdx) : hcat.id;
+      const slug     = colonIdx !== -1 ? raw.slice(colonIdx + 1) : raw;
+      const normalised = slug.replace(/-/g, ' ');
+      if (words.every(w => normalised.includes(w))) {
+        heraldMatches.push({ slug, fetchCat, label: normalised.replace(/\b\w/g, c => c.toUpperCase()) });
+      }
+    });
+  });
+
+  if (!regularMatches.length && !heraldMatches.length) {
+    iconGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);font-size:12px;padding:20px;">Nothing found</div>';
+    return;
+  }
+
+  // Render regular icons first (instant — SVGs are already in memory)
+  regularMatches.forEach(icon => {
+    const svgStr = getIconSvg(icon.slug);
+    const cell = document.createElement('div');
+    cell.className = 'icon-cell';
+    cell.title = icon.label;
+    cell.draggable = true;
+    cell.dataset.slug = icon.slug;
+    if (svgStr) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
+      wrap.innerHTML = colourIcon(svgStr, '#1C1C1C', 'transparent');
+      const s = wrap.querySelector('svg');
+      if (s) s.style.cssText = 'width:100%;height:100%;pointer-events:none;';
+      cell.appendChild(wrap);
+    }
+    const name = document.createElement('span');
+    name.className = 'icon-cell-name';
+    name.textContent = icon.label;
+    cell.appendChild(name);
+    cell.addEventListener('click', () => placeEmblem(icon, 50, 50));
+    iconGrid.appendChild(cell);
+  });
+
+  // Render heraldic icons in batches (async fetch)
+  const BATCH = 12;
+  let i = 0;
+  function renderBatch() {
+    const end = Math.min(i + BATCH, heraldMatches.length);
+    for (; i < end; i++) {
+      const { slug, fetchCat, label } = heraldMatches[i];
+      const cell = document.createElement('div');
+      cell.className = 'icon-cell heraldic-cell';
+      cell.title = label;
+      cell.draggable = true;
+      cell.dataset.slug = slug;
+      const placeholder = document.createElement('div');
+      placeholder.className = 'herald-loading';
+      cell.appendChild(placeholder);
+      const name = document.createElement('span');
+      name.className = 'icon-cell-name';
+      name.textContent = label;
+      cell.appendChild(name);
+      fetchHeraldicSvg(fetchCat, slug).then(svgText => {
+        if (!svgText || !cell.isConnected) return;
+        placeholder.remove();
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
+        const tmp = document.createElement('div');
+        tmp.innerHTML = svgText;
+        const inner = tmp.querySelector('svg');
+        if (inner) {
+          inner.setAttribute('width', '100%');
+          inner.setAttribute('height', '100%');
+          inner.style.cssText = 'pointer-events:none;';
+          wrap.appendChild(inner);
+          cell.insertBefore(wrap, name);
+        }
+      });
+      cell.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('application/vexillum-herald', JSON.stringify({ slug, label, catId: fetchCat }));
+        e.dataTransfer.effectAllowed = 'copy';
+      });
+      cell.addEventListener('click', () => placeHeraldicEmblem(slug, label, fetchCat, 50, 50));
+      iconGrid.appendChild(cell);
+    }
+    if (i < heraldMatches.length) requestAnimationFrame(renderBatch);
+  }
+  renderBatch();
+}
+
 function loadHeraldGrid(catId) {
   iconGrid.innerHTML = '';
   const hcat = HERALDIC_CATEGORIES.find(c => c.id === catId);
@@ -1070,7 +1175,12 @@ function loadHeraldGrid(catId) {
 
   let icons = hcat.icons;
   if (iconSearchQuery) {
-    icons = icons.filter(slug => slug.includes(iconSearchQuery));
+    const words = iconSearchQuery.split(/\s+/).filter(Boolean);
+    icons = icons.filter(raw => {
+      const slug = raw.includes(':') ? raw.slice(raw.indexOf(':') + 1) : raw;
+      const normalised = slug.replace(/-/g, ' ');
+      return words.every(w => normalised.includes(w));
+    });
   }
 
   if (!icons.length) {
