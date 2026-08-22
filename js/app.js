@@ -1915,14 +1915,14 @@ function buildHeraldSwatches(emblem) {
   sep.style.cssText = 'width:1px;height:16px;background:rgba(255,255,255,0.15);flex-shrink:0;';
   container.appendChild(sep);
 
-  // Reset to original SVG colours
+  // Reset to Or gold (the sensible heraldic default)
   const resetBtn = document.createElement('button');
   resetBtn.textContent = '↺';
-  resetBtn.title = 'Restore original colours';
+  resetBtn.title = 'Reset to Or (gold)';
   resetBtn.className = 'icon-btn';
   resetBtn.style.cssText = 'font-size:13px;width:22px;height:22px;flex-shrink:0;';
   resetBtn.addEventListener('click', () => {
-    emblem.tintColor = null;
+    emblem.tintColor = '#c8960c';
     input.value = '#c8960c';
     renderAll();
   });
