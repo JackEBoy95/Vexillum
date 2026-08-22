@@ -140,9 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (em.heraldic && em.heraldCat && em.heraldSlug) {
               fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
                 em._svgContent = svg;
-                if (svg && !em.tintColor) {
-                  em.tintColor = detectPrimaryHeraldicColour(svg);
-                }
                 renderAll();
               });
             } else {
@@ -1421,7 +1418,6 @@ function applyHeraldicColourMap(svgStr, colourMap) {
 async function placeHeraldicEmblem(slug, label, catId, x, y) {
   const svgContent = await fetchHeraldicSvg(catId, slug);
   if (!svgContent) { showToast('Could not load heraldic icon — check your connection'); return; }
-  const tintColor = detectPrimaryHeraldicColour(svgContent);
   const emblem = {
     id: uuid(),
     slug: `heraldic:${catId}/${slug}`,
@@ -1443,7 +1439,7 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
     strokeWidth: 0,
     fg: '#ffffff',
     bg: 'transparent',
-    tintColor,
+    tintColor: null,
     _svgContent: svgContent,
   };
   design.emblems.push(emblem);
@@ -1825,10 +1821,13 @@ function buildHeraldSwatches(emblem) {
   const input = document.createElement('input');
   input.type = 'color';
   input.className = 'ec-herald-swatch';
-  input.value = emblem.tintColor || '#ffffff';
-  input.title = 'Tint colour';
+  // Suggest the primary colour from the SVG but don't apply until user picks
+  const suggested = (emblem.tintColor) || (emblem._svgContent ? detectPrimaryHeraldicColour(emblem._svgContent) : null) || '#ffff00';
+  input.value = suggested;
+  input.title = emblem.tintColor ? 'Tint colour' : 'Apply tint colour (currently showing original colours)';
   input.addEventListener('input', e => {
     emblem.tintColor = e.target.value;
+    input.title = 'Tint colour';
     renderAll();
   });
   container.appendChild(input);
@@ -1840,7 +1839,9 @@ function buildHeraldSwatches(emblem) {
   resetBtn.style.cssText = 'font-size:13px;width:22px;height:22px;';
   resetBtn.addEventListener('click', () => {
     emblem.tintColor = null;
-    input.value = '#ffffff';
+    const sug = emblem._svgContent ? detectPrimaryHeraldicColour(emblem._svgContent) : null;
+    input.value = sug || '#ffff00';
+    input.title = 'Apply tint colour (currently showing original colours)';
     renderAll();
   });
   container.appendChild(resetBtn);
@@ -3078,10 +3079,7 @@ function loadDesign(saved) {
       heraldicPromises.push(
         fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
           em._svgContent = svg;
-          // Set tint colour for older saved designs that lack it
-          if (svg && !em.tintColor) {
-            em.tintColor = detectPrimaryHeraldicColour(svg);
-          }
+          // tintColor stays null unless the saved design had one set explicitly
         })
       );
     } else {
