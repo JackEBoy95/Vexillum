@@ -140,10 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (em.heraldic && em.heraldCat && em.heraldSlug) {
               fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
                 em._svgContent = svg;
-                if (svg && !em.heraldColours) {
-                  const colours = extractHeraldicColours(svg);
-                  em.heraldColours = {};
-                  colours.forEach(c => { em.heraldColours[c] = c; });
+                if (svg && !em.tintColor) {
+                  em.tintColor = detectPrimaryHeraldicColour(svg);
                 }
                 renderAll();
               });
@@ -1382,7 +1380,7 @@ function placeEmblem(icon, x, y) {
 // Extract up to 4 unique non-black fill colours from an SVG string
 function extractHeraldicColours(svgStr) {
   const seen = new Set();
-  const re = /fill\s*:\s*(#[0-9a-fA-F]{3,8})/gi;
+  const re = /fill\s*[=:]\s*"?\s*(#[0-9a-fA-F]{3,8})/gi;
   let m;
   const EXCLUDE = new Set(['#000000','#000','#1c1c1c','#ffffff','#fff','#eeeeee','#eee','#f0f0f0','#fefefe','#fdfdfd']);
   while ((m = re.exec(svgStr)) !== null) {
@@ -1391,6 +1389,20 @@ function extractHeraldicColours(svgStr) {
     if (!EXCLUDE.has(c)) seen.add(c);
   }
   return [...seen].slice(0, 5);
+}
+
+// Returns the most-used non-black/white fill in an SVG — used as the default tint colour
+function detectPrimaryHeraldicColour(svgStr) {
+  const re = /fill\s*[=:]\s*"?\s*(#[0-9a-fA-F]{6})/gi;
+  const EXCLUDE = new Set(['#000000','#1c1c1c','#ffffff','#eeeeee','#f0f0f0','#fefefe','#fdfdfd']);
+  const counts = {};
+  let m;
+  while ((m = re.exec(svgStr)) !== null) {
+    const c = m[1].toLowerCase();
+    if (!EXCLUDE.has(c)) counts[c] = (counts[c] || 0) + 1;
+  }
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return sorted[0]?.[0] || null;
 }
 
 // Apply a colour remap {originalHex: newHex} to an SVG string
@@ -1409,10 +1421,7 @@ function applyHeraldicColourMap(svgStr, colourMap) {
 async function placeHeraldicEmblem(slug, label, catId, x, y) {
   const svgContent = await fetchHeraldicSvg(catId, slug);
   if (!svgContent) { showToast('Could not load heraldic icon — check your connection'); return; }
-  // Build initial colour map (identity — original colours unchanged)
-  const colours = extractHeraldicColours(svgContent);
-  const heraldColours = {};
-  colours.forEach(c => { heraldColours[c] = c; });
+  const tintColor = detectPrimaryHeraldicColour(svgContent);
   const emblem = {
     id: uuid(),
     slug: `heraldic:${catId}/${slug}`,
@@ -1434,7 +1443,7 @@ async function placeHeraldicEmblem(slug, label, catId, x, y) {
     strokeWidth: 0,
     fg: '#ffffff',
     bg: 'transparent',
-    heraldColours,
+    tintColor,
     _svgContent: svgContent,
   };
   design.emblems.push(emblem);
@@ -1812,33 +1821,29 @@ function updateEmblemControls() {
 function buildHeraldSwatches(emblem) {
   const container = document.getElementById('ec-herald-swatches');
   container.innerHTML = '';
-  const entries = emblem.heraldColours ? Object.entries(emblem.heraldColours) : [];
-  if (entries.length === 0) {
-    // No tinctures extracted — show a fill override picker that replaces ALL fills
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.className = 'ec-herald-swatch';
-    input.value = emblem.fillOverride || '#ffffff';
-    input.title = 'Override fill colour';
-    input.addEventListener('input', e => {
-      emblem.fillOverride = e.target.value;
-      renderAll();
-    });
-    container.appendChild(input);
-    return;
-  }
-  entries.forEach(([origHex, currentHex]) => {
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.className = 'ec-herald-swatch';
-    input.value = currentHex;
-    input.title = `Remap ${origHex}`;
-    input.addEventListener('input', e => {
-      emblem.heraldColours[origHex] = e.target.value;
-      renderAll();
-    });
-    container.appendChild(input);
+  // Single tint colour picker — grayscale+tint filter preserves shading
+  const input = document.createElement('input');
+  input.type = 'color';
+  input.className = 'ec-herald-swatch';
+  input.value = emblem.tintColor || '#ffffff';
+  input.title = 'Tint colour';
+  input.addEventListener('input', e => {
+    emblem.tintColor = e.target.value;
+    renderAll();
   });
+  container.appendChild(input);
+  // Reset button — restores original SVG colours
+  const resetBtn = document.createElement('button');
+  resetBtn.textContent = '↺';
+  resetBtn.title = 'Restore original colours';
+  resetBtn.className = 'icon-btn';
+  resetBtn.style.cssText = 'font-size:13px;width:22px;height:22px;';
+  resetBtn.addEventListener('click', () => {
+    emblem.tintColor = null;
+    input.value = '#ffffff';
+    renderAll();
+  });
+  container.appendChild(resetBtn);
 }
 
 function bindEmblemControls() {
@@ -3073,11 +3078,9 @@ function loadDesign(saved) {
       heraldicPromises.push(
         fetchHeraldicSvg(em.heraldCat, em.heraldSlug).then(svg => {
           em._svgContent = svg;
-          // Init colour map if missing (older saved designs)
-          if (svg && !em.heraldColours) {
-            const colours = extractHeraldicColours(svg);
-            em.heraldColours = {};
-            colours.forEach(c => { em.heraldColours[c] = c; });
+          // Set tint colour for older saved designs that lack it
+          if (svg && !em.tintColor) {
+            em.tintColor = detectPrimaryHeraldicColour(svg);
           }
         })
       );

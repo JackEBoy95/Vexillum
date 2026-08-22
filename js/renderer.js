@@ -742,11 +742,9 @@ function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
   // Icon content (inline SVG)
   if (emblem._svgContent) {
     let svgSrc = emblem._svgContent;
-    if (emblem.heraldic && emblem.heraldColours && Object.keys(emblem.heraldColours).length > 0) {
+    // Legacy per-colour remap (still honoured for old saved designs)
+    if (emblem.heraldic && emblem.heraldColours && Object.keys(emblem.heraldColours).length > 0 && !emblem.tintColor) {
       svgSrc = _applyHeraldicColourMap(svgSrc, emblem.heraldColours);
-    } else if (emblem.heraldic && emblem.fillOverride) {
-      svgSrc = svgSrc.replace(/fill\s*:\s*#[0-9a-fA-F]{3,8}/gi, `fill:${emblem.fillOverride}`);
-      svgSrc = svgSrc.replace(/fill="[^"]*"/g, `fill="${emblem.fillOverride}"`);
     }
     const div = document.createElement('div');
     div.innerHTML = svgSrc;
@@ -761,10 +759,23 @@ function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
       const vb = inner.getAttribute('viewBox') ||
         `0 0 ${inner.getAttribute('width') || 512} ${inner.getAttribute('height') || 512}`;
       icon.setAttribute('viewBox', vb);
-      icon.setAttribute('preserveAspectRatio', 'none');
+      // Heraldic: preserve aspect ratio so proportions aren't distorted
+      icon.setAttribute('preserveAspectRatio', emblem.heraldic ? 'xMidYMid meet' : 'none');
       icon.setAttribute('overflow', 'visible');
       icon.innerHTML = inner.innerHTML;
-      if (!emblem.heraldic) icon.setAttribute('fill', emblem.fg || '#ffffff');
+      if (emblem.heraldic && emblem.tintColor) {
+        // Grayscale → tint filter: preserves luminance shading, applies chosen hue
+        const tc = emblem.tintColor.length === 7 ? emblem.tintColor : '#ffffff';
+        const r = parseInt(tc.slice(1,3),16)/255, g2 = parseInt(tc.slice(3,5),16)/255, b = parseInt(tc.slice(5,7),16)/255;
+        const m = `${.299*r} ${.587*r} ${.114*r} 0 0 ${.299*g2} ${.587*g2} ${.114*g2} 0 0 ${.299*b} ${.587*b} ${.114*b} 0 0 0 0 0 1 0`;
+        const fid = `ht${emblem.id.replace(/-/g,'')}`;
+        const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+        defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${m}"/></filter>`;
+        icon.insertBefore(defs, icon.firstChild);
+        icon.setAttribute('filter', `url(#${fid})`);
+      } else if (!emblem.heraldic) {
+        icon.setAttribute('fill', emblem.fg || '#ffffff');
+      }
       if (emblem.strokeColor && emblem.strokeWidth > 0) {
         icon.setAttribute('stroke', emblem.strokeColor);
         icon.setAttribute('stroke-width', emblem.strokeWidth);
@@ -839,7 +850,7 @@ function _renderGroupChild(parentG, child) {
     }
     if (child._svgContent) {
       let svgSrc = child._svgContent;
-      if (child.heraldic && child.heraldColours && Object.keys(child.heraldColours).length > 0) {
+      if (child.heraldic && child.heraldColours && Object.keys(child.heraldColours).length > 0 && !child.tintColor) {
         svgSrc = _applyHeraldicColourMap(svgSrc, child.heraldColours);
       }
       const div = document.createElement('div');
@@ -853,8 +864,20 @@ function _renderGroupChild(parentG, child) {
         const vb = inner.getAttribute('viewBox') ||
           `0 0 ${inner.getAttribute('width')||512} ${inner.getAttribute('height')||512}`;
         icon.setAttribute('viewBox', vb);
+        icon.setAttribute('preserveAspectRatio', child.heraldic ? 'xMidYMid meet' : 'none');
         icon.innerHTML = inner.innerHTML;
-        if (!child.heraldic) icon.setAttribute('fill', child.fg || '#ffffff');
+        if (child.heraldic && child.tintColor) {
+          const tc = child.tintColor.length === 7 ? child.tintColor : '#ffffff';
+          const r = parseInt(tc.slice(1,3),16)/255, g2 = parseInt(tc.slice(3,5),16)/255, b = parseInt(tc.slice(5,7),16)/255;
+          const m = `${.299*r} ${.587*r} ${.114*r} 0 0 ${.299*g2} ${.587*g2} ${.114*g2} 0 0 ${.299*b} ${.587*b} ${.114*b} 0 0 0 0 0 1 0`;
+          const fid = `ht${child.id.replace(/-/g,'')}`;
+          const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+          defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${m}"/></filter>`;
+          icon.insertBefore(defs, icon.firstChild);
+          icon.setAttribute('filter', `url(#${fid})`);
+        } else if (!child.heraldic) {
+          icon.setAttribute('fill', child.fg || '#ffffff');
+        }
         cg.appendChild(icon);
       }
     }
