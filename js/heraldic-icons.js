@@ -78,10 +78,10 @@ const HERALDIC_CATEGORIES = [
 const _heraldicCache = new Map();
 
 async function fetchHeraldicSvg(category, slug) {
-  const key = \`${category}/${slug}\`;
+  const key = `${category}/${slug}`;
   if (_heraldicCache.has(key)) return _heraldicCache.get(key);
   try {
-    const res = await fetch(\`${HERALDIC_BASE_URL}${category}/${slug}.svg\`);
+    const res = await fetch(`${HERALDIC_BASE_URL}${category}/${slug}.svg`);
     if (!res.ok) throw new Error('404');
     const text = await res.text();
     _heraldicCache.set(key, text);
