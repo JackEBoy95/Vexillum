@@ -1449,9 +1449,8 @@ function applyHeraldicColourMap(svgStr, colourMap) {
 async function placeHeraldicEmblem(slug, label, catId, x, y) {
   const svgContent = await fetchHeraldicSvg(catId, slug);
   if (!svgContent) { showToast('Could not load heraldic icon — check your connection'); return; }
-  // Mono-tincture SVGs (single hue family) auto-tint to a nice heraldic Or gold.
-  // Multi-tincture SVGs (bagpipe red+grey, octopus etc.) show their original colours.
-  const tintColor = isMonoTinctureSvg(svgContent) ? '#d4a017' : null;
+  // Default to heraldic Or — user can swap to any tincture or reset to original SVG colours
+  const tintColor = '#c8960c';
   const emblem = {
     id: uuid(),
     slug: `heraldic:${catId}/${slug}`,
@@ -1848,24 +1847,51 @@ function updateEmblemControls() {
   }
 }
 
+const HERALDIC_TINCTURES = [
+  { name: 'Or',      color: '#c8960c' },
+  { name: 'Argent',  color: '#e0e0e0' },
+  { name: 'Gules',   color: '#c91c1c' },
+  { name: 'Azure',   color: '#1c4fc8' },
+  { name: 'Sable',   color: '#1a1a1a' },
+  { name: 'Vert',    color: '#1a7a1a' },
+  { name: 'Purpure', color: '#6b1a8c' },
+];
+
 function buildHeraldSwatches(emblem) {
   const container = document.getElementById('ec-herald-swatches');
   container.innerHTML = '';
-  // Single tint colour picker — grayscale+tint filter preserves shading
+
+  function applyTint(color) {
+    emblem.tintColor = color;
+    input.value = color;
+    renderAll();
+  }
+
+  // Heraldic tincture presets
+  const presets = document.createElement('div');
+  presets.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;';
+  HERALDIC_TINCTURES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.title = t.name;
+    btn.style.cssText = `width:20px;height:20px;border-radius:50%;background:${t.color};border:2px solid rgba(255,255,255,0.25);cursor:pointer;padding:0;flex-shrink:0;`;
+    if (t.name === 'Sable') btn.style.border = '2px solid rgba(255,255,255,0.5)';
+    btn.addEventListener('click', () => applyTint(t.color));
+    presets.appendChild(btn);
+  });
+  container.appendChild(presets);
+
+  // Custom colour picker + reset
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
   const input = document.createElement('input');
   input.type = 'color';
   input.className = 'ec-herald-swatch';
-  // Seed picker with current tint or detected primary (so user has a sensible starting point)
-  const suggested = emblem.tintColor || (emblem._svgContent ? detectPrimaryHeraldicColour(emblem._svgContent) : null) || '#d4a017';
-  input.value = suggested;
-  input.title = emblem.tintColor ? 'Tint colour' : 'Apply tint colour (currently showing original colours)';
-  input.addEventListener('input', e => {
-    emblem.tintColor = e.target.value;
-    input.title = 'Tint colour';
-    renderAll();
-  });
-  container.appendChild(input);
-  // Reset button — restores original SVG colours
+  input.value = emblem.tintColor || '#c8960c';
+  input.title = 'Custom tint colour';
+  input.addEventListener('input', e => applyTint(e.target.value));
+  row.appendChild(input);
+
   const resetBtn = document.createElement('button');
   resetBtn.textContent = '↺';
   resetBtn.title = 'Restore original colours';
@@ -1873,12 +1899,11 @@ function buildHeraldSwatches(emblem) {
   resetBtn.style.cssText = 'font-size:13px;width:22px;height:22px;';
   resetBtn.addEventListener('click', () => {
     emblem.tintColor = null;
-    const sug = emblem._svgContent ? detectPrimaryHeraldicColour(emblem._svgContent) : null;
-    input.value = sug || '#ffff00';
-    input.title = 'Apply tint colour (currently showing original colours)';
+    input.value = '#c8960c';
     renderAll();
   });
-  container.appendChild(resetBtn);
+  row.appendChild(resetBtn);
+  container.appendChild(row);
 }
 
 function bindEmblemControls() {
