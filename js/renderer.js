@@ -764,13 +764,12 @@ function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
       icon.setAttribute('overflow', 'visible');
       icon.innerHTML = inner.innerHTML;
       if (emblem.heraldic && emblem.tintColor) {
-        // feBlend "color" mode: keeps tint hue+saturation, preserves original luminosity exactly.
-        // This maintains all shading/hatching contrast regardless of the source SVG colors.
-        // feComposite "in" clips the result back to the source alpha so transparent areas stay clear.
         const tc = emblem.tintColor.length === 7 ? emblem.tintColor : '#c8960c';
+        const r = parseInt(tc.slice(1,3),16)/255, g2 = parseInt(tc.slice(3,5),16)/255, b = parseInt(tc.slice(5,7),16)/255;
+        const m = `${.299*r} ${.587*r} ${.114*r} 0 0  ${.299*g2} ${.587*g2} ${.114*g2} 0 0  ${.299*b} ${.587*b} ${.114*b} 0 0  0 0 0 1 0`;
         const fid = `ht${emblem.id.replace(/-/g,'')}`;
         const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-        defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%"><feFlood flood-color="${tc}" result="tint"/><feBlend in="tint" in2="SourceGraphic" mode="color" result="blended"/><feComposite in="blended" in2="SourceGraphic" operator="in"/></filter>`;
+        defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${m}"/></filter>`;
         icon.insertBefore(defs, icon.firstChild);
         icon.setAttribute('filter', `url(#${fid})`);
       } else if (!emblem.heraldic) {
@@ -868,9 +867,11 @@ function _renderGroupChild(parentG, child) {
         icon.innerHTML = inner.innerHTML;
         if (child.heraldic && child.tintColor) {
           const tc = child.tintColor.length === 7 ? child.tintColor : '#c8960c';
+          const r = parseInt(tc.slice(1,3),16)/255, g2 = parseInt(tc.slice(3,5),16)/255, b = parseInt(tc.slice(5,7),16)/255;
+          const m = `${.299*r} ${.587*r} ${.114*r} 0 0  ${.299*g2} ${.587*g2} ${.114*g2} 0 0  ${.299*b} ${.587*b} ${.114*b} 0 0  0 0 0 1 0`;
           const fid = `ht${child.id.replace(/-/g,'')}`;
           const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-          defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%"><feFlood flood-color="${tc}" result="tint"/><feBlend in="tint" in2="SourceGraphic" mode="color" result="blended"/><feComposite in="blended" in2="SourceGraphic" operator="in"/></filter>`;
+          defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${m}"/></filter>`;
           icon.insertBefore(defs, icon.firstChild);
           icon.setAttribute('filter', `url(#${fid})`);
         } else if (!child.heraldic) {

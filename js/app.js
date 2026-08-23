@@ -532,14 +532,23 @@ function buildColorPicker(initialValue, onChangeCallback) {
     _closeAllPopovers();
     buildChipRow();
     buildShadeGrid();
-    // Position: prefer below, flip above if needed
-    const r = swatch.getBoundingClientRect();
-    const popH = _shadesExpanded ? 280 : 160;
-    let left = r.left, top = r.bottom + 6;
-    if (left + 220 > window.innerWidth) left = Math.max(4, window.innerWidth - 224);
-    if (top + popH > window.innerHeight) top = Math.max(4, r.top - popH - 6);
-    popover.style.left = left + 'px';
-    popover.style.top  = top  + 'px';
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouch) {
+      // Bottom-sheet: CSS handles positioning; just clear any stale inline styles
+      popover.style.left = '';
+      popover.style.top = '';
+      popover.style.right = '';
+      popover.style.bottom = '';
+    } else {
+      // Desktop: prefer below the swatch, flip above if needed
+      const r = swatch.getBoundingClientRect();
+      const popH = _shadesExpanded ? 280 : 160;
+      let left = r.left, top = r.bottom + 6;
+      if (left + 220 > window.innerWidth) left = Math.max(4, window.innerWidth - 224);
+      if (top + popH > window.innerHeight) top = Math.max(4, r.top - popH - 6);
+      popover.style.left = left + 'px';
+      popover.style.top  = top  + 'px';
+    }
     popover.classList.remove('hidden');
     _activePopover = popover;
   });
