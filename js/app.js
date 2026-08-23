@@ -1323,10 +1323,33 @@ function bindCanvasEvents() {
     const customData = e.dataTransfer.getData('application/vexillum-custom');
     if (customData) {
       const icon = JSON.parse(customData);
+      let scaleX = 1, scaleY = 1;
+      try {
+        const tmpDiv = document.createElement('div');
+        tmpDiv.innerHTML = icon.svg;
+        const svgEl = tmpDiv.querySelector('svg');
+        if (svgEl) {
+          let svgW, svgH;
+          const vb = svgEl.getAttribute('viewBox');
+          if (vb) {
+            const p = vb.trim().split(/[\s,]+/);
+            svgW = parseFloat(p[2]); svgH = parseFloat(p[3]);
+          } else {
+            svgW = parseFloat(svgEl.getAttribute('width'));
+            svgH = parseFloat(svgEl.getAttribute('height'));
+          }
+          if (svgW > 0 && svgH > 0) {
+            const ar = svgW / svgH;
+            if (ar < 0.95) { scaleX = ar; }
+            else if (ar > 1.05) { scaleY = 1 / ar; }
+          }
+        }
+      } catch(e) {}
       const emblem = {
         id: uuid(), slug: `custom:${icon.id}`, label: icon.name, category: 'Custom',
         x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)),
         size: 20, rotate: 0, flipX: false, flipY: false,
+        scaleX, scaleY,
         fg: '#ffffff', bg: 'transparent', _svgContent: icon.svg,
       };
       design.emblems.push(emblem);
@@ -1753,9 +1776,32 @@ function renderCustomIconSection() {
     cell.appendChild(nameEl);
 
     cell.addEventListener('click', () => {
+      let scaleX = 1, scaleY = 1;
+      try {
+        const tmpDiv = document.createElement('div');
+        tmpDiv.innerHTML = icon.svg;
+        const svgEl = tmpDiv.querySelector('svg');
+        if (svgEl) {
+          let svgW, svgH;
+          const vb = svgEl.getAttribute('viewBox');
+          if (vb) {
+            const p = vb.trim().split(/[\s,]+/);
+            svgW = parseFloat(p[2]); svgH = parseFloat(p[3]);
+          } else {
+            svgW = parseFloat(svgEl.getAttribute('width'));
+            svgH = parseFloat(svgEl.getAttribute('height'));
+          }
+          if (svgW > 0 && svgH > 0) {
+            const ar = svgW / svgH;
+            if (ar < 0.95) { scaleX = ar; }
+            else if (ar > 1.05) { scaleY = 1 / ar; }
+          }
+        }
+      } catch(e) {}
       const emblem = {
         id: uuid(), slug: `custom:${icon.id}`, label: icon.name, category: 'Custom',
         x: 50, y: 50, size: 20, rotate: 0, flipX: false, flipY: false,
+        scaleX, scaleY,
         fg: '#ffffff', bg: 'transparent', _svgContent: icon.svg,
       };
       design.emblems.push(emblem);
