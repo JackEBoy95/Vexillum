@@ -1900,6 +1900,9 @@ function onEmblemDragMove(e) {
 
   const others = design.emblems.filter(em => em.id !== draggingEmblemId);
 
+  let rx = { hit: false, v: x }, ry = { hit: false, v: y };
+  let rxEq = { hit: false, v: x }, ryEq = { hit: false, v: y };
+
   if (snapEnabled) {
     // Grid snap targets + positions of other emblems
     const targetsX = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.x)];
@@ -1919,9 +1922,8 @@ function onEmblemDragMove(e) {
       }
     }
 
-    const rx = snapToTargets(x, targetsX);
-    const ry = snapToTargets(y, targetsY);
-    let rxEq = { v: x, hit: false }, ryEq = { v: y, hit: false };
+    rx = snapToTargets(x, targetsX);
+    ry = snapToTargets(y, targetsY);
     if (!rx.hit) rxEq = snapToTargets(x, equalX, 2.0);
     if (!ry.hit) ryEq = snapToTargets(y, equalY, 2.0);
 
