@@ -31,9 +31,6 @@ let _multiSelect = new Set();
 let _prevDragX   = 0;
 let _prevDragY   = 0;
 
-// ---- Snap toggle ----
-let snapEnabled = true;
-
 // ---- Global colour picker state ----
 let _activePopover = null;
 
@@ -1313,8 +1310,8 @@ function _getGuideGroup() {
     _snapGuideGroup.id = 'snap-guides';
     _snapGuideGroup.style.pointerEvents = 'none';
   }
-  // Always bring to front (appendChild moves if already attached)
-  flagSvg.appendChild(_snapGuideGroup);
+  if (_snapGuideGroup.parentNode !== flagSvg) flagSvg.appendChild(_snapGuideGroup);
+  else flagSvg.removeChild(_snapGuideGroup), flagSvg.appendChild(_snapGuideGroup);
   return _snapGuideGroup;
 }
 function clearSnapGuides() {
@@ -1899,39 +1896,32 @@ function onEmblemDragMove(e) {
 
   const others = design.emblems.filter(em => em.id !== draggingEmblemId);
 
-  let rx = { hit: false, v: x }, ry = { hit: false, v: y };
-  let rxEq = { hit: false, v: x }, ryEq = { hit: false, v: y };
+  // Grid snap targets + positions of other emblems
+  const targetsX = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.x)];
+  const targetsY = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.y)];
 
-  if (snapEnabled) {
-    // Grid snap targets + positions of other emblems
-    const targetsX = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.x)];
-    const targetsY = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.y)];
-
-    // Equal-distance snap: add positions where this emblem is evenly spaced with others
-    const equalX = [], equalY = [];
-    for (let i = 0; i < others.length; i++) {
-      for (let j = i + 1; j < others.length; j++) {
-        equalX.push((others[i].x + others[j].x) / 2);
-        equalY.push((others[i].y + others[j].y) / 2);
-      }
-      for (let j = 0; j < others.length; j++) {
-        if (i === j) continue;
-        equalX.push(others[i].x + (others[i].x - others[j].x));
-        equalY.push(others[i].y + (others[i].y - others[j].y));
-      }
+  // Equal-distance snap: add positions where this emblem is evenly spaced with others
+  const equalX = [], equalY = [];
+  for (let i = 0; i < others.length; i++) {
+    for (let j = i + 1; j < others.length; j++) {
+      equalX.push((others[i].x + others[j].x) / 2);
+      equalY.push((others[i].y + others[j].y) / 2);
     }
-
-    rx = snapToTargets(x, targetsX);
-    ry = snapToTargets(y, targetsY);
-    if (!rx.hit) rxEq = snapToTargets(x, equalX, 2.0);
-    if (!ry.hit) ryEq = snapToTargets(y, equalY, 2.0);
-
-    x = Math.max(0, Math.min(100, rx.hit ? rx.v : (rxEq.hit ? rxEq.v : x)));
-    y = Math.max(0, Math.min(100, ry.hit ? ry.v : (ryEq.hit ? ryEq.v : y)));
-  } else {
-    x = Math.max(0, Math.min(100, x));
-    y = Math.max(0, Math.min(100, y));
+    for (let j = 0; j < others.length; j++) {
+      if (i === j) continue;
+      equalX.push(others[i].x + (others[i].x - others[j].x));
+      equalY.push(others[i].y + (others[i].y - others[j].y));
+    }
   }
+
+  const rx = snapToTargets(x, targetsX);
+  const ry = snapToTargets(y, targetsY);
+  let rxEq = { v: x, hit: false }, ryEq = { v: y, hit: false };
+  if (!rx.hit) rxEq = snapToTargets(x, equalX, 2.0);
+  if (!ry.hit) ryEq = snapToTargets(y, equalY, 2.0);
+
+  x = Math.max(0, Math.min(100, rx.hit ? rx.v : (rxEq.hit ? rxEq.v : x)));
+  y = Math.max(0, Math.min(100, ry.hit ? ry.v : (ryEq.hit ? ryEq.v : y)));
 
   // For group emblems, move all children by the same delta
   if (emblem.type === 'group' && Array.isArray(emblem.children)) {
@@ -1950,41 +1940,41 @@ function onEmblemDragMove(e) {
   emblem.x = x;
   emblem.y = y;
 
-  // Re-render emblems (fast path — skips layer rebuild)
-  flagSvg.querySelectorAll('.render-emblem').forEach(el => el.remove());
-  design.emblems.forEach(em => renderEmblemEl(flagSvg, em, em.id === selectedEmblemId));
-
-  // Draw snap guides on top (_getGuideGroup always brings to front)
+  // Draw snap guides
   const gg = _getGuideGroup();
   gg.innerHTML = '';
-  if (snapEnabled) {
-    if (rx.hit) gg.appendChild(_guideLine(rx.v / 100 * CANVAS_W, 0, rx.v / 100 * CANVAS_W, CANVAS_H));
-    if (ry.hit) gg.appendChild(_guideLine(0, ry.v / 100 * CANVAS_H, CANVAS_W, ry.v / 100 * CANVAS_H));
-    if (!rx.hit && rxEq.hit) {
-      const lx = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      const gx = rxEq.v / 100 * CANVAS_W;
-      lx.setAttribute('x1', gx); lx.setAttribute('y1', 0);
-      lx.setAttribute('x2', gx); lx.setAttribute('y2', CANVAS_H);
-      lx.setAttribute('stroke', '#06B6D4'); lx.setAttribute('stroke-width', '0.75');
-      lx.setAttribute('stroke-dasharray', '3 3');
-      gg.appendChild(lx);
-    }
-    if (!ry.hit && ryEq.hit) {
-      const ly = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      const gy = ryEq.v / 100 * CANVAS_H;
-      ly.setAttribute('x1', 0); ly.setAttribute('y1', gy);
-      ly.setAttribute('x2', CANVAS_W); ly.setAttribute('y2', gy);
-      ly.setAttribute('stroke', '#06B6D4'); ly.setAttribute('stroke-width', '0.75');
-      ly.setAttribute('stroke-dasharray', '3 3');
-      gg.appendChild(ly);
-    }
-    if (rx.hit && Math.abs(rx.v - 50) < 0.1 && ry.hit && Math.abs(ry.v - 50) < 0.1) {
-      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      dot.setAttribute('cx', CANVAS_W/2); dot.setAttribute('cy', CANVAS_H/2);
-      dot.setAttribute('r', 3); dot.setAttribute('fill', '#FF6B35');
-      gg.appendChild(dot);
-    }
+  if (rx.hit) gg.appendChild(_guideLine(rx.v / 100 * CANVAS_W, 0, rx.v / 100 * CANVAS_W, CANVAS_H));
+  if (ry.hit) gg.appendChild(_guideLine(0, ry.v / 100 * CANVAS_H, CANVAS_W, ry.v / 100 * CANVAS_H));
+  if (!rx.hit && rxEq.hit) {
+    const lx = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const gx = rxEq.v / 100 * CANVAS_W;
+    lx.setAttribute('x1', gx); lx.setAttribute('y1', 0);
+    lx.setAttribute('x2', gx); lx.setAttribute('y2', CANVAS_H);
+    lx.setAttribute('stroke', '#06B6D4'); lx.setAttribute('stroke-width', '0.75');
+    lx.setAttribute('stroke-dasharray', '3 3');
+    gg.appendChild(lx);
   }
+  if (!ry.hit && ryEq.hit) {
+    const ly = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const gy = ryEq.v / 100 * CANVAS_H;
+    ly.setAttribute('x1', 0); ly.setAttribute('y1', gy);
+    ly.setAttribute('x2', CANVAS_W); ly.setAttribute('y2', gy);
+    ly.setAttribute('stroke', '#06B6D4'); ly.setAttribute('stroke-width', '0.75');
+    ly.setAttribute('stroke-dasharray', '3 3');
+    gg.appendChild(ly);
+  }
+  if (rx.hit && Math.abs(rx.v - 50) < 0.1 && ry.hit && Math.abs(ry.v - 50) < 0.1) {
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('cx', CANVAS_W/2); dot.setAttribute('cy', CANVAS_H/2);
+    dot.setAttribute('r', 3); dot.setAttribute('fill', '#FF6B35');
+    gg.appendChild(dot);
+  }
+
+  // Re-render emblems only (fast path)
+  flagSvg.querySelectorAll('.render-emblem').forEach(el => el.remove());
+  design.emblems.forEach(em => renderEmblemEl(flagSvg, em, em.id === selectedEmblemId));
+  flagSvg.removeChild(gg); flagSvg.appendChild(gg);
+  updateEmblemControls();
 }
 
 function snap(val, targets, threshold = 3) {
@@ -2430,18 +2420,6 @@ function bindHeaderButtons() {
   document.getElementById('btn-add-wstripes').addEventListener('click', () => addLayer('wstripes'));
   document.getElementById('btn-add-zstripes').addEventListener('click', () => addLayer('zstripes'));
   document.getElementById('btn-add-overlay').addEventListener('click',  () => addLayer('overlay'));
-
-  // Snap toggle
-  const snapBtn = document.getElementById('btn-snap-toggle');
-  if (snapBtn) {
-    snapBtn.classList.toggle('active', snapEnabled);
-    snapBtn.addEventListener('click', () => {
-      snapEnabled = !snapEnabled;
-      snapBtn.classList.toggle('active', snapEnabled);
-      snapBtn.title = snapEnabled ? 'Snapping on — click to disable' : 'Snapping off — click to enable';
-      clearSnapGuides();
-    });
-  }
 
   const undoBtn = document.getElementById('btn-undo');
   const redoBtn = document.getElementById('btn-redo');
