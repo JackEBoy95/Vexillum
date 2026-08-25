@@ -1312,10 +1312,8 @@ function _getGuideGroup() {
     _snapGuideGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     _snapGuideGroup.id = 'snap-guides';
     _snapGuideGroup.style.pointerEvents = 'none';
+    flagSvg.appendChild(_snapGuideGroup);
   }
-  // Always ensure it's last child (on top)
-  if (_snapGuideGroup.parentNode !== flagSvg) flagSvg.appendChild(_snapGuideGroup);
-  else flagSvg.removeChild(_snapGuideGroup), flagSvg.appendChild(_snapGuideGroup);
   return _snapGuideGroup;
 }
 function clearSnapGuides() {
@@ -1951,9 +1949,15 @@ function onEmblemDragMove(e) {
   emblem.x = x;
   emblem.y = y;
 
-  // Draw snap guides
+  // Re-render only the dragged emblem (fast path — avoids full renderAll)
+  const existingEl = flagSvg.querySelector(`.render-emblem[data-emblem-id="${draggingEmblemId}"]`);
+  if (existingEl) existingEl.remove();
+  renderEmblemEl(flagSvg, emblem, true);
+
+  // Draw snap guides on top
   const gg = _getGuideGroup();
   gg.innerHTML = '';
+  flagSvg.appendChild(gg); // keep guide group as last child
   if (snapEnabled) {
     if (rx.hit) gg.appendChild(_guideLine(rx.v / 100 * CANVAS_W, 0, rx.v / 100 * CANVAS_W, CANVAS_H));
     if (ry.hit) gg.appendChild(_guideLine(0, ry.v / 100 * CANVAS_H, CANVAS_W, ry.v / 100 * CANVAS_H));
@@ -1982,12 +1986,6 @@ function onEmblemDragMove(e) {
       gg.appendChild(dot);
     }
   }
-
-  // Re-render emblems only (fast path)
-  flagSvg.querySelectorAll('.render-emblem').forEach(el => el.remove());
-  design.emblems.forEach(em => renderEmblemEl(flagSvg, em, em.id === selectedEmblemId));
-  flagSvg.removeChild(gg); flagSvg.appendChild(gg);
-  updateEmblemControls();
 }
 
 function snap(val, targets, threshold = 3) {
