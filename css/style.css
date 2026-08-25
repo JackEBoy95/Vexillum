@@ -276,10 +276,11 @@ html, body {
 
 .add-layer-buttons {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   padding: 8px 10px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .add-btn {
@@ -301,7 +302,9 @@ html, body {
   text-align: center;
   line-height: 1.2;
 }
-.add-btn:hover { background: var(--hover); border-style: solid; }
+.add-btn:hover  { background: var(--hover); border-style: solid; }
+.add-btn.active { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border-color: var(--accent); border-style: solid; color: var(--accent); }
+.add-btn.icon-only { flex: 0 0 auto; padding: 6px 8px; }
 
 /* ---------- Layer Stack ---------- */
 #layer-list {
@@ -1385,11 +1388,11 @@ input.ec-num-input:focus {
 }
 
 /* Dark mode icon silhouette inversion */
-body.dark-mode .icon-cell:not(.heraldic-cell) svg,
-body.dark-mode .icon-cell:not(.heraldic-cell) img {
+body.dark-mode .icon-cell svg,
+body.dark-mode .icon-cell img {
   filter: brightness(0) invert(1);
 }
-body.dark-mode .icon-cell:hover:not(.heraldic-cell) svg {
+body.dark-mode .icon-cell:hover svg {
   filter: brightness(0) invert(1);
 }
 
@@ -2299,6 +2302,12 @@ body.dark-mode .icon-cell:hover:not(.heraldic-cell) svg {
   .export-res-opt {
     padding: 4px 8px;
     font-size: 11px;
+  }
+
+  /* Ensure modal inner content is scrollable on iOS */
+  .modal {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

@@ -49,6 +49,8 @@ const BASIC_SHAPES = {
   diamondthin:{ label: 'Tall Diamond', path: '<polygon points="50,3 72,50 50,97 28,50"/>' },
   wavyband:   { label: 'Wavy Band',    path: '<path d="M0,50 Q6.25,20 12.5,50 Q18.75,80 25,50 Q31.25,20 37.5,50 Q43.75,80 50,50 Q56.25,20 62.5,50 Q68.75,80 75,50 Q81.25,20 87.5,50 Q93.75,80 100,50 L100,65 Q93.75,95 87.5,65 Q81.25,35 75,65 Q68.75,95 62.5,65 Q56.25,35 50,65 Q43.75,95 37.5,65 Q31.25,35 25,65 Q18.75,95 12.5,65 Q6.25,35 0,65 Z"/>', defaultScaleX: 5, defaultScaleY: 0.6 },
   zigzagband: { label: 'Zigzag Band',  path: '<polygon points="0,42 10,22 20,42 30,22 40,42 50,22 60,42 70,22 80,42 90,22 100,42 100,58 90,78 80,58 70,78 60,58 50,78 40,58 30,78 20,58 10,78 0,58"/>', defaultScaleX: 5, defaultScaleY: 0.6 },
+  rect:       { label: 'Rectangle',   path: '<rect x="5" y="22" width="90" height="56"/>' },
+  starring:   { label: 'Star Ring',   path: '<path fill-rule="evenodd" d="M50,4 L59,32 88,32 65,50 74,78 50,60 26,78 35,50 12,32 41,32 Z M50,20 L56,38 74,38 61,48 66,64 50,54 34,64 39,48 26,38 44,38 Z"/>' },
 };
 
 // ---- Flag shape definitions ----
@@ -220,13 +222,18 @@ const SHAPES = {
   canton: {
     label: 'Canton',
     params: {
-      width:  { label: 'Width',  min: 10, max: 60, default: 33 },
-      height: { label: 'Height', min: 10, max: 60, default: 50 },
+      width:    { label: 'Width %',   min: 10, max: 60, default: 33 },
+      height:   { label: 'Height %',  min: 10, max: 60, default: 50 },
+      quadrant: { label: 'Corner (0=TL 1=TR 2=BL 3=BR)', min: 0, max: 3, default: 0, step: 1 },
     },
     render(c, p) {
-      const w = (p.width ?? 33) / 100 * CANVAS_W;
-      const h = (p.height ?? 50) / 100 * CANVAS_H;
-      return `<rect x="0" y="0" width="${w}" height="${h}" fill="${c.color}" opacity="${c.opacity/100}"/>`;
+      const W = CANVAS_W, H = CANVAS_H;
+      const w = (p.width ?? 33) / 100 * W;
+      const h = (p.height ?? 50) / 100 * H;
+      const q = Math.round(p.quadrant ?? 0);
+      const x = (q === 1 || q === 3) ? W - w : 0;
+      const y = (q === 2 || q === 3) ? H - h : 0;
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c.color}" opacity="${c.opacity/100}"/>`;
     }
   },
   diagonal: {
@@ -413,6 +420,49 @@ const SHAPES = {
     }
   },
 
+  sash: {
+    label: 'Sash',
+    params: {
+      thickness: { label: 'Width %',      min: 3,  max: 60, default: 20 },
+      direction: { label: 'Dir (0=↘ 1=↗)', min: 0,  max: 1,  default: 0, step: 1 },
+    },
+    render(c, p) {
+      const W = CANVAS_W, H = CANVAS_H;
+      const t   = (p.thickness ?? 20) / 100 * Math.min(W, H);
+      const dir = Math.round(p.direction ?? 0);
+      const diag = Math.sqrt(W * W + H * H);
+      const angleDeg = Math.atan2(H, W) * 180 / Math.PI * (dir === 0 ? 1 : -1);
+      const cx = W / 2, cy = H / 2;
+      return `<rect x="${(cx - diag / 2).toFixed(2)}" y="${(cy - t / 2).toFixed(2)}" width="${diag.toFixed(2)}" height="${t.toFixed(2)}"
+                transform="rotate(${angleDeg.toFixed(3)} ${cx} ${cy})"
+                fill="${c.color}" opacity="${c.opacity / 100}"/>`;
+    }
+  },
+
+  dstripes: {
+    label: 'Diag Stripes',
+    params: {
+      angle:   { label: 'Angle °',     min: -89, max: 89, default: 45 },
+      band:    { label: 'Band width %', min: 2,   max: 45, default: 12 },
+      spacing: { label: 'Spacing %',   min: 5,   max: 60, default: 25 },
+    },
+    render(c, p) {
+      const W = CANVAS_W, H = CANVAS_H;
+      const angle   = p.angle ?? 45;
+      const ref     = Math.max(W, H);
+      const bandW   = (p.band    ?? 12) / 100 * ref;
+      const spacing = (p.spacing ?? 25) / 100 * ref;
+      const pid = `ds_${c.id || 'x'}_${angle}`;
+      return `<defs>
+        <pattern id="${pid}" patternUnits="userSpaceOnUse" width="${spacing.toFixed(2)}" height="${spacing.toFixed(2)}"
+                 patternTransform="rotate(${angle} ${W / 2} ${H / 2})">
+          <rect width="${bandW.toFixed(2)}" height="${spacing.toFixed(2)}" fill="${c.color}"/>
+        </pattern>
+      </defs>
+      <rect x="0" y="0" width="${W}" height="${H}" fill="url(#${pid})" opacity="${c.opacity / 100}"/>`;
+    }
+  },
+
   star: {
     label: 'Star',
     params: {
@@ -525,8 +575,67 @@ function renderFlag(svgEl, design, selectedEmblemId = null, multiSelectIds = nul
 function renderLayer(layer) {
   if (layer.type === 'hstripes') return renderStripes(layer, false);
   if (layer.type === 'vstripes') return renderStripes(layer, true);
+  if (layer.type === 'wstripes') return renderWaveStripes(layer, false);
+  if (layer.type === 'zstripes') return renderWaveStripes(layer, true);
   if (layer.type === 'overlay')  return renderOverlay(layer);
   return '';
+}
+
+// Returns path segments (Q or L) for a wave/zigzag boundary line.
+// forward=true: left→right; forward=false: right→left
+function _waveSeg(pos, W, H, n, amp, zigzag, forward) {
+  const cy = pos * H;
+  const step = W / (n * 2);
+  let s = '';
+  if (forward) {
+    for (let i = 0; i < n * 2; i++) {
+      const dir = i % 2 === 0 ? -1 : 1;
+      const xm = ((i + 0.5) * step).toFixed(2);
+      const xe = ((i + 1) * step).toFixed(2);
+      const ym = (cy + dir * amp).toFixed(2);
+      s += zigzag ? ` L ${xm},${ym} L ${xe},${cy.toFixed(2)}` : ` Q ${xm},${ym} ${xe},${cy.toFixed(2)}`;
+    }
+  } else {
+    for (let i = n * 2 - 1; i >= 0; i--) {
+      const dir = i % 2 === 0 ? -1 : 1;
+      const xm = ((i + 0.5) * step).toFixed(2);
+      const xs = (i * step).toFixed(2);
+      const ym = (cy + dir * amp).toFixed(2);
+      s += zigzag ? ` L ${xm},${ym} L ${xs},${cy.toFixed(2)}` : ` Q ${xm},${ym} ${xs},${cy.toFixed(2)}`;
+    }
+  }
+  return s;
+}
+
+function renderWaveStripes(layer, zigzag) {
+  const bands = layer.bands || [];
+  if (!bands.length) return '';
+  const W = CANVAS_W, H = CANVAS_H;
+  const n   = Math.max(2, Math.round(layer.params?.waves ?? 4));
+  const amp = (layer.params?.amplitude ?? 8) / 100 * H;
+  const total = bands.reduce((s, b) => s + (b.weight || 1), 0);
+
+  const bounds = [0];
+  let pos = 0;
+  bands.forEach(b => { pos += (b.weight || 1) / total; bounds.push(pos); });
+
+  let out = '';
+  bands.forEach((band, i) => {
+    const top = bounds[i], bot = bounds[i + 1];
+    const topY = (top * H).toFixed(2), botY = (bot * H).toFixed(2);
+    let d;
+    if (bands.length === 1) {
+      d = `M 0,0 L ${W},0 L ${W},${H} L 0,${H} Z`;
+    } else if (i === 0) {
+      d = `M 0,0 L ${W},0 L ${W},${botY}${_waveSeg(bot, W, H, n, amp, zigzag, false)} Z`;
+    } else if (i === bands.length - 1) {
+      d = `M 0,${topY}${_waveSeg(top, W, H, n, amp, zigzag, true)} L ${W},${H} L 0,${H} Z`;
+    } else {
+      d = `M 0,${topY}${_waveSeg(top, W, H, n, amp, zigzag, true)} L ${W},${botY}${_waveSeg(bot, W, H, n, amp, zigzag, false)} Z`;
+    }
+    out += `<path d="${d}" fill="${band.color}"/>`;
+  });
+  return out;
 }
 
 function _patternDef(id, type, color, bg) {

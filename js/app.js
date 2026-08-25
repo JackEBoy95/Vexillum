@@ -31,6 +31,9 @@ let _multiSelect = new Set();
 let _prevDragX   = 0;
 let _prevDragY   = 0;
 
+// ---- Snap toggle ----
+let snapEnabled = true;
+
 // ---- Global colour picker state ----
 let _activePopover = null;
 
@@ -373,6 +376,8 @@ function buildLayerCard(layer) {
 function layerLabel(layer) {
   if (layer.type === 'hstripes') return `Horizontal Stripes (${layer.bands.length})`;
   if (layer.type === 'vstripes') return `Vertical Stripes (${layer.bands.length})`;
+  if (layer.type === 'wstripes') return `Wave Stripes (${layer.bands.length})`;
+  if (layer.type === 'zstripes') return `Zigzag Stripes (${layer.bands.length})`;
   if (layer.type === 'overlay')  {
     const name = SHAPES[layer.shape]?.label || 'Overlay';
     return name;
@@ -382,8 +387,44 @@ function layerLabel(layer) {
 
 function buildLayerBody(layer) {
   const frag = document.createDocumentFragment();
-  if (layer.type === 'hstripes' || layer.type === 'vstripes') {
+  if (['hstripes','vstripes','wstripes','zstripes'].includes(layer.type)) {
     frag.appendChild(buildStripesBody(layer));
+    // Wave/zigzag extra controls
+    if (layer.type === 'wstripes' || layer.type === 'zstripes') {
+      const wavesRow = document.createElement('div');
+      wavesRow.className = 'control-row';
+      const wVal = document.createElement('span'); wVal.className = 'control-value';
+      wVal.textContent = layer.params?.waves ?? 4;
+      wavesRow.innerHTML = `<span class="control-label">Waves</span>`;
+      const wInput = document.createElement('input');
+      wInput.type = 'range'; wInput.min = 1; wInput.max = 12; wInput.step = 1;
+      wInput.value = layer.params?.waves ?? 4;
+      wInput.addEventListener('input', e => {
+        if (!layer.params) layer.params = {};
+        layer.params.waves = +e.target.value;
+        wVal.textContent = layer.params.waves;
+        onChange();
+      });
+      wavesRow.appendChild(wInput); wavesRow.appendChild(wVal);
+      frag.appendChild(wavesRow);
+
+      const ampRow = document.createElement('div');
+      ampRow.className = 'control-row';
+      const aVal = document.createElement('span'); aVal.className = 'control-value';
+      aVal.textContent = `${layer.params?.amplitude ?? 8}%`;
+      ampRow.innerHTML = `<span class="control-label">Height %</span>`;
+      const aInput = document.createElement('input');
+      aInput.type = 'range'; aInput.min = 2; aInput.max = 25; aInput.step = 1;
+      aInput.value = layer.params?.amplitude ?? 8;
+      aInput.addEventListener('input', e => {
+        if (!layer.params) layer.params = {};
+        layer.params.amplitude = +e.target.value;
+        aVal.textContent = `${layer.params.amplitude}%`;
+        onChange();
+      });
+      ampRow.appendChild(aInput); ampRow.appendChild(aVal);
+      frag.appendChild(ampRow);
+    }
   } else if (layer.type === 'overlay') {
     frag.appendChild(buildOverlayBody(layer));
   }
@@ -800,6 +841,8 @@ function shapeIcon(key) {
     rhombus:  `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 22,12 12,22 2,12"/></svg>`,
     crescent: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18,5 A9,9 0 1,0 18,19 A7,7 0 1,1 18,5 Z"/></svg>`,
     star:     `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9"/></svg>`,
+    sash:     `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="0,0 24,0 24,8 0,16"/><polygon points="0,8 24,16 24,24 0,24"/></svg>`,
+    dstripes: `<svg viewBox="0 0 24 24" fill="currentColor"><line x1="2" y1="0" x2="10" y2="24" stroke="currentColor" stroke-width="3"/><line x1="10" y1="0" x2="18" y2="24" stroke="currentColor" stroke-width="3"/><line x1="18" y1="0" x2="26" y2="24" stroke="currentColor" stroke-width="3"/></svg>`,
   };
   return icons[key] || `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="2"/></svg>`;
 }
@@ -826,8 +869,9 @@ function addLayer(type) {
   const layer = {
     id: uuid(), type, visible: true, expanded: true,
   };
-  if (type === 'hstripes' || type === 'vstripes') {
+  if (['hstripes','vstripes','wstripes','zstripes'].includes(type)) {
     layer.bands = [{ color: '#d4a832', weight: 1 }, { color: '#2c3e50', weight: 1 }];
+    layer.params = {};
   } else {
     layer.shape = 'cross';
     layer.color = '#ffffff';
@@ -1856,34 +1900,37 @@ function onEmblemDragMove(e) {
 
   const others = design.emblems.filter(em => em.id !== draggingEmblemId);
 
-  // Grid snap targets + positions of other emblems
-  const targetsX = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.x)];
-  const targetsY = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.y)];
+  if (snapEnabled) {
+    // Grid snap targets + positions of other emblems
+    const targetsX = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.x)];
+    const targetsY = [0, 16.7, 25, 33.3, 50, 66.6, 75, 83.3, 100, ...others.map(em => em.y)];
 
-  // Equal-distance snap: add positions where this emblem is evenly spaced with others
-  const equalX = [], equalY = [];
-  for (let i = 0; i < others.length; i++) {
-    for (let j = i + 1; j < others.length; j++) {
-      // Midpoint — dragging emblem equidistant from others[i] and others[j]
-      equalX.push((others[i].x + others[j].x) / 2);
-      equalY.push((others[i].y + others[j].y) / 2);
+    // Equal-distance snap: add positions where this emblem is evenly spaced with others
+    const equalX = [], equalY = [];
+    for (let i = 0; i < others.length; i++) {
+      for (let j = i + 1; j < others.length; j++) {
+        equalX.push((others[i].x + others[j].x) / 2);
+        equalY.push((others[i].y + others[j].y) / 2);
+      }
+      for (let j = 0; j < others.length; j++) {
+        if (i === j) continue;
+        equalX.push(others[i].x + (others[i].x - others[j].x));
+        equalY.push(others[i].y + (others[i].y - others[j].y));
+      }
     }
-    // Extension — drag at equal spacing on either side of each other emblem
-    for (let j = 0; j < others.length; j++) {
-      if (i === j) continue;
-      equalX.push(others[i].x + (others[i].x - others[j].x));
-      equalY.push(others[i].y + (others[i].y - others[j].y));
-    }
+
+    const rx = snapToTargets(x, targetsX);
+    const ry = snapToTargets(y, targetsY);
+    let rxEq = { v: x, hit: false }, ryEq = { v: y, hit: false };
+    if (!rx.hit) rxEq = snapToTargets(x, equalX, 2.0);
+    if (!ry.hit) ryEq = snapToTargets(y, equalY, 2.0);
+
+    x = Math.max(0, Math.min(100, rx.hit ? rx.v : (rxEq.hit ? rxEq.v : x)));
+    y = Math.max(0, Math.min(100, ry.hit ? ry.v : (ryEq.hit ? ryEq.v : y)));
+  } else {
+    x = Math.max(0, Math.min(100, x));
+    y = Math.max(0, Math.min(100, y));
   }
-
-  const rx = snapToTargets(x, targetsX);
-  const ry = snapToTargets(y, targetsY);
-  let rxEq = { v: x, hit: false }, ryEq = { v: y, hit: false };
-  if (!rx.hit) rxEq = snapToTargets(x, equalX, 2.0);
-  if (!ry.hit) ryEq = snapToTargets(y, equalY, 2.0);
-
-  x = Math.max(0, Math.min(100, rx.hit ? rx.v : (rxEq.hit ? rxEq.v : x)));
-  y = Math.max(0, Math.min(100, ry.hit ? ry.v : (ryEq.hit ? ryEq.v : y)));
 
   // For group emblems, move all children by the same delta
   if (emblem.type === 'group' && Array.isArray(emblem.children)) {
@@ -1905,34 +1952,33 @@ function onEmblemDragMove(e) {
   // Draw snap guides
   const gg = _getGuideGroup();
   gg.innerHTML = '';
-  // Grid/align guides (orange)
-  if (rx.hit) gg.appendChild(_guideLine(rx.v / 100 * CANVAS_W, 0, rx.v / 100 * CANVAS_W, CANVAS_H));
-  if (ry.hit) gg.appendChild(_guideLine(0, ry.v / 100 * CANVAS_H, CANVAS_W, ry.v / 100 * CANVAS_H));
-  // Equal-distance guides (teal)
-  if (!rx.hit && rxEq.hit) {
-    const lx = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    const gx = rxEq.v / 100 * CANVAS_W;
-    lx.setAttribute('x1', gx); lx.setAttribute('y1', 0);
-    lx.setAttribute('x2', gx); lx.setAttribute('y2', CANVAS_H);
-    lx.setAttribute('stroke', '#06B6D4'); lx.setAttribute('stroke-width', '0.75');
-    lx.setAttribute('stroke-dasharray', '3 3');
-    gg.appendChild(lx);
-  }
-  if (!ry.hit && ryEq.hit) {
-    const ly = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    const gy = ryEq.v / 100 * CANVAS_H;
-    ly.setAttribute('x1', 0); ly.setAttribute('y1', gy);
-    ly.setAttribute('x2', CANVAS_W); ly.setAttribute('y2', gy);
-    ly.setAttribute('stroke', '#06B6D4'); ly.setAttribute('stroke-width', '0.75');
-    ly.setAttribute('stroke-dasharray', '3 3');
-    gg.appendChild(ly);
-  }
-  // Centre crosshair dot
-  if (rx.hit && Math.abs(rx.v - 50) < 0.1 && ry.hit && Math.abs(ry.v - 50) < 0.1) {
-    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    dot.setAttribute('cx', CANVAS_W/2); dot.setAttribute('cy', CANVAS_H/2);
-    dot.setAttribute('r', 3); dot.setAttribute('fill', '#FF6B35');
-    gg.appendChild(dot);
+  if (snapEnabled) {
+    if (rx.hit) gg.appendChild(_guideLine(rx.v / 100 * CANVAS_W, 0, rx.v / 100 * CANVAS_W, CANVAS_H));
+    if (ry.hit) gg.appendChild(_guideLine(0, ry.v / 100 * CANVAS_H, CANVAS_W, ry.v / 100 * CANVAS_H));
+    if (!rx.hit && rxEq.hit) {
+      const lx = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      const gx = rxEq.v / 100 * CANVAS_W;
+      lx.setAttribute('x1', gx); lx.setAttribute('y1', 0);
+      lx.setAttribute('x2', gx); lx.setAttribute('y2', CANVAS_H);
+      lx.setAttribute('stroke', '#06B6D4'); lx.setAttribute('stroke-width', '0.75');
+      lx.setAttribute('stroke-dasharray', '3 3');
+      gg.appendChild(lx);
+    }
+    if (!ry.hit && ryEq.hit) {
+      const ly = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      const gy = ryEq.v / 100 * CANVAS_H;
+      ly.setAttribute('x1', 0); ly.setAttribute('y1', gy);
+      ly.setAttribute('x2', CANVAS_W); ly.setAttribute('y2', gy);
+      ly.setAttribute('stroke', '#06B6D4'); ly.setAttribute('stroke-width', '0.75');
+      ly.setAttribute('stroke-dasharray', '3 3');
+      gg.appendChild(ly);
+    }
+    if (rx.hit && Math.abs(rx.v - 50) < 0.1 && ry.hit && Math.abs(ry.v - 50) < 0.1) {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', CANVAS_W/2); dot.setAttribute('cy', CANVAS_H/2);
+      dot.setAttribute('r', 3); dot.setAttribute('fill', '#FF6B35');
+      gg.appendChild(dot);
+    }
   }
 
   // Re-render emblems only (fast path)
@@ -2382,7 +2428,21 @@ function bindHeaderButtons() {
 
   document.getElementById('btn-add-hstripes').addEventListener('click', () => addLayer('hstripes'));
   document.getElementById('btn-add-vstripes').addEventListener('click', () => addLayer('vstripes'));
+  document.getElementById('btn-add-wstripes').addEventListener('click', () => addLayer('wstripes'));
+  document.getElementById('btn-add-zstripes').addEventListener('click', () => addLayer('zstripes'));
   document.getElementById('btn-add-overlay').addEventListener('click',  () => addLayer('overlay'));
+
+  // Snap toggle
+  const snapBtn = document.getElementById('btn-snap-toggle');
+  if (snapBtn) {
+    snapBtn.classList.toggle('active', snapEnabled);
+    snapBtn.addEventListener('click', () => {
+      snapEnabled = !snapEnabled;
+      snapBtn.classList.toggle('active', snapEnabled);
+      snapBtn.title = snapEnabled ? 'Snapping on — click to disable' : 'Snapping off — click to enable';
+      clearSnapGuides();
+    });
+  }
 
   const undoBtn = document.getElementById('btn-undo');
   const redoBtn = document.getElementById('btn-redo');
