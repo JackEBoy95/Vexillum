@@ -1312,8 +1312,9 @@ function _getGuideGroup() {
     _snapGuideGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     _snapGuideGroup.id = 'snap-guides';
     _snapGuideGroup.style.pointerEvents = 'none';
-    flagSvg.appendChild(_snapGuideGroup);
   }
+  // Always bring to front (appendChild moves if already attached)
+  flagSvg.appendChild(_snapGuideGroup);
   return _snapGuideGroup;
 }
 function clearSnapGuides() {
@@ -1949,15 +1950,13 @@ function onEmblemDragMove(e) {
   emblem.x = x;
   emblem.y = y;
 
-  // Re-render only the dragged emblem (fast path — avoids full renderAll)
-  const existingEl = flagSvg.querySelector(`.render-emblem[data-emblem-id="${draggingEmblemId}"]`);
-  if (existingEl) existingEl.remove();
-  renderEmblemEl(flagSvg, emblem, true);
+  // Re-render emblems (fast path — skips layer rebuild)
+  flagSvg.querySelectorAll('.render-emblem').forEach(el => el.remove());
+  design.emblems.forEach(em => renderEmblemEl(flagSvg, em, em.id === selectedEmblemId));
 
-  // Draw snap guides on top
+  // Draw snap guides on top (_getGuideGroup always brings to front)
   const gg = _getGuideGroup();
   gg.innerHTML = '';
-  flagSvg.appendChild(gg); // keep guide group as last child
   if (snapEnabled) {
     if (rx.hit) gg.appendChild(_guideLine(rx.v / 100 * CANVAS_W, 0, rx.v / 100 * CANVAS_W, CANVAS_H));
     if (ry.hit) gg.appendChild(_guideLine(0, ry.v / 100 * CANVAS_H, CANVAS_W, ry.v / 100 * CANVAS_H));
