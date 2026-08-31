@@ -809,23 +809,12 @@ function buildOverlayBody(layer) {
     Object.entries(shapeDef.params || {}).forEach(([key, def]) => {
       const row = document.createElement('div');
       row.className = 'control-row';
-      const val = document.createElement('span');
-      val.className = 'control-value';
-      val.textContent = layer.params?.[key] ?? def.default;
       row.innerHTML = `<span class="control-label">${def.label}</span>`;
-      const input = document.createElement('input');
-      input.type = 'range';
-      input.min = def.min; input.max = def.max;
-      input.step = def.step || 1;
-      input.value = layer.params?.[key] ?? def.default;
-      input.addEventListener('input', e => {
-        if (!layer.params) layer.params = {};
-        layer.params[key] = +e.target.value;
-        val.textContent = layer.params[key];
-        onChange();
-      });
-      row.appendChild(input);
-      row.appendChild(val);
+      row.appendChild(buildSliderWithVal(
+        { min: def.min, max: def.max, step: def.step || 1, value: layer.params?.[key] ?? def.default, title: def.label },
+        v => { if (!layer.params) layer.params = {}; layer.params[key] = v; renderFlagOnly(); },
+        () => onChange()
+      ));
       wrap.appendChild(row);
     });
   }
@@ -1347,16 +1336,23 @@ function renderGrid() {
     l.setAttribute('x1', x1); l.setAttribute('y1', y1);
     l.setAttribute('x2', x2); l.setAttribute('y2', y2);
     l.setAttribute('stroke', '#1E40AF');
-    l.setAttribute('stroke-width', opacity > 0.25 ? '0.75' : '0.4');
+    l.setAttribute('stroke-width', opacity >= 0.6 ? '1' : opacity >= 0.4 ? '0.75' : '0.5');
     l.setAttribute('opacity', opacity);
     _gridGroup.appendChild(l);
   };
-  for (let p = 1; p < 10; p++) {
-    const op = [25, 50, 75].includes(p * 10) ? 0.5 : 0.22;
-    const x = p / 10 * W, y = p / 10 * H;
-    addLine(x, -BLEED, x, H + BLEED, op);       // vertical lines extend above/below
-    addLine(-BLEED, y, W + BLEED, y, op);        // horizontal lines extend left/right
-  }
+  // Minor lines every 10%
+  [10, 20, 30, 40, 60, 70, 80, 90].forEach(pct => {
+    addLine(pct / 100 * W, -BLEED, pct / 100 * W, H + BLEED, 0.28);
+    addLine(-BLEED, pct / 100 * H, W + BLEED, pct / 100 * H, 0.28);
+  });
+  // Quarter guides at 25% and 75%
+  [25, 75].forEach(pct => {
+    addLine(pct / 100 * W, -BLEED, pct / 100 * W, H + BLEED, 0.45);
+    addLine(-BLEED, pct / 100 * H, W + BLEED, pct / 100 * H, 0.45);
+  });
+  // Centre lines at 50%
+  addLine(W / 2, -BLEED, W / 2, H + BLEED, 0.65);
+  addLine(-BLEED, H / 2, W + BLEED, H / 2, 0.65);
 }
 
 function _hideGridOverflow() {
@@ -2630,22 +2626,12 @@ function openOverlayQuickedit(layer) {
     Object.entries(shapeDef.params || {}).forEach(([key, def]) => {
       const row = document.createElement('div');
       row.className = 'oqe-row';
-      const val = document.createElement('span');
-      val.className = 'oqe-val';
-      val.textContent = layer.params?.[key] ?? def.default;
       row.innerHTML = `<span class="oqe-label">${def.label}</span>`;
-      const input = document.createElement('input');
-      input.type = 'range';
-      input.min = def.min; input.max = def.max; input.step = def.step || 1;
-      input.value = layer.params?.[key] ?? def.default;
-      input.addEventListener('input', e => {
-        if (!layer.params) layer.params = {};
-        layer.params[key] = +e.target.value;
-        val.textContent = layer.params[key];
-        onChange();
-      });
-      row.appendChild(input);
-      row.appendChild(val);
+      row.appendChild(buildSliderWithVal(
+        { min: def.min, max: def.max, step: def.step || 1, value: layer.params?.[key] ?? def.default, title: def.label },
+        v => { if (!layer.params) layer.params = {}; layer.params[key] = v; renderFlagOnly(); },
+        () => onChange()
+      ));
       body.appendChild(row);
     });
   }
