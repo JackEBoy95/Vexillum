@@ -787,20 +787,12 @@ function buildOverlayBody(layer) {
   // Opacity
   const opRow = document.createElement('div');
   opRow.className = 'control-row';
-  const opVal = document.createElement('span');
-  opVal.className = 'control-value';
-  opVal.textContent = `${layer.opacity ?? 100}%`;
   opRow.innerHTML = `<span class="control-label">Opacity</span>`;
-  const opInput = document.createElement('input');
-  opInput.type = 'range'; opInput.min = 5; opInput.max = 100; opInput.step = 5;
-  opInput.value = layer.opacity ?? 100;
-  opInput.addEventListener('input', e => {
-    layer.opacity = +e.target.value;
-    opVal.textContent = `${layer.opacity}%`;
-    onChange();
-  });
-  opRow.appendChild(opInput);
-  opRow.appendChild(opVal);
+  opRow.appendChild(buildSliderWithVal(
+    { min: 5, max: 100, step: 5, value: layer.opacity ?? 100, title: 'Opacity %' },
+    v => { layer.opacity = v; renderFlagOnly(); },
+    () => onChange()
+  ));
   wrap.appendChild(opRow);
 
   // Shape-specific params
@@ -2604,20 +2596,12 @@ function openOverlayQuickedit(layer) {
   // ---- Opacity row ----
   const opRow = document.createElement('div');
   opRow.className = 'oqe-row';
-  const opVal = document.createElement('span');
-  opVal.className = 'oqe-val';
-  opVal.textContent = `${layer.opacity ?? 100}%`;
   opRow.innerHTML = '<span class="oqe-label">Opacity</span>';
-  const opInput = document.createElement('input');
-  opInput.type = 'range'; opInput.min = 5; opInput.max = 100; opInput.step = 5;
-  opInput.value = layer.opacity ?? 100;
-  opInput.addEventListener('input', e => {
-    layer.opacity = +e.target.value;
-    opVal.textContent = `${layer.opacity}%`;
-    onChange();
-  });
-  opRow.appendChild(opInput);
-  opRow.appendChild(opVal);
+  opRow.appendChild(buildSliderWithVal(
+    { min: 5, max: 100, step: 5, value: layer.opacity ?? 100, title: 'Opacity %' },
+    v => { layer.opacity = v; renderFlagOnly(); },
+    () => onChange()
+  ));
   body.appendChild(opRow);
 
   // ---- Shape-specific params ----
