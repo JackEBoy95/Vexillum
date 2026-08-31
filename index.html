@@ -95,6 +95,7 @@
        LEFT PANEL — Layers
        ============================================================ -->
   <aside id="layers-panel">
+    <div id="panel-resize-handle"></div>
     <div class="panel-header">
       <span class="panel-title">Layers</span>
       <div class="palette-select-wrap">
@@ -132,11 +133,36 @@
         </svg>
         Zigzag
       </button>
+      <button class="add-btn" id="btn-add-vwstripes" title="Add vertical wave stripe layer">
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+          <path d="M3,0 Q1,2 3,4 Q5,6 3,8 Q1,10 3,12 Q4,13 3,14 L5,14 Q6,13 5,12 Q7,10 5,8 Q3,6 5,4 Q7,2 5,0 Z"/>
+          <path d="M7,0 Q5,2 7,4 Q9,6 7,8 Q5,10 7,12 Q8,13 7,14 L9,14 Q10,13 9,12 Q11,10 9,8 Q7,6 9,4 Q11,2 9,0 Z"/>
+        </svg>
+        V Wave
+      </button>
+      <button class="add-btn" id="btn-add-vzstripes" title="Add vertical zigzag stripe layer">
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+          <polygon points="3,0 1,2 3,4 1,6 3,8 1,10 3,12 1,14 4,14 6,12 4,10 6,8 4,6 6,4 4,2 6,0"/>
+          <polygon points="7,0 5,2 7,4 5,6 7,8 5,10 7,12 5,14 8,14 10,12 8,10 10,8 8,6 10,4 8,2 10,0"/>
+        </svg>
+        V Zigzag
+      </button>
       <button class="add-btn" id="btn-add-overlay" title="Add overlay shape layer">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
           <rect x="5" y="0" width="4" height="14"/><rect x="0" y="5" width="14" height="4"/>
         </svg>
         Overlay
+      </button>
+    </div>
+
+    <div class="canvas-toolbar">
+      <button class="tool-btn" id="btn-toggle-grid" title="Toggle grid overlay">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+          <line x1="5" y1="0" x2="5" y2="14"/><line x1="9" y1="0" x2="9" y2="14"/>
+          <line x1="0" y1="5" x2="14" y2="5"/><line x1="0" y1="9" x2="14" y2="9"/>
+          <rect x="0.6" y="0.6" width="12.8" height="12.8"/>
+        </svg>
+        Grid
       </button>
     </div>
 

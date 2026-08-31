@@ -161,10 +161,25 @@ document.addEventListener('DOMContentLoaded', () => {
   _updateUndoRedoBtns();
 });
 
+// ---- Unified z-order (layers + emblems in one stack) ----
+function ensureOrder(d) {
+  const allIds = new Set([...d.layers.map(l => l.id), ...d.emblems.map(e => e.id)]);
+  if (!d.stackOrder) d.stackOrder = [];
+  // Remove stale IDs
+  d.stackOrder = d.stackOrder.filter(id => allIds.has(id));
+  // Append any new items (layers first, then emblems, to preserve old default order)
+  const existing = new Set(d.stackOrder);
+  d.layers.forEach(l => { if (!existing.has(l.id)) { d.stackOrder.push(l.id); existing.add(l.id); } });
+  d.emblems.forEach(e => { if (!existing.has(e.id)) { d.stackOrder.push(e.id); existing.add(e.id); } });
+  return d.stackOrder;
+}
+
 // ---- Full render cycle ----
 function renderAll() {
+  ensureOrder(design);
   renderFlag(flagSvg, design, selectedEmblemId, _multiSelect);
   renderLayerList();
+  renderGrid();
   updateEmblemControls();
 }
 
@@ -174,28 +189,13 @@ function renderAll() {
 
 function renderLayerList() {
   layerList.innerHTML = '';
-
-  // ---- Emblem section ----
-  if (design.emblems.length > 0) {
-    const sec = document.createElement('div');
-    sec.className = 'layer-section';
-    const secTitle = document.createElement('div');
-    secTitle.className = 'layer-section-title';
-    secTitle.textContent = 'Icons';
-    sec.appendChild(secTitle);
-    // Reverse so last placed = top of list
-    [...design.emblems].reverse().forEach(emblem => {
-      const row = buildEmblemRow(emblem);
-      sec.appendChild(row);
-    });
-    layerList.appendChild(sec);
-  }
-
-  // ---- Layer section ----
-  const layers = [...design.layers].reverse();
-  layers.forEach(layer => {
-    const card = buildLayerCard(layer);
-    layerList.appendChild(card);
+  const order = ensureOrder(design);
+  // Reverse: highest z (top of visual stack) appears first in list
+  [...order].reverse().forEach(id => {
+    const layer = design.layers.find(l => l.id === id);
+    if (layer) { layerList.appendChild(buildLayerCard(layer)); return; }
+    const emblem = design.emblems.find(e => e.id === id);
+    if (emblem) { layerList.appendChild(buildEmblemRow(emblem)); }
   });
 }
 
@@ -287,7 +287,7 @@ function buildEmblemRow(emblem) {
   dragHandle.className = 'layer-drag';
   dragHandle.title = 'Drag to reorder';
   dragHandle.innerHTML = `<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg>`;
-  dragHandle.addEventListener('pointerdown', e => startEmblemRowDrag(e, emblem.id));
+  dragHandle.addEventListener('pointerdown', e => startStackDrag(e, emblem.id));
 
   row.appendChild(dragHandle);
   row.appendChild(preview);
@@ -315,7 +315,7 @@ function buildLayerCard(layer) {
     <circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/>
     <circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/>
   </svg>`;
-  drag.addEventListener('pointerdown', e => { if (!layer.locked) startLayerDrag(e, layer.id); });
+  drag.addEventListener('pointerdown', e => { if (!layer.locked) startStackDrag(e, layer.id); });
 
   // Thumbnail
   const thumb = document.createElement('div');
@@ -371,10 +371,12 @@ function buildLayerCard(layer) {
 }
 
 function layerLabel(layer) {
-  if (layer.type === 'hstripes') return `Horizontal Stripes (${layer.bands.length})`;
-  if (layer.type === 'vstripes') return `Vertical Stripes (${layer.bands.length})`;
-  if (layer.type === 'wstripes') return `Wave Stripes (${layer.bands.length})`;
-  if (layer.type === 'zstripes') return `Zigzag Stripes (${layer.bands.length})`;
+  if (layer.type === 'hstripes')  return `Horizontal Stripes (${layer.bands.length})`;
+  if (layer.type === 'vstripes')  return `Vertical Stripes (${layer.bands.length})`;
+  if (layer.type === 'wstripes')  return `Wave Stripes (${layer.bands.length})`;
+  if (layer.type === 'zstripes')  return `Zigzag Stripes (${layer.bands.length})`;
+  if (layer.type === 'vwstripes') return `V Wave Stripes (${layer.bands.length})`;
+  if (layer.type === 'vzstripes') return `V Zigzag Stripes (${layer.bands.length})`;
   if (layer.type === 'overlay')  {
     const name = SHAPES[layer.shape]?.label || 'Overlay';
     return name;
@@ -384,42 +386,28 @@ function layerLabel(layer) {
 
 function buildLayerBody(layer) {
   const frag = document.createDocumentFragment();
-  if (['hstripes','vstripes','wstripes','zstripes'].includes(layer.type)) {
+  if (['hstripes','vstripes','wstripes','zstripes','vwstripes','vzstripes'].includes(layer.type)) {
     frag.appendChild(buildStripesBody(layer));
     // Wave/zigzag extra controls
-    if (layer.type === 'wstripes' || layer.type === 'zstripes') {
+    if (['wstripes','zstripes','vwstripes','vzstripes'].includes(layer.type)) {
       const wavesRow = document.createElement('div');
       wavesRow.className = 'control-row';
-      const wVal = document.createElement('span'); wVal.className = 'control-value';
-      wVal.textContent = layer.params?.waves ?? 4;
       wavesRow.innerHTML = `<span class="control-label">Waves</span>`;
-      const wInput = document.createElement('input');
-      wInput.type = 'range'; wInput.min = 1; wInput.max = 12; wInput.step = 1;
-      wInput.value = layer.params?.waves ?? 4;
-      wInput.addEventListener('input', e => {
-        if (!layer.params) layer.params = {};
-        layer.params.waves = +e.target.value;
-        wVal.textContent = layer.params.waves;
-        onChange();
-      });
-      wavesRow.appendChild(wInput); wavesRow.appendChild(wVal);
+      wavesRow.appendChild(buildSliderWithVal(
+        { min: 1, max: 12, step: 1, value: layer.params?.waves ?? 4, title: 'Wave count' },
+        v => { if (!layer.params) layer.params = {}; layer.params.waves = v; renderFlagOnly(); },
+        () => onChange()
+      ));
       frag.appendChild(wavesRow);
 
       const ampRow = document.createElement('div');
       ampRow.className = 'control-row';
-      const aVal = document.createElement('span'); aVal.className = 'control-value';
-      aVal.textContent = `${layer.params?.amplitude ?? 8}%`;
       ampRow.innerHTML = `<span class="control-label">Height %</span>`;
-      const aInput = document.createElement('input');
-      aInput.type = 'range'; aInput.min = 2; aInput.max = 25; aInput.step = 1;
-      aInput.value = layer.params?.amplitude ?? 8;
-      aInput.addEventListener('input', e => {
-        if (!layer.params) layer.params = {};
-        layer.params.amplitude = +e.target.value;
-        aVal.textContent = `${layer.params.amplitude}%`;
-        onChange();
-      });
-      ampRow.appendChild(aInput); ampRow.appendChild(aVal);
+      ampRow.appendChild(buildSliderWithVal(
+        { min: 2, max: 25, step: 1, value: layer.params?.amplitude ?? 8, title: 'Wave amplitude %' },
+        v => { if (!layer.params) layer.params = {}; layer.params.amplitude = v; renderFlagOnly(); },
+        () => onChange()
+      ));
       frag.appendChild(ampRow);
     }
   } else if (layer.type === 'overlay') {
@@ -596,6 +584,37 @@ function buildColorPicker(initialValue, onChangeCallback) {
 }
 
 // ---- Stripes body ----
+// Returns a flex wrapper: [range slider] [editable number input]
+// onInput fires on every move (lightweight), onCommit fires on release (full save)
+function buildSliderWithVal({ min, max, step = 1, value, title, className, suffix = '' }, onInput, onCommit) {
+  const wrap = document.createElement('div');
+  wrap.className = 'slider-val-wrap';
+
+  const range = document.createElement('input');
+  range.type = 'range';
+  range.min = min; range.max = max; range.step = step; range.value = value;
+  if (title) range.title = title;
+  if (className) range.className = className;
+
+  const num = document.createElement('input');
+  num.type = 'number';
+  num.className = 'slider-num-input';
+  num.min = min; num.max = max; num.step = step; num.value = value;
+  if (title) num.title = title;
+
+  range.addEventListener('input', () => { num.value = range.value; onInput(+range.value); });
+  range.addEventListener('change', () => onCommit && onCommit(+range.value));
+  num.addEventListener('input', () => {
+    const v = Math.min(max, Math.max(min, +num.value || min));
+    range.value = v; onInput(v);
+  });
+  num.addEventListener('change', () => onCommit && onCommit(+num.value));
+
+  wrap.appendChild(range);
+  wrap.appendChild(num);
+  return wrap;
+}
+
 function buildStripesBody(layer) {
   const wrap = document.createElement('div');
   const bandsList = document.createElement('div');
@@ -663,12 +682,17 @@ function buildStripesBody(layer) {
         patternBgWrap.title = 'Pattern background colour';
       }
 
-      const weightInput = document.createElement('input');
-      weightInput.type = 'range';
-      weightInput.min = 1; weightInput.max = 20; weightInput.step = 1;
-      weightInput.value = band.weight;
-      weightInput.title = 'Band width';
-      weightInput.addEventListener('input', e => { band.weight = +e.target.value; onChange(); });
+      const weightWrap = buildSliderWithVal(
+        { min: 1, max: 20, step: 1, value: band.weight, title: 'Band width' },
+        v => { band.weight = v; renderFlagOnly(); },
+        () => onChange()
+      );
+
+      const opacityWrap = buildSliderWithVal(
+        { min: 0, max: 100, step: 1, value: band.opacity ?? 100, title: 'Opacity %', className: 'band-opacity-slider' },
+        v => { band.opacity = v; renderFlagOnly(); },
+        () => onChange()
+      );
 
       const removeBtn = document.createElement('button');
       removeBtn.className = 'band-remove';
@@ -681,13 +705,35 @@ function buildStripesBody(layer) {
         onChange();
       });
 
-      row.appendChild(colorWrap);
-      row.appendChild(gradBtn);
-      if (gradEndWrap) row.appendChild(gradEndWrap);
-      if (patternSelect) row.appendChild(patternSelect);
-      if (patternBgWrap) row.appendChild(patternBgWrap);
-      row.appendChild(weightInput);
-      row.appendChild(removeBtn);
+      // Top row: colour + fill controls + remove
+      const topRow = document.createElement('div');
+      topRow.className = 'band-row-top';
+      topRow.appendChild(colorWrap);
+      topRow.appendChild(gradBtn);
+      if (gradEndWrap) topRow.appendChild(gradEndWrap);
+      if (patternSelect) topRow.appendChild(patternSelect);
+      if (patternBgWrap) topRow.appendChild(patternBgWrap);
+      topRow.appendChild(removeBtn);
+
+      // Slider row: width + opacity, each with a tiny label
+      const sliderRow = document.createElement('div');
+      sliderRow.className = 'band-row-sliders';
+
+      const wLabel = document.createElement('span');
+      wLabel.className = 'band-slider-label';
+      wLabel.textContent = 'Width';
+
+      const oLabel = document.createElement('span');
+      oLabel.className = 'band-slider-label';
+      oLabel.textContent = 'Opacity';
+
+      sliderRow.appendChild(wLabel);
+      sliderRow.appendChild(weightWrap);
+      sliderRow.appendChild(oLabel);
+      sliderRow.appendChild(opacityWrap);
+
+      row.appendChild(topRow);
+      row.appendChild(sliderRow);
       bandsList.appendChild(row);
     });
   }
@@ -859,6 +905,7 @@ function toggleLayerLocked(id) {
 }
 function deleteLayer(id) {
   design.layers = design.layers.filter(l => l.id !== id);
+  if (design.stackOrder) design.stackOrder = design.stackOrder.filter(x => x !== id);
   _commitChange();
 }
 
@@ -866,7 +913,7 @@ function addLayer(type) {
   const layer = {
     id: uuid(), type, visible: true, expanded: true,
   };
-  if (['hstripes','vstripes','wstripes','zstripes'].includes(type)) {
+  if (['hstripes','vstripes','wstripes','zstripes','vwstripes','vzstripes'].includes(type)) {
     layer.bands = [{ color: '#d4a832', weight: 1 }, { color: '#2c3e50', weight: 1 }];
     layer.params = {};
   } else {
@@ -876,73 +923,46 @@ function addLayer(type) {
     layer.params = {};
   }
   design.layers.push(layer);
+  ensureOrder(design); // adds new layer id to stackOrder at top
   _commitChange();
 }
 
-// ---- Layer drag to reorder ----
-function startLayerDrag(e, layerId) {
-  dragLayerId = layerId;
-  dragLayerOriginY = e.clientY;
-  document.addEventListener('pointermove', onLayerDragMove);
-  document.addEventListener('pointerup', onLayerDragEnd);
-  try { e.target.setPointerCapture(e.pointerId); } catch {}
-  e.preventDefault();
-}
-function onLayerDragMove(e) {
-  if (!dragLayerId) return;
-  const cards = [...layerList.querySelectorAll('.layer-card')];
-  const idx = cards.findIndex(c => c.dataset.layerId === dragLayerId);
-  if (idx === -1) return;
-  const dy = e.clientY - dragLayerOriginY;
-  if (Math.abs(dy) < 20) return;
-  const dir = dy > 0 ? 1 : -1;
-  dragLayerOriginY = e.clientY;
-  // Layers list is reversed (top of list = top of visual stack = end of array)
-  const arrIdx = design.layers.findIndex(l => l.id === dragLayerId);
-  const newIdx = arrIdx - dir; // reversed in UI
-  if (newIdx < 0 || newIdx >= design.layers.length) return;
-  const [removed] = design.layers.splice(arrIdx, 1);
-  design.layers.splice(newIdx, 0, removed);
-  renderAll();
-}
-function onLayerDragEnd() {
-  dragLayerId = null;
-  document.removeEventListener('pointermove', onLayerDragMove);
-  document.removeEventListener('pointerup', onLayerDragEnd);
-}
-
-// ---- Emblem row drag-to-reorder ----
-let _dragEmblemId = null;
-let _dragEmblemY  = 0;
+// ---- Unified stack drag (layers + emblems share one list) ----
 let _copiedEmblem = null;
+let _stackDragId  = null;
+let _stackDragY   = 0;
 
-function startEmblemRowDrag(e, emblemId) {
-  _dragEmblemId = emblemId;
-  _dragEmblemY  = e.clientY;
-  document.addEventListener('pointermove', _onEmblemRowMove);
-  document.addEventListener('pointerup',   _onEmblemRowEnd);
+function startStackDrag(e, id) {
+  _stackDragId = id;
+  _stackDragY  = e.clientY;
+  document.addEventListener('pointermove', _onStackDragMove);
+  document.addEventListener('pointerup',   _onStackDragEnd);
+  try { e.target.setPointerCapture(e.pointerId); } catch {}
   e.preventDefault();
   e.stopPropagation();
 }
-function _onEmblemRowMove(e) {
-  if (!_dragEmblemId) return;
-  const dy = e.clientY - _dragEmblemY;
-  if (Math.abs(dy) < 18) return;
+function _onStackDragMove(e) {
+  if (!_stackDragId) return;
+  const dy = e.clientY - _stackDragY;
+  if (Math.abs(dy) < 20) return;
   const dir = dy > 0 ? 1 : -1;
-  _dragEmblemY = e.clientY;
-  const arrIdx = design.emblems.findIndex(em => em.id === _dragEmblemId);
+  _stackDragY = e.clientY;
+  const order = ensureOrder(design);
+  const arrIdx = order.indexOf(_stackDragId);
   if (arrIdx === -1) return;
-  // UI shows in REVERSE: drag down (dir=+1) = move toward lower z = earlier in array
+  // UI list is reversed, so dragging down (dir=+1) moves item earlier in the array (lower z)
   const newIdx = arrIdx - dir;
-  if (newIdx < 0 || newIdx >= design.emblems.length) return;
-  const [removed] = design.emblems.splice(arrIdx, 1);
-  design.emblems.splice(newIdx, 0, removed);
+  if (newIdx < 0 || newIdx >= order.length) return;
+  order.splice(arrIdx, 1);
+  order.splice(newIdx, 0, _stackDragId);
   renderAll();
 }
-function _onEmblemRowEnd() {
-  _dragEmblemId = null;
-  document.removeEventListener('pointermove', _onEmblemRowMove);
-  document.removeEventListener('pointerup',   _onEmblemRowEnd);
+function _onStackDragEnd() {
+  if (!_stackDragId) return;
+  _stackDragId = null;
+  document.removeEventListener('pointermove', _onStackDragMove);
+  document.removeEventListener('pointerup',   _onStackDragEnd);
+  _commitChange();
 }
 
 // ============================================================
@@ -1300,6 +1320,47 @@ function loadHeraldGrid(catId) {
     if (i < icons.length) requestAnimationFrame(renderBatch);
   }
   renderBatch();
+}
+
+// ---- Visible grid overlay ----
+let gridEnabled = false;
+let _gridGroup  = null;
+
+function renderGrid() {
+  if (!_gridGroup) {
+    _gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    _gridGroup.id = 'grid-overlay';
+    _gridGroup.style.pointerEvents = 'none';
+  }
+  _gridGroup.innerHTML = '';
+  if (!gridEnabled) {
+    if (_gridGroup.parentNode) _gridGroup.parentNode.removeChild(_gridGroup);
+    flagSvg.style.overflow = '';
+    return;
+  }
+  flagSvg.appendChild(_gridGroup);
+  flagSvg.style.overflow = 'visible';
+  const W = CANVAS_W, H = CANVAS_H;
+  const BLEED = 20; // extend lines 20px beyond canvas edges
+  const addLine = (x1, y1, x2, y2, opacity) => {
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+    l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('stroke', '#1E40AF');
+    l.setAttribute('stroke-width', opacity > 0.25 ? '0.75' : '0.4');
+    l.setAttribute('opacity', opacity);
+    _gridGroup.appendChild(l);
+  };
+  for (let p = 1; p < 10; p++) {
+    const op = [25, 50, 75].includes(p * 10) ? 0.5 : 0.22;
+    const x = p / 10 * W, y = p / 10 * H;
+    addLine(x, -BLEED, x, H + BLEED, op);       // vertical lines extend above/below
+    addLine(-BLEED, y, W + BLEED, y, op);        // horizontal lines extend left/right
+  }
+}
+
+function _hideGridOverflow() {
+  flagSvg.style.overflow = '';
 }
 
 // ---- Snap guide overlay ----
@@ -2415,11 +2476,56 @@ function bindEmblemControls() {
 function bindHeaderButtons() {
   designNameEl.addEventListener('change', e => { design.name = e.target.value || 'Untitled Flag'; });
 
-  document.getElementById('btn-add-hstripes').addEventListener('click', () => addLayer('hstripes'));
-  document.getElementById('btn-add-vstripes').addEventListener('click', () => addLayer('vstripes'));
-  document.getElementById('btn-add-wstripes').addEventListener('click', () => addLayer('wstripes'));
-  document.getElementById('btn-add-zstripes').addEventListener('click', () => addLayer('zstripes'));
-  document.getElementById('btn-add-overlay').addEventListener('click',  () => addLayer('overlay'));
+  document.getElementById('btn-add-hstripes').addEventListener('click',  () => addLayer('hstripes'));
+  document.getElementById('btn-add-vstripes').addEventListener('click',  () => addLayer('vstripes'));
+  document.getElementById('btn-add-wstripes').addEventListener('click',  () => addLayer('wstripes'));
+  document.getElementById('btn-add-zstripes').addEventListener('click',  () => addLayer('zstripes'));
+  document.getElementById('btn-add-vwstripes').addEventListener('click', () => addLayer('vwstripes'));
+  document.getElementById('btn-add-vzstripes').addEventListener('click', () => addLayer('vzstripes'));
+  document.getElementById('btn-add-overlay').addEventListener('click',   () => addLayer('overlay'));
+
+  document.getElementById('btn-toggle-grid').addEventListener('click', function () {
+    gridEnabled = !gridEnabled;
+    this.classList.toggle('active', gridEnabled);
+    renderGrid();
+  });
+
+  // ---- Resizable left panel ----
+  (function () {
+    const handle  = document.getElementById('panel-resize-handle');
+    const panel   = document.getElementById('layers-panel');
+    const root    = document.documentElement;
+    const MIN_W   = 220, MAX_W = 520;
+    const STORE_KEY = 'vexillum_panel_w';
+
+    const saved = parseInt(localStorage.getItem(STORE_KEY), 10);
+    if (saved && saved >= MIN_W && saved <= MAX_W) {
+      root.style.setProperty('--panel-w', saved + 'px');
+    }
+
+    let startX = 0, startW = 0;
+
+    handle.addEventListener('pointerdown', e => {
+      startX = e.clientX;
+      startW = panel.getBoundingClientRect().width;
+      handle.classList.add('dragging');
+      handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    handle.addEventListener('pointermove', e => {
+      if (!handle.classList.contains('dragging')) return;
+      const w = Math.min(MAX_W, Math.max(MIN_W, startW + (e.clientX - startX)));
+      root.style.setProperty('--panel-w', w + 'px');
+    });
+
+    handle.addEventListener('pointerup', e => {
+      if (!handle.classList.contains('dragging')) return;
+      handle.classList.remove('dragging');
+      const w = panel.getBoundingClientRect().width;
+      localStorage.setItem(STORE_KEY, Math.round(w));
+    });
+  })();
 
   const undoBtn = document.getElementById('btn-undo');
   const redoBtn = document.getElementById('btn-redo');
@@ -2867,6 +2973,11 @@ function _updateUndoRedoBtns() {
 // ============================================================
 // CHANGE CALLBACK
 // ============================================================
+
+function renderFlagOnly() {
+  renderFlag(flagSvg, design, selectedEmblemId, _multiSelect);
+  renderGrid();
+}
 
 function onChange() {
   renderAll();

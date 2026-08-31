@@ -208,15 +208,28 @@ const SHAPES = {
   chevron: {
     label: 'Chevron',
     params: {
-      depth:     { label: 'Depth',  min: 5,  max: 80, default: 40 },
-      thickness: { label: 'Width',  min: 5,  max: 80, default: 30 },
+      depth:     { label: 'Depth %',     min: 5,  max: 80, default: 40 },
+      thickness: { label: 'Width %',     min: 5,  max: 80, default: 30 },
+      direction: { label: 'Dir (0=→ 1=← 2=↓ 3=↑)', min: 0, max: 3, default: 0, step: 1 },
     },
     render(c, p) {
-      const d = (p.depth ?? 40) / 100 * CANVAS_W;
-      const t = (p.thickness ?? 30) / 100 * CANVAS_W;
       const W = CANVAS_W, H = CANVAS_H;
-      return `<polygon points="0,0 ${d},${H/2} 0,${H} ${t},${H} ${d+t},${H/2} ${t},0"
-                fill="${c.color}" opacity="${c.opacity/100}"/>`;
+      const dir = Math.round(p.direction ?? 0);
+      let points;
+      if (dir === 0) {         // → from left
+        const d = (p.depth ?? 40) / 100 * W, t = (p.thickness ?? 30) / 100 * W;
+        points = `0,0 ${d},${H/2} 0,${H} ${t},${H} ${d+t},${H/2} ${t},0`;
+      } else if (dir === 1) {  // ← from right
+        const d = (p.depth ?? 40) / 100 * W, t = (p.thickness ?? 30) / 100 * W;
+        points = `${W},0 ${W-d},${H/2} ${W},${H} ${W-t},${H} ${W-d-t},${H/2} ${W-t},0`;
+      } else if (dir === 2) {  // ↓ from top
+        const d = (p.depth ?? 40) / 100 * H, t = (p.thickness ?? 30) / 100 * H;
+        points = `0,0 ${W/2},${d} ${W},0 ${W},${t} ${W/2},${d+t} 0,${t}`;
+      } else {                 // ↑ from bottom
+        const d = (p.depth ?? 40) / 100 * H, t = (p.thickness ?? 30) / 100 * H;
+        points = `0,${H} ${W/2},${H-d} ${W},${H} ${W},${H-t} ${W/2},${H-d-t} 0,${H-t}`;
+      }
+      return `<polygon points="${points}" fill="${c.color}" opacity="${c.opacity/100}"/>`;
     }
   },
   canton: {
@@ -552,32 +565,41 @@ function renderFlag(svgEl, design, selectedEmblemId = null, multiSelectIds = nul
   base.setAttribute('fill', 'white');
   group.appendChild(base);
 
-  // Render layers
-  design.layers.forEach(layer => {
-    if (!layer.visible) return;
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.classList.add('render-layer');
-    g.dataset.layerId = layer.id;
-    g.innerHTML = renderLayer(layer);
-    group.appendChild(g);
-  });
-
-  // Render emblems into the clipped group
-  design.emblems.forEach(emblem => {
-    const isSel      = emblem.id === selectedEmblemId;
-    const isMultiSel = multiSelectIds ? multiSelectIds.has(emblem.id) : false;
-    renderEmblemEl(group, emblem, isSel, isMultiSel);
+  // Render layers + emblems in unified z-order
+  const stackOrder = design.stackOrder || [
+    ...design.layers.map(l => l.id),
+    ...design.emblems.map(e => e.id),
+  ];
+  stackOrder.forEach(id => {
+    const layer = design.layers.find(l => l.id === id);
+    if (layer) {
+      if (!layer.visible) return;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('render-layer');
+      g.dataset.layerId = layer.id;
+      g.innerHTML = renderLayer(layer);
+      group.appendChild(g);
+      return;
+    }
+    const emblem = design.emblems.find(e => e.id === id);
+    if (emblem) {
+      const isSel      = emblem.id === selectedEmblemId;
+      const isMultiSel = multiSelectIds ? multiSelectIds.has(emblem.id) : false;
+      renderEmblemEl(group, emblem, isSel, isMultiSel);
+    }
   });
 
   svgEl.appendChild(group);
 }
 
 function renderLayer(layer) {
-  if (layer.type === 'hstripes') return renderStripes(layer, false);
-  if (layer.type === 'vstripes') return renderStripes(layer, true);
-  if (layer.type === 'wstripes') return renderWaveStripes(layer, false);
-  if (layer.type === 'zstripes') return renderWaveStripes(layer, true);
-  if (layer.type === 'overlay')  return renderOverlay(layer);
+  if (layer.type === 'hstripes')  return renderStripes(layer, false);
+  if (layer.type === 'vstripes')  return renderStripes(layer, true);
+  if (layer.type === 'wstripes')  return renderWaveStripes(layer, false);
+  if (layer.type === 'zstripes')  return renderWaveStripes(layer, true);
+  if (layer.type === 'vwstripes') return renderVWaveStripes(layer, false);
+  if (layer.type === 'vzstripes') return renderVWaveStripes(layer, true);
+  if (layer.type === 'overlay')   return renderOverlay(layer);
   return '';
 }
 
@@ -633,7 +655,58 @@ function renderWaveStripes(layer, zigzag) {
     } else {
       d = `M 0,${topY}${_waveSeg(top, W, H, n, amp, zigzag, true)} L ${W},${botY}${_waveSeg(bot, W, H, n, amp, zigzag, false)} Z`;
     }
-    out += `<path d="${d}" fill="${band.color}"/>`;
+    out += `<path d="${d}" fill="${band.color}" opacity="${(band.opacity ?? 100) / 100}"/>`;
+  });
+  return out;
+}
+
+// Vertical wave/zigzag boundary: top→bottom (forward=true) or bottom→top (false)
+function _waveSegV(pos, W, H, n, amp, zigzag, forward) {
+  const cx = pos * W;
+  const step = H / (n * 2);
+  let s = '';
+  if (forward) {
+    for (let i = 0; i < n * 2; i++) {
+      const dir = i % 2 === 0 ? -1 : 1;
+      const ym = ((i + 0.5) * step).toFixed(2), ye = ((i + 1) * step).toFixed(2);
+      const xm = (cx + dir * amp).toFixed(2);
+      s += zigzag ? ` L ${xm},${ym} L ${cx.toFixed(2)},${ye}` : ` Q ${xm},${ym} ${cx.toFixed(2)},${ye}`;
+    }
+  } else {
+    for (let i = n * 2 - 1; i >= 0; i--) {
+      const dir = i % 2 === 0 ? -1 : 1;
+      const ym = ((i + 0.5) * step).toFixed(2), ys = (i * step).toFixed(2);
+      const xm = (cx + dir * amp).toFixed(2);
+      s += zigzag ? ` L ${xm},${ym} L ${cx.toFixed(2)},${ys}` : ` Q ${xm},${ym} ${cx.toFixed(2)},${ys}`;
+    }
+  }
+  return s;
+}
+
+function renderVWaveStripes(layer, zigzag) {
+  const bands = layer.bands || [];
+  if (!bands.length) return '';
+  const W = CANVAS_W, H = CANVAS_H;
+  const n   = Math.max(2, Math.round(layer.params?.waves ?? 4));
+  const amp = (layer.params?.amplitude ?? 8) / 100 * W;
+  const total = bands.reduce((s, b) => s + (b.weight || 1), 0);
+  const bounds = [0]; let pos = 0;
+  bands.forEach(b => { pos += (b.weight || 1) / total; bounds.push(pos); });
+  let out = '';
+  bands.forEach((band, i) => {
+    const lft = bounds[i], rgt = bounds[i + 1];
+    const lftX = (lft * W).toFixed(2), rgtX = (rgt * W).toFixed(2);
+    let d;
+    if (bands.length === 1) {
+      d = `M 0,0 L ${W},0 L ${W},${H} L 0,${H} Z`;
+    } else if (i === 0) {
+      d = `M 0,0 L ${rgtX},0${_waveSegV(rgt, W, H, n, amp, zigzag, true)} L 0,${H} Z`;
+    } else if (i === bands.length - 1) {
+      d = `M ${lftX},0${_waveSegV(lft, W, H, n, amp, zigzag, true)} L ${W},${H} L ${W},0 Z`;
+    } else {
+      d = `M ${lftX},0${_waveSegV(lft, W, H, n, amp, zigzag, true)} L ${rgtX},${H}${_waveSegV(rgt, W, H, n, amp, zigzag, false)} Z`;
+    }
+    out += `<path d="${d}" fill="${band.color}" opacity="${(band.opacity ?? 100) / 100}"/>`;
   });
   return out;
 }
@@ -673,14 +746,15 @@ function renderStripes(layer, vertical) {
       const patDef = _patternDef(patId, band.pattern, band.color, band.patternBg || 'transparent');
       if (patDef) { defs += patDef; fill = `url(#${patId})`; }
     }
+    const op = (band.opacity ?? 100) / 100;
     if (vertical) {
       const x = pos * CANVAS_W;
       const w = size * CANVAS_W;
-      out += `<rect x="${x}" y="0" width="${w}" height="${CANVAS_H}" fill="${fill}"/>`;
+      out += `<rect x="${x}" y="0" width="${w}" height="${CANVAS_H}" fill="${fill}" opacity="${op}"/>`;
     } else {
       const y = pos * CANVAS_H;
       const h = size * CANVAS_H;
-      out += `<rect x="0" y="${y}" width="${CANVAS_W}" height="${h}" fill="${fill}"/>`;
+      out += `<rect x="0" y="${y}" width="${CANVAS_W}" height="${h}" fill="${fill}" opacity="${op}"/>`;
     }
     pos += size;
   });
