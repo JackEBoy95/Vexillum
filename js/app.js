@@ -3066,21 +3066,20 @@ function getSvgString(scale = 1) {
   const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   group.setAttribute('clip-path', 'url(#flag-clip)');
 
-  design.layers.forEach(layer => {
-    if (!layer.visible) return;
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    if (layer.type !== 'overlay') {
-      g.setAttribute('data-layer-type', layer.type);
-    } else {
-      g.setAttribute('data-layer-type', 'overlay');
-      g.setAttribute('data-shape', layer.shape);
+  const stackOrder = ensureOrder(design);
+  stackOrder.forEach(id => {
+    const layer = design.layers.find(l => l.id === id);
+    if (layer) {
+      if (!layer.visible) return;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('data-layer-type', layer.type === 'overlay' ? 'overlay' : layer.type);
+      if (layer.type === 'overlay') g.setAttribute('data-shape', layer.shape);
+      g.innerHTML = renderLayer(layer);
+      group.appendChild(g);
+      return;
     }
-    g.innerHTML = renderLayer(layer);
-    group.appendChild(g);
-  });
-
-  design.emblems.forEach(emblem => {
-    renderEmblemEl(group, emblem, false);
+    const emblem = design.emblems.find(e => e.id === id);
+    if (emblem) renderEmblemEl(group, emblem, false);
   });
 
   tempSvg.appendChild(group);
