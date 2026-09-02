@@ -3098,6 +3098,27 @@ function getSvgString(scale = 1) {
   });
 
   tempSvg.appendChild(group);
+
+  // Watermark text element (inside clip group so it stays within flag bounds)
+  const watermarkOn = document.getElementById('export-watermark')?.checked ?? true;
+  if (watermarkOn) {
+    const fontSize = Math.max(10, Math.round(CANVAS_H * 0.034));
+    const padding  = Math.round(CANVAS_H * 0.022);
+    const wm = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    wm.setAttribute('x', CANVAS_W - padding);
+    wm.setAttribute('y', CANVAS_H - padding);
+    wm.setAttribute('text-anchor', 'end');
+    wm.setAttribute('dominant-baseline', 'auto');
+    wm.setAttribute('font-family', 'DM Sans, Arial, sans-serif');
+    wm.setAttribute('font-size', fontSize);
+    wm.setAttribute('font-weight', '600');
+    wm.setAttribute('fill', '#ffffff');
+    wm.setAttribute('opacity', '0.5');
+    wm.setAttribute('filter', 'drop-shadow(0 1px 2px rgba(0,0,0,0.65))');
+    wm.textContent = 'quickflags.app';
+    group.appendChild(wm);
+  }
+
   return new XMLSerializer().serializeToString(tempSvg);
 }
 
