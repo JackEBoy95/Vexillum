@@ -3195,14 +3195,6 @@ function bindExportModal() {
 
   function openExport() {
     _updateResLabels();
-    const isPro = getTier() !== 'free';
-    const wmCheck = document.getElementById('export-watermark');
-    const wmHint  = document.getElementById('watermark-hint');
-    if (wmCheck) {
-      wmCheck.checked = !isPro;       // pro defaults to no watermark
-      wmCheck.disabled = false;       // everyone can toggle freely
-      if (wmHint) wmHint.style.display = isPro ? 'none' : '';
-    }
     modal.classList.remove('hidden');
   }
   function closeExport() { modal.classList.add('hidden'); }
