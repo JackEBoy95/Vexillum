@@ -493,7 +493,68 @@
   </div>
 </div>
 
-<!-- Upgrade modal removed — all features are free -->
+<!-- First-visit welcome screen -->
+<div id="welcome-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Welcome to Quick Flags">
+  <div class="modal welcome-modal-inner">
+    <div class="welcome-logo">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="var(--accent)"/><path d="M8 10h14l-4 8h-10z" fill="white" opacity="0.9"/><rect x="8" y="10" width="2" height="16" rx="1" fill="white"/></svg>
+      <span class="welcome-logo-name">Quick Flags</span>
+    </div>
+    <h2 class="welcome-title">Design any flag in seconds</h2>
+    <p class="welcome-sub">Free. No account needed. Works on any device.</p>
+
+    <div class="welcome-features">
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div>
+          <strong>Upload your own SVG or image</strong>
+          <span>Use custom artwork, logos, or heraldic SVGs as emblems</span>
+        </div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        </div>
+        <div>
+          <strong>Curved & banner text</strong>
+          <span>Add text that arcs along the top, bottom, or in a full circle</span>
+        </div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div>
+          <strong>2,400+ heraldic charges</strong>
+          <span>Lions, eagles, crosses, crowns — the full traditional library</span>
+        </div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div>
+          <strong>Export SVG or PNG — free</strong>
+          <span>Lossless vector SVG or crisp PNG at any resolution</span>
+        </div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div>
+          <strong>Full layer control</strong>
+          <span>Stack stripes, overlays, and icons in any order — even mix them</span>
+        </div>
+      </div>
+    </div>
+
+    <button id="welcome-start" class="welcome-start-btn">Start Designing →</button>
+    <p class="welcome-footer">Used by vexillologists, worldbuilders, modders & designers</p>
+  </div>
+</div>
 
 <!-- Toast -->
 <div id="toast"></div>

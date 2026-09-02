@@ -2540,6 +2540,21 @@ function bindHeaderButtons() {
   bindMobileNav();
   bindHeaderMenu();
 
+  // ---- First-visit welcome screen ----
+  (function () {
+    const SEEN_KEY = 'qf_welcome_seen';
+    const modal    = document.getElementById('welcome-modal');
+    const startBtn = document.getElementById('welcome-start');
+    if (!modal || !startBtn) return;
+    if (!localStorage.getItem(SEEN_KEY)) modal.classList.remove('hidden');
+    function dismiss() {
+      modal.classList.add('hidden');
+      localStorage.setItem(SEEN_KEY, '1');
+    }
+    startBtn.addEventListener('click', dismiss);
+    modal.addEventListener('click', e => { if (e.target === modal) dismiss(); });
+  })();
+
   // Auto-save before navigating to Inspire
   const inspireLink = document.querySelector('a.header-nav-link[href="inspire.html"]');
   if (inspireLink) {

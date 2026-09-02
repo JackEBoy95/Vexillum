@@ -1702,6 +1702,90 @@ body.dark-mode .icon-cell:hover svg {
   border-radius: 10px;
 }
 
+/* ---------- Welcome Modal ---------- */
+.welcome-modal-inner {
+  max-width: 480px;
+  width: 92vw;
+  padding: 32px 28px 24px;
+  text-align: center;
+}
+.welcome-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.welcome-logo-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+.welcome-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.welcome-sub {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 24px;
+}
+.welcome-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+.welcome-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.welcome-feature-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.welcome-feature strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1px;
+}
+.welcome-feature span {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+.welcome-start-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition);
+  margin-bottom: 12px;
+}
+.welcome-start-btn:hover { background: var(--accent-h); }
+.welcome-footer {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
 /* ---------- Share Modal ---------- */
 .share-link-row {
   display: flex;
