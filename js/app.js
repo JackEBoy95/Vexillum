@@ -3114,19 +3114,18 @@ function _makePngDataUrl(scale) {
       ctx.drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
 
-      // Watermark removed — all exports are free
-      if (false) {
-        const fontSize = Math.max(11, Math.round(H * 0.038));
+      const watermarkOn = document.getElementById('export-watermark')?.checked ?? true;
+      if (watermarkOn) {
+        const fontSize = Math.max(10, Math.round(H * 0.034));
         ctx.save();
-        ctx.globalAlpha = 0.55;
+        ctx.globalAlpha = 0.5;
         ctx.fillStyle = '#ffffff';
         ctx.font = `600 ${fontSize}px DM Sans, sans-serif`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'bottom';
-        // Drop shadow for legibility on any background
-        ctx.shadowColor = 'rgba(0,0,0,0.6)';
-        ctx.shadowBlur = 4;
-        ctx.fillText('vexillum.app', W - 8, H - 6);
+        ctx.shadowColor = 'rgba(0,0,0,0.65)';
+        ctx.shadowBlur = 5;
+        ctx.fillText('quickflags.app', W - Math.round(H * 0.025), H - Math.round(H * 0.02));
         ctx.restore();
       }
 
@@ -3181,6 +3180,14 @@ function bindExportModal() {
 
   function openExport() {
     _updateResLabels();
+    const isPro = getTier() !== 'free';
+    const wmCheck = document.getElementById('export-watermark');
+    const wmHint  = document.getElementById('watermark-hint');
+    if (wmCheck) {
+      wmCheck.checked = !isPro;       // pro defaults to no watermark
+      wmCheck.disabled = false;       // everyone can toggle freely
+      if (wmHint) wmHint.style.display = isPro ? 'none' : '';
+    }
     modal.classList.remove('hidden');
   }
   function closeExport() { modal.classList.add('hidden'); }

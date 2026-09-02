@@ -1680,6 +1680,27 @@ body.dark-mode .icon-cell:hover svg {
   margin-bottom: 8px;
   line-height: 1.4;
 }
+.export-watermark-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.export-watermark-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+.export-watermark-row strong { color: var(--text); }
+.export-watermark-hint {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
 
 /* ---------- Share Modal ---------- */
 .share-link-row {
