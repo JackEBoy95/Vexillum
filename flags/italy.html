@@ -3,80 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Italy Flag Colors, Design &amp; Meaning | Vexillum</title>
-  <meta name="description" content="Explore the Italian Tricolore — official hex codes for green, white, and red, design proportions, and the history of the Il Tricolore since 1948.">
-  <meta name="keywords" content="Italy flag colors, Italian Tricolore hex codes, Italy flag meaning, Italian flag design, il tricolore verde bianco rosso">
-  <meta property="og:title" content="Italy Flag Colors, Design &amp; Meaning | Vexillum">
-  <meta property="og:description" content="Official colors, proportions, and symbolism of the Italian Tricolore — green, white, and red since the Napoleonic era.">
+  <title>Italy Flag — Colors, Design &amp; History | Quick Flags</title>
+  <meta name="description" content="Italy flag — official green, white and red hex codes, design history from Napoleon to the Italian Republic.">
+  <meta name="keywords" content="Italy flag, Italian Tricolore, green white red, Italian flag colors, Risorgimento flag">
+  <meta property="og:title" content="Italy Flag — Colors, Design &amp; History | Quick Flags">
+  <meta property="og:description" content="Italy flag — official green, white and red hex codes, design history from Napoleon to the Italian Republic.">
   <meta property="og:type" content="website">
-  <link rel="canonical" href="https://vexillum.app/flags/italy">
+  <meta property="og:image" content="https://quickflags.app/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://quickflags.app/flags/italy">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../css/style.css">
   <style>
     html, body { overflow: auto; background: var(--canvas-bg); }
-    #site-nav { display: flex; align-items: center; gap: 20px; padding: 0 32px; height: 52px; background: var(--panel-bg); border-bottom: 2px solid var(--near-black); position: sticky; top: 0; z-index: 10; }
-    #site-nav .logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--near-black); text-decoration: none; }
-    .nav-link { color: var(--near-black); text-decoration: none; font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 6px; transition: background 0.12s; }
-    .nav-link:hover { background: var(--hover); }
-    .nav-link.active { background: var(--active); font-weight: 700; }
+    #site-nav { display: flex; align-items: center; gap: 20px; padding: 0 32px; height: 52px; background: var(--panel-bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    #site-nav .logo { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; color: var(--text); text-decoration: none; }
+    .nav-link { color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 6px; transition: background 0.12s; }
+    .nav-link:hover { background: var(--hover); color: var(--text); }
     .nav-spacer { flex: 1; }
-    .nav-cta { padding: 7px 16px; background: var(--near-black); color: var(--panel-bg); border: 2px solid var(--near-black); border-radius: 6px; font-weight: 700; font-size: 13px; text-decoration: none; transition: all 0.12s; box-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
-    .nav-cta:hover { opacity: 0.85; }
+    .nav-cta { padding: 7px 16px; background: var(--accent); color: var(--accent-fg); border-radius: 6px; font-weight: 700; font-size: 13px; text-decoration: none; transition: background 0.12s; }
+    .nav-cta:hover { background: var(--accent-h); }
     .page-wrap { max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
     .breadcrumb { font-size: 13px; color: var(--text-2); padding: 20px 0 0; display: flex; align-items: center; gap: 8px; }
-    .breadcrumb a { color: var(--text-2); text-decoration: none; }
-    .breadcrumb a:hover { color: var(--text); }
+    .breadcrumb a { color: var(--text-2); text-decoration: none; } .breadcrumb a:hover { color: var(--text); }
     .breadcrumb span { opacity: 0.5; }
-    .hero { padding: 40px 0 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; border-bottom: 2px solid var(--near-black); margin-bottom: 56px; }
-    .flag-display { border: 3px solid var(--near-black); border-radius: 8px; overflow: hidden; box-shadow: 6px 6px 0 var(--near-black); width: 100%; aspect-ratio: 3/2; }
+    .hero { padding: 40px 0 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    .flag-display { border: 2px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-md); width: 100%; aspect-ratio: 3/2; }
     .flag-display svg { width: 100%; height: 100%; display: block; }
     .hero-meta { display: flex; flex-direction: column; gap: 12px; }
-    .hero-label { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--text-2); text-transform: uppercase; }
-    .hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 6vw, 60px); letter-spacing: 1px; color: var(--text); line-height: 1; margin: 0; }
-    .hero-official-name { font-size: 15px; color: var(--text-2); font-style: italic; }
-    .hero-stats { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 8px; }
+    .hero-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--text-2); text-transform: uppercase; }
+    .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; color: var(--text); line-height: 1.1; margin: 0; }
+    .hero-official-name { font-size: 14px; color: var(--text-2); font-style: italic; }
+    .hero-stats { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 4px; }
     .stat { display: flex; flex-direction: column; gap: 2px; }
-    .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--text-2); text-transform: uppercase; }
-    .stat-value { font-size: 16px; font-weight: 700; color: var(--text); }
-    .section { margin-bottom: 56px; }
-    .section-heading { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: var(--text); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--near-black); }
-    .colors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
-    .color-card { background: var(--panel-bg); border: 2px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: 3px 3px 0 var(--border); }
-    .color-swatch { height: 80px; width: 100%; }
-    .color-info { padding: 12px; }
-    .color-name { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 2px; }
-    .color-hex { font-family: 'Courier New', monospace; font-size: 13px; color: var(--text-2); background: var(--canvas-bg); padding: 2px 6px; border-radius: 4px; display: inline-block; }
-    .color-usage { font-size: 12px; color: var(--text-2); margin-top: 6px; line-height: 1.4; }
-    .prose p { font-size: 16px; color: var(--text-2); line-height: 1.7; margin-bottom: 16px; }
+    .stat-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-2); text-transform: uppercase; }
+    .stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
+    .remix-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: 14px; border-radius: 8px; text-decoration: none; transition: background 0.12s; margin-top: 6px; }
+    .remix-btn:hover { background: var(--accent-h); }
+    .section { margin-bottom: 48px; }
+    .section-heading { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .colors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+    .color-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); }
+    .color-swatch { height: 72px; width: 100%; }
+    .color-info { padding: 10px 12px; }
+    .color-name { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+    .color-hex { font-family: 'Courier New', monospace; font-size: 12px; color: var(--text-2); background: var(--canvas-bg); padding: 1px 5px; border-radius: 3px; display: inline-block; }
+    .color-usage { font-size: 11px; color: var(--text-2); margin-top: 4px; line-height: 1.4; }
+    .prose p { font-size: 15px; color: var(--text-2); line-height: 1.75; margin-bottom: 14px; }
     .prose p:last-child { margin-bottom: 0; }
-    .prose strong { color: var(--text); font-weight: 700; }
-    .cta-band { background: var(--near-black); color: var(--panel-bg); border-radius: 12px; padding: 48px 40px; text-align: center; margin-top: 64px; }
-    .cta-band h2 { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; margin-bottom: 12px; }
-    .cta-band p { font-size: 16px; opacity: 0.75; margin-bottom: 28px; }
-    .btn-white { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: var(--panel-bg); color: var(--near-black); font-weight: 700; font-size: 14px; border-radius: 8px; text-decoration: none; border: 2px solid var(--panel-bg); box-shadow: 3px 3px 0 rgba(255,255,255,0.2); transition: all 0.12s; }
-    .btn-white:hover { transform: translate(-1px,-1px); }
-    @media (max-width: 650px) { .hero { grid-template-columns: 1fr; gap: 24px; } #site-nav { padding: 0 16px; gap: 12px; } .page-wrap { padding: 0 16px 60px; } .cta-band { padding: 32px 20px; } }
+    .prose strong { color: var(--text); }
+    .cta-band { background: var(--accent); color: var(--accent-fg); border-radius: 12px; padding: 44px 36px; text-align: center; margin-top: 56px; }
+    .cta-band h2 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+    .cta-band p { font-size: 15px; opacity: 0.85; margin-bottom: 24px; }
+    .btn-white { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: white; color: var(--accent); font-weight: 800; font-size: 14px; border-radius: 8px; text-decoration: none; transition: opacity 0.12s; }
+    .btn-white:hover { opacity: 0.9; }
+    .flags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+    .flag-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: box-shadow 0.15s, transform 0.15s; }
+    .flag-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .flag-card-thumb { width: 100%; aspect-ratio: 3/2; overflow: hidden; }
+    .flag-card-thumb svg { width: 100%; height: 100%; display: block; }
+    .flag-card-name { padding: 8px 12px; font-size: 13px; font-weight: 600; }
+    @media (max-width: 650px) { .hero { grid-template-columns: 1fr; gap: 24px; } #site-nav { padding: 0 16px; gap: 12px; } .page-wrap { padding: 0 16px 60px; } .cta-band { padding: 28px 18px; } }
   </style>
 </head>
 <body>
 <nav id="site-nav">
-  <a href="../index.html" class="logo">VEXILLUM</a>
-  <a href="../inspire.html" class="nav-link">Inspire</a>
-  <a href="../learn.html" class="nav-link">Learn</a>
-  <a href="../flags.html" class="nav-link active">Flags</a>
+  <a href="../index.html" class="logo">Quick Flags</a>
+  <a href="index.html" class="nav-link">All Flags</a>
   <span class="nav-spacer"></span>
   <a href="../index.html" class="nav-cta">Design a Flag →</a>
 </nav>
 <main class="page-wrap">
-  <nav class="breadcrumb">
-    <a href="../flags.html">Flags</a>
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Flags</a>
     <span>/</span>
     <span>Italy</span>
   </nav>
 
   <section class="hero">
-    <div class="flag-display">
+    <div class="flag-display" aria-label="Italy flag">
       <svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-        <rect x="0"   y="0" width="300" height="600" fill="#009246"/>
+        <rect x="0" y="0" width="300" height="600" fill="#009246"/>
         <rect x="300" y="0" width="300" height="600" fill="#FFFFFF"/>
         <rect x="600" y="0" width="300" height="600" fill="#CE2B37"/>
       </svg>
@@ -84,41 +91,39 @@
     <div class="hero-meta">
       <p class="hero-label">Country Flag</p>
       <h1>Italy</h1>
-      <p class="hero-official-name">Il Tricolore — The Italian Tricolor</p>
+      <p class="hero-official-name">Il Tricolore Italiano</p>
       <div class="hero-stats">
-        <div class="stat">
-          <span class="stat-label">Proportion</span>
-          <span class="stat-value">2 : 3</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Adopted</span>
-          <span class="stat-value">1948</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Design</span>
-          <span class="stat-value">Vertical Tricolor</span>
-        </div>
+        <div class="stat"><span class="stat-label">Proportion</span><span class="stat-value">2:3</span></div>
+        <div class="stat"><span class="stat-label">Adopted</span><span class="stat-value">1948</span></div>
+        <div class="stat"><span class="stat-label">Design</span><span class="stat-value">Vertical Tricolour</span></div>
       </div>
+      <a href="../index.html#d=eyJuYW1lIjoiSXRhbHkiLCJmbGFnU2hhcGUiOiJyZWN0MzIiLCJsYXllcnMiOlt7ImlkIjoibDEiLCJ0eXBlIjoidnN0cmlwZXMiLCJ2aXNpYmxlIjp0cnVlLCJleHBhbmRlZCI6ZmFsc2UsImJhbmRzIjpbeyJjb2xvciI6IiMwMDkyNDYiLCJ3ZWlnaHQiOjF9LHsiY29sb3IiOiIjRkZGRkZGIiwid2VpZ2h0IjoxfSx7ImNvbG9yIjoiI0NFMkIzNyIsIndlaWdodCI6MX1dfV0sImVtYmxlbXMiOltdLCJzdGFja09yZGVyIjpbImwxIl19" class="remix-btn" title="Open this flag in the Quick Flags editor">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Remix this Flag
+      </a>
     </div>
   </section>
 
   <section class="section">
     <h2 class="section-heading">Official Colors</h2>
     <div class="colors-grid">
+      
       <div class="color-card">
         <div class="color-swatch" style="background:#009246;"></div>
         <div class="color-info">
           <div class="color-name">Fern Green</div>
           <div class="color-hex">#009246</div>
-          <div class="color-usage">Hoist-side vertical band</div>
+          <div class="color-usage" style="margin-bottom:4px;">Pantone 347 C</div>
+          <div class="color-usage">Hoist stripe</div>
         </div>
       </div>
       <div class="color-card">
-        <div class="color-swatch" style="background:#FFFFFF; border-bottom:1px solid var(--border);"></div>
+        <div class="color-swatch" style="background:#FFFFFF;border-bottom:1px solid var(--border);"></div>
         <div class="color-info">
           <div class="color-name">White</div>
           <div class="color-hex">#FFFFFF</div>
-          <div class="color-usage">Central vertical band</div>
+          
+          <div class="color-usage">Centre stripe</div>
         </div>
       </div>
       <div class="color-card">
@@ -126,7 +131,8 @@
         <div class="color-info">
           <div class="color-name">Flame Red</div>
           <div class="color-hex">#CE2B37</div>
-          <div class="color-usage">Fly-side vertical band</div>
+          <div class="color-usage" style="margin-bottom:4px;">Pantone 186 C</div>
+          <div class="color-usage">Fly stripe</div>
         </div>
       </div>
     </div>
@@ -135,26 +141,23 @@
   <section class="section">
     <h2 class="section-heading">Design Breakdown</h2>
     <div class="prose">
-      <p>The Italian Tricolore is composed of <strong>three equal vertical bands</strong> of green (hoist), white (center), and red (fly), each occupying exactly one-third of the flag's width. The overall proportion is <strong>2:3</strong> — the same as the French Tricolore, which served as the direct inspiration for the Italian flag's structure. The three bands are perfectly rectangular with no additional emblems on the standard civil flag.</p>
-      <p>Like France, Italy has a separate state/war flag that bears additional symbols. The Italian <strong>presidential standard</strong> and certain state uses feature the Italian coat of arms — a white five-pointed star on a cogwheel, flanked by olive and oak branches — in the center. The colors are standardized to specific Pantone values: green to Pantone 17-0145 TPG and red to Pantone 18-1660 TPG. These are notably different from the Irish flag, which uses a lighter green.</p>
-      <p>The proportional similarity to the French Tricolore is not accidental. The Italian flag was directly modeled on the French design during Napoleon's campaigns in the Italian peninsula. The substitution of <strong>green for blue</strong> is the defining visual departure that makes the Italian flag distinct — and the source of considerable debate among vexillologists about exactly why green was chosen.</p>
+      <p>Three equal vertical stripes of green, white, and red form the Italian flag, known as the <strong>Il Tricolore</strong>. The design closely mirrors France's but rotates the colour order and swaps blue for green.</p>
+      <p>The official shades are Pantone 347 C (green) and Pantone 186 C (red). The civil and military flags are identical; a version bearing the coat of arms is used by the President.</p>
     </div>
   </section>
 
   <section class="section">
-    <h2 class="section-heading">Symbolism &amp; History</h2>
+    <h2 class="section-heading">History &amp; Symbolism</h2>
     <div class="prose">
-      <p>The Italian Tricolore has its origins in the revolutionary period of the late 18th century. The first recorded use of green, white, and red together appeared in <strong>1794 in Bologna</strong>, when two students displayed a revolutionary cockade in those colors. The colors gained wider political traction in 1796 when the <strong>Cispadane Republic</strong> — a French client state in northern Italy — adopted a horizontal tricolor of green, white, and red as its banner. When Napoleon reorganized Italian territories into the Cisalpine Republic, the flag was rotated to vertical bands, directly mirroring the French Tricolore's structure.</p>
-      <p>Several theories explain the choice of green. The most widely cited is that green was the color of the <strong>uniforms of the Lombard Legion</strong>, the Italian volunteer militia that fought alongside Napoleon. Another theory credits the green to the meadows and hills of the Italian landscape, with white representing the snow of the Alps and red the blood shed for Italian liberty. Yet another interpretation traces the colors to the heraldic shields of Italian city-states — particularly Milan and Florence, both of which used green prominently.</p>
-      <p>The Tricolore was formally adopted by the <strong>Kingdom of Sardinia</strong> under King Charles Albert in 1848, during the first wars of Italian independence. The Savoy dynastic shield (a white cross on red) was placed in the center during the Kingdom of Italy period (1861–1946). After the abolition of the monarchy by referendum in 1946 and the proclamation of the Italian Republic, the dynastic emblem was removed and the current plain tricolor was adopted with the <strong>Constitution of 1948</strong>.</p>
-      <p>Today, the Tricolore is deeply embedded in Italian cultural identity. The colors appear everywhere from sports uniforms (the national football team's azure blue jerseys being a separate heraldic tradition) to food packaging. The phrase "verde, bianco e rosso" (green, white, and red) is shorthand for Italian identity. The flag's birthday, January 7th, commemorates the date in 1797 when the Cispadane Republic officially adopted the tricolor.</p>
+      <p>The Italian tricolour debuted on 7 January 1797 in Reggio Emilia, adopted by the Cispadane Republic — a Napoleonic client state. The colours were inspired by the French Tricolore, with green substituted for blue, possibly reflecting Milanese civic colours or Napoleon's Lombard Legion uniforms.</p>
+      <p>The flag became the symbol of the Risorgimento — the 19th-century movement for Italian unification. The House of Savoy's shield occupied the centre stripe from 1861 to 1946. After the republic was proclaimed in 1948 the plain tricolour was enshrined in the Constitution.</p>
     </div>
   </section>
 
   <div class="cta-band">
-    <h2>Design Your Own Vertical Tricolor</h2>
-    <p>Three bold bands, your palette. Create an Italian-inspired tricolor in Vexillum.</p>
-    <a href="../index.html" class="btn-white">Open Flag Studio →</a>
+    <h2>Design your own Tricolore</h2>
+    <p>Remix the Italian flag, swap the green for another hue, or build something entirely new in the Quick Flags editor.</p>
+    <a href="../index.html#d=eyJuYW1lIjoiSXRhbHkiLCJmbGFnU2hhcGUiOiJyZWN0MzIiLCJsYXllcnMiOlt7ImlkIjoibDEiLCJ0eXBlIjoidnN0cmlwZXMiLCJ2aXNpYmxlIjp0cnVlLCJleHBhbmRlZCI6ZmFsc2UsImJhbmRzIjpbeyJjb2xvciI6IiMwMDkyNDYiLCJ3ZWlnaHQiOjF9LHsiY29sb3IiOiIjRkZGRkZGIiwid2VpZ2h0IjoxfSx7ImNvbG9yIjoiI0NFMkIzNyIsIndlaWdodCI6MX1dfV0sImVtYmxlbXMiOltdLCJzdGFja09yZGVyIjpbImwxIl19" class="btn-white">Remix in Editor →</a>
   </div>
 </main>
 </body>

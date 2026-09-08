@@ -1,0 +1,261 @@
+#!/usr/bin/env node
+// Generates static flag pages from flags/data.js
+// Run: node flags/build.js
+
+const fs   = require('fs');
+const path = require('path');
+const flags = require('./data.js');
+
+const OUT_DIR = __dirname;
+
+function encodeDesign(design) {
+  const json = JSON.stringify(design);
+  return Buffer.from(json, 'utf8').toString('base64');
+}
+
+function colorCards(colors) {
+  return colors.map(c => {
+    const needsBorder = c.hex.toUpperCase() === '#FFFFFF' || c.hex.toUpperCase() === '#FAFAFA';
+    return `
+      <div class="color-card">
+        <div class="color-swatch" style="background:${c.hex};${needsBorder ? 'border-bottom:1px solid var(--border);' : ''}"></div>
+        <div class="color-info">
+          <div class="color-name">${c.name}</div>
+          <div class="color-hex">${c.hex}</div>
+          ${c.pantone ? `<div class="color-usage" style="margin-bottom:4px;">${c.pantone}</div>` : ''}
+          <div class="color-usage">${c.usage}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function prose(paragraphs) {
+  return paragraphs.map(p => `<p>${p}</p>`).join('\n      ');
+}
+
+function generatePage(flag) {
+  const remixHash = encodeDesign(flag.design);
+  const remixUrl  = `../index.html#d=${remixHash}`;
+  const canonical = `https://quickflags.app/flags/${flag.slug}`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${flag.name} Flag — Colors, Design &amp; History | Quick Flags</title>
+  <meta name="description" content="${flag.metaDescription}">
+  <meta name="keywords" content="${flag.keywords}">
+  <meta property="og:title" content="${flag.name} Flag — Colors, Design &amp; History | Quick Flags">
+  <meta property="og:description" content="${flag.metaDescription}">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://quickflags.app/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="${canonical}">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    html, body { overflow: auto; background: var(--canvas-bg); }
+    #site-nav { display: flex; align-items: center; gap: 20px; padding: 0 32px; height: 52px; background: var(--panel-bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    #site-nav .logo { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; color: var(--text); text-decoration: none; }
+    .nav-link { color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 6px; transition: background 0.12s; }
+    .nav-link:hover { background: var(--hover); color: var(--text); }
+    .nav-spacer { flex: 1; }
+    .nav-cta { padding: 7px 16px; background: var(--accent); color: var(--accent-fg); border-radius: 6px; font-weight: 700; font-size: 13px; text-decoration: none; transition: background 0.12s; }
+    .nav-cta:hover { background: var(--accent-h); }
+    .page-wrap { max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+    .breadcrumb { font-size: 13px; color: var(--text-2); padding: 20px 0 0; display: flex; align-items: center; gap: 8px; }
+    .breadcrumb a { color: var(--text-2); text-decoration: none; } .breadcrumb a:hover { color: var(--text); }
+    .breadcrumb span { opacity: 0.5; }
+    .hero { padding: 40px 0 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    .flag-display { border: 2px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-md); width: 100%; aspect-ratio: 3/2; }
+    .flag-display svg { width: 100%; height: 100%; display: block; }
+    .hero-meta { display: flex; flex-direction: column; gap: 12px; }
+    .hero-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--text-2); text-transform: uppercase; }
+    .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; color: var(--text); line-height: 1.1; margin: 0; }
+    .hero-official-name { font-size: 14px; color: var(--text-2); font-style: italic; }
+    .hero-stats { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 4px; }
+    .stat { display: flex; flex-direction: column; gap: 2px; }
+    .stat-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-2); text-transform: uppercase; }
+    .stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
+    .remix-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: 14px; border-radius: 8px; text-decoration: none; transition: background 0.12s; margin-top: 6px; }
+    .remix-btn:hover { background: var(--accent-h); }
+    .section { margin-bottom: 48px; }
+    .section-heading { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .colors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+    .color-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); }
+    .color-swatch { height: 72px; width: 100%; }
+    .color-info { padding: 10px 12px; }
+    .color-name { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+    .color-hex { font-family: 'Courier New', monospace; font-size: 12px; color: var(--text-2); background: var(--canvas-bg); padding: 1px 5px; border-radius: 3px; display: inline-block; }
+    .color-usage { font-size: 11px; color: var(--text-2); margin-top: 4px; line-height: 1.4; }
+    .prose p { font-size: 15px; color: var(--text-2); line-height: 1.75; margin-bottom: 14px; }
+    .prose p:last-child { margin-bottom: 0; }
+    .prose strong { color: var(--text); }
+    .cta-band { background: var(--accent); color: var(--accent-fg); border-radius: 12px; padding: 44px 36px; text-align: center; margin-top: 56px; }
+    .cta-band h2 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+    .cta-band p { font-size: 15px; opacity: 0.85; margin-bottom: 24px; }
+    .btn-white { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: white; color: var(--accent); font-weight: 800; font-size: 14px; border-radius: 8px; text-decoration: none; transition: opacity 0.12s; }
+    .btn-white:hover { opacity: 0.9; }
+    .flags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+    .flag-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: box-shadow 0.15s, transform 0.15s; }
+    .flag-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .flag-card-thumb { width: 100%; aspect-ratio: 3/2; overflow: hidden; }
+    .flag-card-thumb svg { width: 100%; height: 100%; display: block; }
+    .flag-card-name { padding: 8px 12px; font-size: 13px; font-weight: 600; }
+    @media (max-width: 650px) { .hero { grid-template-columns: 1fr; gap: 24px; } #site-nav { padding: 0 16px; gap: 12px; } .page-wrap { padding: 0 16px 60px; } .cta-band { padding: 28px 18px; } }
+  </style>
+</head>
+<body>
+<nav id="site-nav">
+  <a href="../index.html" class="logo">Quick Flags</a>
+  <a href="index.html" class="nav-link">All Flags</a>
+  <span class="nav-spacer"></span>
+  <a href="../index.html" class="nav-cta">Design a Flag →</a>
+</nav>
+<main class="page-wrap">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Flags</a>
+    <span>/</span>
+    <span>${flag.name}</span>
+  </nav>
+
+  <section class="hero">
+    <div class="flag-display" aria-label="${flag.name} flag">
+      <svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+        ${flag.svg}
+      </svg>
+    </div>
+    <div class="hero-meta">
+      <p class="hero-label">${flag.category}</p>
+      <h1>${flag.name}</h1>
+      ${flag.officialName ? `<p class="hero-official-name">${flag.officialName}</p>` : ''}
+      <div class="hero-stats">
+        ${flag.proportion ? `<div class="stat"><span class="stat-label">Proportion</span><span class="stat-value">${flag.proportion}</span></div>` : ''}
+        ${flag.adopted ? `<div class="stat"><span class="stat-label">Adopted</span><span class="stat-value">${flag.adopted}</span></div>` : ''}
+        ${flag.designType ? `<div class="stat"><span class="stat-label">Design</span><span class="stat-value">${flag.designType}</span></div>` : ''}
+      </div>
+      <a href="${remixUrl}" class="remix-btn" title="Open this flag in the Quick Flags editor">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Remix this Flag
+      </a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-heading">Official Colors</h2>
+    <div class="colors-grid">
+      ${colorCards(flag.colors)}
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-heading">Design Breakdown</h2>
+    <div class="prose">
+      ${prose(flag.breakdown)}
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-heading">History &amp; Symbolism</h2>
+    <div class="prose">
+      ${prose(flag.history)}
+    </div>
+  </section>
+
+  <div class="cta-band">
+    <h2>${flag.ctaHeadline}</h2>
+    <p>${flag.ctaBody}</p>
+    <a href="${remixUrl}" class="btn-white">Remix in Editor →</a>
+  </div>
+</main>
+</body>
+</html>`;
+}
+
+// Generate individual flag pages
+let generated = 0;
+flags.forEach(flag => {
+  const html = generatePage(flag);
+  const outPath = path.join(OUT_DIR, `${flag.slug}.html`);
+  fs.writeFileSync(outPath, html, 'utf8');
+  generated++;
+  console.log(`  ✓ ${flag.slug}.html`);
+});
+
+// Generate index page
+const indexHtml = generateIndex(flags);
+fs.writeFileSync(path.join(OUT_DIR, 'index.html'), indexHtml, 'utf8');
+console.log(`  ✓ index.html`);
+console.log(`\nDone — ${generated} flag pages + index`);
+
+function generateIndex(flags) {
+  const continents = [...new Set(flags.map(f => f.continent))].sort();
+  const byContinent = continents.map(cont => {
+    const group = flags.filter(f => f.continent === cont);
+    const cards = group.map(f => `
+        <a href="${f.slug}.html" class="flag-card">
+          <div class="flag-card-thumb"><svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">${f.svg}</svg></div>
+          <div class="flag-card-name">${f.name}</div>
+        </a>`).join('');
+    return `
+    <section class="section">
+      <h2 class="section-heading">${cont}</h2>
+      <div class="flags-grid">${cards}
+      </div>
+    </section>`;
+  }).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flag Directory — Colors, History &amp; Design | Quick Flags</title>
+  <meta name="description" content="Explore flags from around the world — official colors, history, and design breakdowns. Click any flag to remix it in the Quick Flags editor.">
+  <meta property="og:title" content="Flag Directory | Quick Flags">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://quickflags.app/flags/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    html, body { overflow: auto; background: var(--canvas-bg); }
+    #site-nav { display:flex; align-items:center; gap:20px; padding:0 32px; height:52px; background:var(--panel-bg); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10; }
+    #site-nav .logo { font-size:16px; font-weight:800; color:var(--text); text-decoration:none; }
+    .nav-link { color:var(--text-2); text-decoration:none; font-size:13px; font-weight:500; padding:4px 10px; border-radius:6px; }
+    .nav-link:hover, .nav-link.active { background:var(--hover); color:var(--text); }
+    .nav-spacer { flex:1; }
+    .nav-cta { padding:7px 16px; background:var(--accent); color:var(--accent-fg); border-radius:6px; font-weight:700; font-size:13px; text-decoration:none; }
+    .nav-cta:hover { background:var(--accent-h); }
+    .page-wrap { max-width:1020px; margin:0 auto; padding:0 24px 80px; }
+    .page-hero { padding:48px 0 32px; border-bottom:1px solid var(--border); margin-bottom:40px; }
+    .page-hero h1 { font-size:clamp(28px,5vw,42px); font-weight:800; color:var(--text); margin-bottom:10px; }
+    .page-hero p { font-size:15px; color:var(--text-2); max-width:520px; line-height:1.6; }
+    .section { margin-bottom:48px; }
+    .section-heading { font-size:18px; font-weight:800; color:var(--text); margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .flags-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; }
+    .flag-card { background:var(--panel-bg); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:var(--shadow-sm); text-decoration:none; color:var(--text); transition:box-shadow 0.15s,transform 0.15s; }
+    .flag-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+    .flag-card-thumb { width:100%; aspect-ratio:3/2; overflow:hidden; }
+    .flag-card-thumb svg { width:100%; height:100%; display:block; }
+    .flag-card-name { padding:7px 10px; font-size:12px; font-weight:600; }
+    @media (max-width:600px) { #site-nav { padding:0 16px; } .page-wrap { padding:0 16px 60px; } }
+  </style>
+</head>
+<body>
+<nav id="site-nav">
+  <a href="../index.html" class="logo">Quick Flags</a>
+  <a href="index.html" class="nav-link active">All Flags</a>
+  <span class="nav-spacer"></span>
+  <a href="../index.html" class="nav-cta">Design a Flag →</a>
+</nav>
+<main class="page-wrap">
+  <div class="page-hero">
+    <h1>World Flag Directory</h1>
+    <p>Official colors, design breakdowns, and history for flags from every continent. Click any flag to remix it instantly in the editor.</p>
+  </div>
+  ${byContinent}
+</main>
+</body>
+</html>`;
+}
