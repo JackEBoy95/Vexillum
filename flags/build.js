@@ -34,7 +34,15 @@ function prose(paragraphs) {
 }
 
 function generatePage(flag) {
-  const remixHash = encodeDesign(flag.design);
+  const baseColor = flag.colors[0].hex;
+  const starterDesign = {
+    name: flag.name,
+    flagShape: 'rect32',
+    layers: [{ id: 'l1', type: 'hstripes', visible: true, expanded: false, bands: [{ color: baseColor, weight: 1 }] }],
+    emblems: [],
+    stackOrder: ['l1'],
+  };
+  const remixHash = encodeDesign(starterDesign);
   const remixUrl  = `../index.html#d=${remixHash}`;
   const canonical = `https://quickflags.app/flags/${flag.slug}`;
 
