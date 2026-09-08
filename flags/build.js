@@ -144,10 +144,6 @@ function generatePage(flag) {
         ${flag.adopted ? `<div class="stat"><span class="stat-label">Adopted</span><span class="stat-value">${flag.adopted}</span></div>` : ''}
         ${flag.designType ? `<div class="stat"><span class="stat-label">Design</span><span class="stat-value">${flag.designType}</span></div>` : ''}
       </div>
-      <a href="${remixUrl}" class="design-btn" title="Design your own flag in Quick Flags">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Design your own flag
-      </a>
     </div>
   </section>
 
@@ -175,7 +171,7 @@ function generatePage(flag) {
   <div class="cta-band">
     <h2>${flag.ctaHeadline}</h2>
     <p>${flag.ctaBody}</p>
-    <a href="../index.html" class="btn-white">Open Flag Designer →</a>
+    <a href="../index.html" class="btn-white">Open the Flag Designer →</a>
   </div>
 </main>
 </body>
