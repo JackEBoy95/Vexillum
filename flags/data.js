@@ -8,6 +8,7 @@ module.exports = [
 
   {
     slug: 'france',
+    isoCode: 'fr',
     name: 'France',
     officialName: 'Le Drapeau Tricolore',
     category: 'Country Flag',
@@ -51,6 +52,7 @@ module.exports = [
 
   {
     slug: 'germany',
+    isoCode: 'de',
     name: 'Germany',
     officialName: 'Bundesflagge',
     category: 'Country Flag',
@@ -93,6 +95,7 @@ module.exports = [
 
   {
     slug: 'italy',
+    isoCode: 'it',
     name: 'Italy',
     officialName: 'Il Tricolore Italiano',
     category: 'Country Flag',
@@ -135,6 +138,7 @@ module.exports = [
 
   {
     slug: 'spain',
+    isoCode: 'es',
     name: 'Spain',
     officialName: 'La Rojigualda',
     category: 'Country Flag',
@@ -176,6 +180,7 @@ module.exports = [
 
   {
     slug: 'netherlands',
+    isoCode: 'nl',
     name: 'Netherlands',
     officialName: 'De Nederlandse Vlag',
     category: 'Country Flag',
@@ -218,6 +223,7 @@ module.exports = [
 
   {
     slug: 'belgium',
+    isoCode: 'be',
     name: 'Belgium',
     officialName: 'De Belgische Vlag / Le Drapeau Belge',
     category: 'Country Flag',
@@ -260,6 +266,7 @@ module.exports = [
 
   {
     slug: 'sweden',
+    isoCode: 'se',
     name: 'Sweden',
     officialName: 'Sveriges Flagga',
     category: 'Country Flag',
@@ -300,6 +307,7 @@ module.exports = [
 
   {
     slug: 'norway',
+    isoCode: 'no',
     name: 'Norway',
     officialName: 'Norges Flagg',
     category: 'Country Flag',
@@ -344,6 +352,7 @@ module.exports = [
 
   {
     slug: 'denmark',
+    isoCode: 'dk',
     name: 'Denmark',
     officialName: 'Dannebrog',
     category: 'Country Flag',
@@ -384,6 +393,7 @@ module.exports = [
 
   {
     slug: 'finland',
+    isoCode: 'fi',
     name: 'Finland',
     officialName: 'Suomen Lippu',
     category: 'Country Flag',
@@ -424,6 +434,7 @@ module.exports = [
 
   {
     slug: 'switzerland',
+    isoCode: 'ch',
     name: 'Switzerland',
     officialName: 'Schweizer Fahne',
     category: 'Country Flag',
@@ -464,6 +475,7 @@ module.exports = [
 
   {
     slug: 'austria',
+    isoCode: 'at',
     name: 'Austria',
     officialName: 'Österreichische Fahne',
     category: 'Country Flag',
@@ -505,6 +517,7 @@ module.exports = [
 
   {
     slug: 'poland',
+    isoCode: 'pl',
     name: 'Poland',
     officialName: 'Flaga Polski',
     category: 'Country Flag',
@@ -544,6 +557,7 @@ module.exports = [
 
   {
     slug: 'portugal',
+    isoCode: 'pt',
     name: 'Portugal',
     officialName: 'Bandeira de Portugal',
     category: 'Country Flag',
@@ -587,6 +601,7 @@ module.exports = [
 
   {
     slug: 'greece',
+    isoCode: 'gr',
     name: 'Greece',
     officialName: 'Σημαία της Ελλάδας',
     category: 'Country Flag',
@@ -643,6 +658,7 @@ module.exports = [
 
   {
     slug: 'ireland',
+    isoCode: 'ie',
     name: 'Ireland',
     officialName: 'Bratach na hÉireann',
     category: 'Country Flag',
@@ -685,6 +701,7 @@ module.exports = [
 
   {
     slug: 'ukraine',
+    isoCode: 'ua',
     name: 'Ukraine',
     officialName: 'Прапор України',
     category: 'Country Flag',
@@ -724,6 +741,7 @@ module.exports = [
 
   {
     slug: 'iceland',
+    isoCode: 'is',
     name: 'Iceland',
     officialName: 'Íslenski Fáni',
     category: 'Country Flag',
@@ -768,6 +786,7 @@ module.exports = [
 
   {
     slug: 'hungary',
+    isoCode: 'hu',
     name: 'Hungary',
     officialName: 'Magyarország Zászlaja',
     category: 'Country Flag',
@@ -810,6 +829,7 @@ module.exports = [
 
   {
     slug: 'czech-republic',
+    isoCode: 'cz',
     name: 'Czech Republic',
     officialName: 'Vlajka České Republiky',
     category: 'Country Flag',
@@ -856,6 +876,7 @@ module.exports = [
 
   {
     slug: 'usa',
+    isoCode: 'us',
     name: 'United States',
     officialName: 'The Stars and Stripes',
     category: 'Country Flag',
@@ -911,6 +932,7 @@ module.exports = [
 
   {
     slug: 'canada',
+    isoCode: 'ca',
     name: 'Canada',
     officialName: 'The Maple Leaf Flag',
     category: 'Country Flag',
@@ -953,6 +975,7 @@ module.exports = [
 
   {
     slug: 'brazil',
+    isoCode: 'br',
     name: 'Brazil',
     officialName: 'Bandeira do Brasil',
     category: 'Country Flag',
@@ -992,6 +1015,7 @@ module.exports = [
 
   {
     slug: 'mexico',
+    isoCode: 'mx',
     name: 'Mexico',
     officialName: 'La Bandera de México',
     category: 'Country Flag',
@@ -1035,6 +1059,7 @@ module.exports = [
 
   {
     slug: 'argentina',
+    isoCode: 'ar',
     name: 'Argentina',
     officialName: 'La Bandera Argentina',
     category: 'Country Flag',
@@ -1078,6 +1103,7 @@ module.exports = [
 
   {
     slug: 'colombia',
+    isoCode: 'co',
     name: 'Colombia',
     officialName: 'La Bandera de Colombia',
     category: 'Country Flag',
@@ -1120,6 +1146,7 @@ module.exports = [
 
   {
     slug: 'chile',
+    isoCode: 'cl',
     name: 'Chile',
     officialName: 'La Bandera de Chile',
     category: 'Country Flag',
@@ -1165,6 +1192,7 @@ module.exports = [
 
   {
     slug: 'jamaica',
+    isoCode: 'jm',
     name: 'Jamaica',
     officialName: 'Flag of Jamaica',
     category: 'Country Flag',
@@ -1211,6 +1239,7 @@ module.exports = [
 
   {
     slug: 'cuba',
+    isoCode: 'cu',
     name: 'Cuba',
     officialName: 'La Bandera de Cuba',
     category: 'Country Flag',
@@ -1260,6 +1289,7 @@ module.exports = [
 
   {
     slug: 'peru',
+    isoCode: 'pe',
     name: 'Peru',
     officialName: 'La Bandera de Perú',
     category: 'Country Flag',
@@ -1304,6 +1334,7 @@ module.exports = [
 
   {
     slug: 'japan',
+    isoCode: 'jp',
     name: 'Japan',
     officialName: '日本の国旗 — Nisshōki',
     category: 'Country Flag',
@@ -1340,6 +1371,7 @@ module.exports = [
 
   {
     slug: 'china',
+    isoCode: 'cn',
     name: 'China',
     officialName: '中华人民共和国国旗',
     category: 'Country Flag',
@@ -1380,6 +1412,7 @@ module.exports = [
 
   {
     slug: 'india',
+    isoCode: 'in',
     name: 'India',
     officialName: 'भारत का राष्ट्रीय ध्वज — Tiraṅgā',
     category: 'Country Flag',
@@ -1425,6 +1458,7 @@ module.exports = [
 
   {
     slug: 'south-korea',
+    isoCode: 'kr',
     name: 'South Korea',
     officialName: '대한민국 국기 — Taegukgi',
     category: 'Country Flag',
@@ -1466,6 +1500,7 @@ module.exports = [
 
   {
     slug: 'thailand',
+    isoCode: 'th',
     name: 'Thailand',
     officialName: 'ธงไตรรงค์ — Thong Trairong',
     category: 'Country Flag',
@@ -1512,6 +1547,7 @@ module.exports = [
 
   {
     slug: 'indonesia',
+    isoCode: 'id',
     name: 'Indonesia',
     officialName: 'Sang Merah Putih',
     category: 'Country Flag',
@@ -1551,6 +1587,7 @@ module.exports = [
 
   {
     slug: 'philippines',
+    isoCode: 'ph',
     name: 'Philippines',
     officialName: 'Watawat ng Pilipinas',
     category: 'Country Flag',
@@ -1600,6 +1637,7 @@ module.exports = [
 
   {
     slug: 'vietnam',
+    isoCode: 'vn',
     name: 'Vietnam',
     officialName: 'Cờ đỏ sao vàng',
     category: 'Country Flag',
@@ -1636,6 +1674,7 @@ module.exports = [
 
   {
     slug: 'malaysia',
+    isoCode: 'my',
     name: 'Malaysia',
     officialName: 'Jalur Gemilang',
     category: 'Country Flag',
@@ -1681,6 +1720,7 @@ module.exports = [
 
   {
     slug: 'singapore',
+    isoCode: 'sg',
     name: 'Singapore',
     officialName: 'Flag of Singapore',
     category: 'Country Flag',
@@ -1729,6 +1769,7 @@ module.exports = [
 
   {
     slug: 'turkey',
+    isoCode: 'tr',
     name: 'Turkey',
     officialName: 'Türk Bayrağı — Ay Yıldız',
     category: 'Country Flag',
@@ -1767,6 +1808,7 @@ module.exports = [
 
   {
     slug: 'israel',
+    isoCode: 'il',
     name: 'Israel',
     officialName: 'דגל ישראל — Degel Yisra\'el',
     category: 'Country Flag',
@@ -1808,6 +1850,7 @@ module.exports = [
 
   {
     slug: 'uae',
+    isoCode: 'ae',
     name: 'UAE',
     officialName: 'علم الإمارات — ʿAlam al-ʾImārāt',
     category: 'Country Flag',
@@ -1855,6 +1898,7 @@ module.exports = [
 
   {
     slug: 'saudi-arabia',
+    isoCode: 'sa',
     name: 'Saudi Arabia',
     officialName: 'علم المملكة العربية السعودية',
     category: 'Country Flag',
@@ -1896,6 +1940,7 @@ module.exports = [
 
   {
     slug: 'south-africa',
+    isoCode: 'za',
     name: 'South Africa',
     officialName: 'Flag of South Africa',
     category: 'Country Flag',
@@ -1951,6 +1996,7 @@ module.exports = [
 
   {
     slug: 'egypt',
+    isoCode: 'eg',
     name: 'Egypt',
     officialName: 'علم مصر — ʿAlam Miṣr',
     category: 'Country Flag',
@@ -1995,6 +2041,7 @@ module.exports = [
 
   {
     slug: 'nigeria',
+    isoCode: 'ng',
     name: 'Nigeria',
     officialName: 'Flag of Nigeria',
     category: 'Country Flag',
@@ -2036,6 +2083,7 @@ module.exports = [
 
   {
     slug: 'kenya',
+    isoCode: 'ke',
     name: 'Kenya',
     officialName: 'Bendera ya Kenya',
     category: 'Country Flag',
@@ -2087,6 +2135,7 @@ module.exports = [
 
   {
     slug: 'australia',
+    isoCode: 'au',
     name: 'Australia',
     officialName: 'Australian National Flag',
     category: 'Country Flag',
@@ -2140,6 +2189,7 @@ module.exports = [
 
   {
     slug: 'new-zealand',
+    isoCode: 'nz',
     name: 'New Zealand',
     officialName: 'Flag of New Zealand',
     category: 'Country Flag',
