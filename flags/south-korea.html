@@ -27,9 +27,7 @@
     .breadcrumb { font-size: 13px; color: var(--text-2); padding: 20px 0 0; display: flex; align-items: center; gap: 8px; }
     .breadcrumb a { color: var(--text-2); text-decoration: none; } .breadcrumb a:hover { color: var(--text); }
     .breadcrumb span { opacity: 0.5; }
-    .hero { padding: 40px 0 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
-    .flag-display { border: 2px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-md); width: 100%; aspect-ratio: 3/2; }
-    .flag-display svg { width: 100%; height: 100%; display: block; }
+    .hero { padding: 40px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
     .hero-meta { display: flex; flex-direction: column; gap: 12px; }
     .hero-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--text-2); text-transform: uppercase; }
     .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; color: var(--text); line-height: 1.1; margin: 0; }
@@ -38,8 +36,8 @@
     .stat { display: flex; flex-direction: column; gap: 2px; }
     .stat-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-2); text-transform: uppercase; }
     .stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
-    .remix-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: 14px; border-radius: 8px; text-decoration: none; transition: background 0.12s; margin-top: 6px; }
-    .remix-btn:hover { background: var(--accent-h); }
+    .design-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: 14px; border-radius: 8px; text-decoration: none; transition: background 0.12s; margin-top: 6px; }
+    .design-btn:hover { background: var(--accent-h); }
     .section { margin-bottom: 48px; }
     .section-heading { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
     .colors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
@@ -58,12 +56,10 @@
     .btn-white { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: white; color: var(--accent); font-weight: 800; font-size: 14px; border-radius: 8px; text-decoration: none; transition: opacity 0.12s; }
     .btn-white:hover { opacity: 0.9; }
     .flags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
-    .flag-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: box-shadow 0.15s, transform 0.15s; }
+    .flag-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: box-shadow 0.15s, transform 0.15s; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
     .flag-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .flag-card-thumb { width: 100%; aspect-ratio: 3/2; overflow: hidden; }
-    .flag-card-thumb svg { width: 100%; height: 100%; display: block; }
-    .flag-card-name { padding: 8px 12px; font-size: 13px; font-weight: 600; }
-    @media (max-width: 650px) { .hero { grid-template-columns: 1fr; gap: 24px; } #site-nav { padding: 0 16px; gap: 12px; } .page-wrap { padding: 0 16px 60px; } .cta-band { padding: 28px 18px; } }
+    .flag-card-name { font-size: 13px; font-weight: 600; }
+    @media (max-width: 650px) { #site-nav { padding: 0 16px; gap: 12px; } .page-wrap { padding: 0 16px 60px; } .cta-band { padding: 28px 18px; } }
   </style>
 </head>
 <body>
@@ -81,27 +77,18 @@
   </nav>
 
   <section class="hero">
-    <div class="flag-display" aria-label="South Korea flag">
-      <svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-        <rect x="0" y="0" width="900" height="600" fill="#FFFFFF"/>
-        <circle cx="450" cy="300" r="130" fill="#CD2E3A"/>
-        <circle cx="450" cy="235" r="65" fill="#0047A0"/>
-        <circle cx="450" cy="365" r="65" fill="#CD2E3A"/>
-        <path d="M450,170 A130,130 0 0,0 450,430 A65,65 0 0,1 450,300 A65,65 0 0,0 450,170Z" fill="#0047A0"/>
-      </svg>
-    </div>
     <div class="hero-meta">
       <p class="hero-label">Country Flag</p>
-      <h1>South Korea</h1>
+      <h1>South Korea Flag</h1>
       <p class="hero-official-name">대한민국 국기 — Taegukgi</p>
       <div class="hero-stats">
         <div class="stat"><span class="stat-label">Proportion</span><span class="stat-value">2:3</span></div>
         <div class="stat"><span class="stat-label">Adopted</span><span class="stat-value">1949</span></div>
         <div class="stat"><span class="stat-label">Design</span><span class="stat-value">White Field with Yin-Yang and Trigrams</span></div>
       </div>
-      <a href="../index.html#d=eyJuYW1lIjoiU291dGggS29yZWEiLCJmbGFnU2hhcGUiOiJyZWN0MzIiLCJsYXllcnMiOlt7ImlkIjoibDEiLCJ0eXBlIjoiaHN0cmlwZXMiLCJ2aXNpYmxlIjp0cnVlLCJleHBhbmRlZCI6ZmFsc2UsImJhbmRzIjpbeyJjb2xvciI6IiNGRkZGRkYiLCJ3ZWlnaHQiOjF9XX1dLCJlbWJsZW1zIjpbXSwic3RhY2tPcmRlciI6WyJsMSJdfQ==" class="remix-btn" title="Open this flag in the Quick Flags editor">
+      <a href="../index.html#d=eyJuYW1lIjoiU291dGggS29yZWEiLCJmbGFnU2hhcGUiOiJyZWN0MzIiLCJsYXllcnMiOlt7ImlkIjoibDEiLCJ0eXBlIjoiaHN0cmlwZXMiLCJ2aXNpYmxlIjp0cnVlLCJleHBhbmRlZCI6ZmFsc2UsImJhbmRzIjpbeyJjb2xvciI6IiNGRkZGRkYiLCJ3ZWlnaHQiOjF9XX1dLCJlbWJsZW1zIjpbXSwic3RhY2tPcmRlciI6WyJsMSJdfQ==" class="design-btn" title="Design your own flag in Quick Flags">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Remix this Flag
+        Design your own flag
       </a>
     </div>
   </section>
@@ -168,7 +155,7 @@
   <div class="cta-band">
     <h2>Design a Philosophical Flag</h2>
     <p>Explore the symbolism of the Taegukgi and build your own emblem-centred flag design in Quick Flags.</p>
-    <a href="../index.html#d=eyJuYW1lIjoiU291dGggS29yZWEiLCJmbGFnU2hhcGUiOiJyZWN0MzIiLCJsYXllcnMiOlt7ImlkIjoibDEiLCJ0eXBlIjoiaHN0cmlwZXMiLCJ2aXNpYmxlIjp0cnVlLCJleHBhbmRlZCI6ZmFsc2UsImJhbmRzIjpbeyJjb2xvciI6IiNGRkZGRkYiLCJ3ZWlnaHQiOjF9XX1dLCJlbWJsZW1zIjpbXSwic3RhY2tPcmRlciI6WyJsMSJdfQ==" class="btn-white">Remix in Editor →</a>
+    <a href="../index.html" class="btn-white">Open Flag Designer →</a>
   </div>
 </main>
 </body>
