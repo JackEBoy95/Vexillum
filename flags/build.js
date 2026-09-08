@@ -68,8 +68,8 @@ function generatePage(flag) {
     .breadcrumb a { color: var(--text-2); text-decoration: none; } .breadcrumb a:hover { color: var(--text); }
     .breadcrumb span { opacity: 0.5; }
     .hero { padding: 40px 0 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
-    .flag-img-wrap { border: 2px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-md); width: 100%; aspect-ratio: 3/2; background: #f0f0f0; }
-    .flag-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .flag-img-wrap { border: 2px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-md); width: 100%; aspect-ratio: 3/2; background: var(--canvas-bg); display: flex; align-items: center; justify-content: center; }
+    .flag-img-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .hero-meta { display: flex; flex-direction: column; gap: 12px; }
     .hero-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--text-2); text-transform: uppercase; }
     .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; color: var(--text); line-height: 1.1; margin: 0; }
@@ -100,8 +100,8 @@ function generatePage(flag) {
     .flags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
     .flag-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: box-shadow 0.15s, transform 0.15s; }
     .flag-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .flag-card-thumb { width: 100%; aspect-ratio: 3/2; overflow: hidden; background: #eee; }
-    .flag-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .flag-card-thumb { width: 100%; aspect-ratio: 3/2; overflow: hidden; background: var(--canvas-bg); display: flex; align-items: center; justify-content: center; }
+    .flag-card-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .flag-card-name { padding: 8px 12px; font-size: 13px; font-weight: 600; }
     @media (max-width: 650px) { .hero { grid-template-columns: 1fr; gap: 24px; } #site-nav { padding: 0 16px; gap: 12px; } .page-wrap { padding: 0 16px 60px; } .cta-band { padding: 28px 18px; } }
   </style>
