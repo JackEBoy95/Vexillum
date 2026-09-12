@@ -12,6 +12,8 @@
   <meta property="og:image" content="https://quickflags.app/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://quickflags.app/flags/vietnam">
+  <link rel="preconnect" href="https://flagcdn.com" crossorigin>
+  <link rel="preload" as="image" href="https://flagcdn.com/w640/vn.png" fetchpriority="high">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../css/style.css">
   <style>
@@ -85,7 +87,9 @@
       <img src="https://flagcdn.com/w640/vn.png"
            srcset="https://flagcdn.com/w1280/vn.png 2x"
            alt="Vietnam flag"
-           loading="eager">
+           loading="eager"
+           fetchpriority="high"
+           width="640" height="427">
     </div>
     <div class="hero-meta">
       <p class="hero-label">Country Flag</p>

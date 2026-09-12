@@ -60,6 +60,8 @@ function generatePage(flag) {
   <meta property="og:image" content="https://quickflags.app/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="${canonical}">
+  <link rel="preconnect" href="https://flagcdn.com" crossorigin>
+  <link rel="preload" as="image" href="https://flagcdn.com/w640/${flag.isoCode}.png" fetchpriority="high">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../css/style.css">
   <style>
@@ -133,7 +135,9 @@ function generatePage(flag) {
       <img src="https://flagcdn.com/w640/${flag.isoCode}.png"
            srcset="https://flagcdn.com/w1280/${flag.isoCode}.png 2x"
            alt="${flag.name} flag"
-           loading="eager">
+           loading="eager"
+           fetchpriority="high"
+           width="640" height="427">
     </div>
     <div class="hero-meta">
       <p class="hero-label">${flag.category}</p>
@@ -240,8 +244,8 @@ function generateIndex(flags) {
     .flags-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; }
     .flag-card { background:var(--panel-bg); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:var(--shadow-sm); text-decoration:none; color:var(--text); transition:box-shadow 0.15s,transform 0.15s; }
     .flag-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
-    .flag-card-thumb { width:100%; aspect-ratio:3/2; overflow:hidden; }
-    .flag-card-thumb svg { width:100%; height:100%; display:block; }
+    .flag-card-thumb { width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--canvas-bg); display:flex; align-items:center; justify-content:center; }
+    .flag-card-thumb img { width:100%; height:100%; object-fit:contain; display:block; }
     .flag-card-name { padding:7px 10px; font-size:12px; font-weight:600; }
     @media (max-width:600px) { #site-nav { padding:0 16px; } .page-wrap { padding:0 16px 60px; } }
   </style>
