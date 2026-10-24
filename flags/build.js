@@ -179,12 +179,8 @@ function generatePage(flag) {
   </section>
 
   <div class="ad-wrap">
-    <script data-cfasync="false">
-      if (window.innerWidth >= 728) {
-        atOptions = {'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};
-        document.write('<scr'+'ipt src="https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f"><\\/scr'+'ipt>');
-      }
-    </script>
+    <script data-cfasync="false">if(window.innerWidth>=728){atOptions={'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};}</script>
+    <script data-cfasync="false" src="https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f"></script>
   </div>
 
 </main>
@@ -276,12 +272,8 @@ function generateIndex(flags) {
     <p>Official colors, design breakdowns, and history for flags from every continent. Click any flag to remix it instantly in the editor.</p>
   </div>
   <div class="ad-wrap">
-    <script data-cfasync="false">
-      if (window.innerWidth >= 728) {
-        atOptions = {'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};
-        document.write('<scr'+'ipt src="https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f"><\\/scr'+'ipt>');
-      }
-    </script>
+    <script data-cfasync="false">if(window.innerWidth>=728){atOptions={'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};}</script>
+    <script data-cfasync="false" src="https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f"></script>
   </div>
   ${byContinent}
 </main>
