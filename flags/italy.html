@@ -159,18 +159,14 @@
     </div>
   </section>
 
-  <div class="ad-wrap" id="ad-banner"></div>
-  <script data-cfasync="false">
-    if (window.innerWidth >= 728) {
-      var s1 = document.createElement('script');
-      s1.text = "atOptions={'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};";
-      var s2 = document.createElement('script');
-      s2.src = 'https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f';
-      var wrap = document.getElementById('ad-banner');
-      wrap.appendChild(s1);
-      wrap.appendChild(s2);
-    }
-  </script>
+  <div class="ad-wrap">
+    <script data-cfasync="false">
+      if (window.innerWidth >= 728) {
+        atOptions = {'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};
+        document.write('<scr'+'ipt src="https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f"><\/scr'+'ipt>');
+      }
+    </script>
+  </div>
 
 </main>
 </body>
