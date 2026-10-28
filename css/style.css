@@ -2703,4 +2703,11 @@ body.dark-mode .icon-cell:hover svg {
   #app {
     height: calc(100vh - 90px);
   }
+  /* Lift emblem toolbar and quick-edit overlay above the ad strip */
+  #emblem-controls {
+    bottom: 90px;
+  }
+  .overlay-quickedit {
+    bottom: 98px; /* 90px ad + 8px gap */
+  }
 }
