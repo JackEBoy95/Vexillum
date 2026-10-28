@@ -2681,3 +2681,26 @@ body.dark-mode .icon-cell:hover svg {
     height: 36px;
   }
 }
+
+/* ---------- Ad footer (desktop only) ---------- */
+#ad-footer {
+  display: none;
+}
+@media (min-width: 768px) {
+  #ad-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border);
+    z-index: 5;
+  }
+  #app {
+    height: calc(100vh - 90px);
+  }
+}
