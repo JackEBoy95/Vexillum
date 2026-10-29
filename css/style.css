@@ -2682,32 +2682,3 @@ body.dark-mode .icon-cell:hover svg {
   }
 }
 
-/* ---------- Ad footer (desktop only) ---------- */
-#ad-footer {
-  display: none;
-}
-@media (min-width: 768px) {
-  #ad-footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 90px;
-    background: var(--panel-bg);
-    border-top: 1px solid var(--border);
-    z-index: 5;
-  }
-  #app {
-    height: calc(100vh - 90px);
-  }
-  /* Lift emblem toolbar and quick-edit overlay above the ad strip */
-  #emblem-controls {
-    bottom: 90px;
-  }
-  .overlay-quickedit {
-    bottom: 98px;
-  }
-}
