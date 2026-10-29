@@ -177,7 +177,7 @@ function generatePage(flag) {
   </section>
 
 </main>
-<script>(function(s){s.dataset.zone='12149980',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script>(function(s){s.dataset.zone='12149995',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 </body>
 </html>`;
 }
@@ -265,7 +265,7 @@ function generateIndex(flags) {
   </div>
   ${byContinent}
 </main>
-<script>(function(s){s.dataset.zone='12149980',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script>(function(s){s.dataset.zone='12149995',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 </body>
 </html>`;
 }
