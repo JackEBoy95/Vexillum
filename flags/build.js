@@ -113,8 +113,8 @@ function generatePage(flag) {
     .flag-card-thumb { width: 100%; aspect-ratio: 3/2; overflow: hidden; background: var(--canvas-bg); display: flex; align-items: center; justify-content: center; }
     .flag-card-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .flag-card-name { padding: 8px 12px; font-size: 13px; font-weight: 600; }
-    .ad-wrap { display: flex; justify-content: center; margin: 40px 0 8px; min-height: 50px; }
-    @media (min-width: 768px) { .ad-wrap { min-height: 90px; } }
+    .ad-wrap { display: flex; justify-content: center; margin: 40px 0 8px; min-height: 90px; }
+    @media (max-width: 767px) { .ad-wrap { display: none; } }
     @media (max-width: 650px) { .hero { grid-template-columns: 1fr; gap: 24px; } #site-nav { padding: 0 16px; gap: 12px; } .page-wrap { padding: 0 16px 60px; } .cta-band { padding: 28px 18px; } }
   </style>
 </head>
@@ -179,7 +179,7 @@ function generatePage(flag) {
   </section>
 
   <div class="ad-wrap">
-    <script data-cfasync="false">(function(){var s=document.createElement('script');if(window.innerWidth>=768){atOptions={'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};s.src='https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f';}else{atOptions={'key':'d9b1753b1e12addb80d8d115a714fc4e','format':'iframe','height':50,'width':320,'params':{}};s.src='https://bauval.org/22/d9b1753b1e12addb80d8d115a714fc4e';}document.currentScript.parentNode.appendChild(s);})();</script>
+    <script data-cfasync="false">(function(){if(window.innerWidth<768)return;atOptions={'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};var s=document.createElement('script');s.src='https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f';document.currentScript.parentNode.appendChild(s);})();</script>
   </div>
 
 </main>
@@ -253,8 +253,8 @@ function generateIndex(flags) {
     .flag-card-thumb { width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--canvas-bg); display:flex; align-items:center; justify-content:center; }
     .flag-card-thumb img { width:100%; height:100%; object-fit:contain; display:block; }
     .flag-card-name { padding:7px 10px; font-size:12px; font-weight:600; }
-    .ad-wrap { display:flex; justify-content:center; margin:0 0 40px; min-height:50px; }
-    @media (min-width:768px) { .ad-wrap { min-height:90px; } }
+    .ad-wrap { display:flex; justify-content:center; margin:0 0 40px; min-height:90px; }
+    @media (max-width:767px) { .ad-wrap { display:none; } }
     @media (max-width:600px) { #site-nav { padding:0 16px; } .page-wrap { padding:0 16px 60px; } }
   </style>
 </head>
@@ -271,7 +271,7 @@ function generateIndex(flags) {
     <p>Official colors, design breakdowns, and history for flags from every continent. Click any flag to remix it instantly in the editor.</p>
   </div>
   <div class="ad-wrap">
-    <script data-cfasync="false">(function(){var s=document.createElement('script');if(window.innerWidth>=768){atOptions={'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};s.src='https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f';}else{atOptions={'key':'d9b1753b1e12addb80d8d115a714fc4e','format':'iframe','height':50,'width':320,'params':{}};s.src='https://bauval.org/22/d9b1753b1e12addb80d8d115a714fc4e';}document.currentScript.parentNode.appendChild(s);})();</script>
+    <script data-cfasync="false">(function(){if(window.innerWidth<768)return;atOptions={'key':'9c47f74ce3e460bbd1c09dfb8f192f7f','format':'iframe','height':90,'width':728,'params':{}};var s=document.createElement('script');s.src='https://bauval.org/22/9c47f74ce3e460bbd1c09dfb8f192f7f';document.currentScript.parentNode.appendChild(s);})();</script>
   </div>
   ${byContinent}
 </main>

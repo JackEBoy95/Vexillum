@@ -2682,25 +2682,23 @@ body.dark-mode .icon-cell:hover svg {
   }
 }
 
-/* ---------- Ad footer ---------- */
+/* ---------- Ad footer (desktop only) ---------- */
 #ad-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: var(--panel-bg);
-  border-top: 1px solid var(--border);
-  z-index: 6;
-  /* Mobile: sits just above the mobile nav bar */
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  display: none;
 }
 @media (min-width: 768px) {
   #ad-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     height: 90px;
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border);
+    z-index: 5;
   }
   #app {
     height: calc(100vh - 90px);
@@ -2711,17 +2709,5 @@ body.dark-mode .icon-cell:hover svg {
   }
   .overlay-quickedit {
     bottom: 98px;
-  }
-}
-/* Mobile: account for ad strip above mobile nav */
-@media (max-width: 767px) {
-  #app {
-    height: calc(100vh - 56px - 50px);
-  }
-  #emblem-controls {
-    bottom: calc(56px + 50px + env(safe-area-inset-bottom, 0px));
-  }
-  .overlay-quickedit {
-    bottom: calc(56px + 50px + 8px + env(safe-area-inset-bottom, 0px));
   }
 }
