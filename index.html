@@ -329,9 +329,12 @@
     </div>
     <input id="icon-search" type="search" placeholder="Search heraldic icons…" autocomplete="off">
     <div class="cat-scroll-wrap">
-      <button class="cat-arrow" id="cat-prev" aria-label="Scroll categories left">&#8249;</button>
-      <div class="icon-categories"><!-- Populated by JS --></div>
-      <button class="cat-arrow" id="cat-next" aria-label="Scroll categories right">&#8250;</button>
+      <button class="cat-arrow" id="cat-prev" aria-label="Scroll categories left"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M6.5 1.5L3 5l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="cat-strip-outer">
+        <div class="icon-categories"><!-- Populated by JS --></div>
+        <div class="cat-track"><div class="cat-thumb"></div></div>
+      </div>
+      <button class="cat-arrow" id="cat-next" aria-label="Scroll categories right"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3.5 1.5L7 5l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div id="icon-grid">
       <!-- Populated by JS -->

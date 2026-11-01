@@ -1027,18 +1027,31 @@ function buildHeraldCats() {
     catWrap.appendChild(btn);
   });
 
-  // Wire arrow buttons
+  // Wire arrow buttons + scrollbar thumb
   const prev = document.getElementById('cat-prev');
   const next = document.getElementById('cat-next');
+  const thumb = document.querySelector('.cat-thumb');
+  const track = document.querySelector('.cat-track');
   if (prev && next) {
-    const STEP = 140;
+    const STEP = 160;
     const updateArrows = () => {
       const atStart = catWrap.scrollLeft <= 0;
       const atEnd = catWrap.scrollLeft >= catWrap.scrollWidth - catWrap.clientWidth - 1;
-      prev.style.opacity = atStart ? '0.25' : '1';
+      prev.style.opacity = atStart ? '0.3' : '1';
       prev.style.pointerEvents = atStart ? 'none' : 'auto';
-      next.style.opacity = atEnd ? '0.25' : '1';
+      next.style.opacity = atEnd ? '0.3' : '1';
       next.style.pointerEvents = atEnd ? 'none' : 'auto';
+      if (thumb && track) {
+        const scrollable = catWrap.scrollWidth > catWrap.clientWidth + 1;
+        track.style.visibility = scrollable ? '' : 'hidden';
+        if (scrollable) {
+          const ratio = catWrap.clientWidth / catWrap.scrollWidth;
+          const thumbPct = Math.max(ratio * 100, 8);
+          const leftPct = (catWrap.scrollLeft / catWrap.scrollWidth) * 100;
+          thumb.style.width = thumbPct + '%';
+          thumb.style.left = leftPct + '%';
+        }
+      }
     };
     prev.onclick = () => catWrap.scrollBy({ left: -STEP, behavior: 'smooth' });
     next.onclick = () => catWrap.scrollBy({ left: STEP, behavior: 'smooth' });
