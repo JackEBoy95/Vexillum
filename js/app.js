@@ -1056,6 +1056,37 @@ function buildHeraldCats() {
     prev.onclick = () => catWrap.scrollBy({ left: -STEP, behavior: 'smooth' });
     next.onclick = () => catWrap.scrollBy({ left: STEP, behavior: 'smooth' });
     catWrap.addEventListener('scroll', updateArrows);
+
+    // Drag-to-scroll on thumb
+    if (thumb && track) {
+      let dragStartX = 0, dragStartScroll = 0, dragging = false;
+      thumb.addEventListener('mousedown', e => {
+        dragging = true;
+        dragStartX = e.clientX;
+        dragStartScroll = catWrap.scrollLeft;
+        thumb.style.transition = 'none';
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const dx = e.clientX - dragStartX;
+        const trackW = track.clientWidth;
+        catWrap.scrollLeft = dragStartScroll + (dx / trackW) * catWrap.scrollWidth;
+      });
+      document.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        thumb.style.transition = '';
+      });
+      // Click on track (outside thumb) jumps to that position
+      track.addEventListener('click', e => {
+        if (e.target === thumb) return;
+        const rect = track.getBoundingClientRect();
+        const pct = (e.clientX - rect.left) / rect.width;
+        catWrap.scrollTo({ left: pct * catWrap.scrollWidth - catWrap.clientWidth / 2, behavior: 'smooth' });
+      });
+    }
+
     updateArrows();
   }
 }

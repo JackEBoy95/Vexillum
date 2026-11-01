@@ -1183,12 +1183,13 @@ input.ec-num-input:focus {
 }
 .icon-categories::-webkit-scrollbar { display: none; }
 .cat-track {
-  height: 3px;
+  height: 6px;
   background: var(--border);
-  border-radius: 2px;
+  border-radius: 3px;
   margin: 0 2px 5px;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 .cat-thumb {
   position: absolute;
@@ -1197,10 +1198,12 @@ input.ec-num-input:focus {
   height: 100%;
   width: 30%;
   background: var(--accent);
-  border-radius: 2px;
-  opacity: 0.45;
-  transition: left 0.12s, width 0.12s;
+  border-radius: 3px;
+  opacity: 0.5;
+  transition: left 0.12s, width 0.12s, opacity 0.1s;
+  cursor: grab;
 }
+.cat-thumb:active { cursor: grabbing; opacity: 0.75; }
 .cat-btn {
   padding: 2px 9px;
   border-radius: 20px;
