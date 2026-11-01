@@ -1026,6 +1026,25 @@ function buildHeraldCats() {
     });
     catWrap.appendChild(btn);
   });
+
+  // Wire arrow buttons
+  const prev = document.getElementById('cat-prev');
+  const next = document.getElementById('cat-next');
+  if (prev && next) {
+    const STEP = 140;
+    const updateArrows = () => {
+      const atStart = catWrap.scrollLeft <= 0;
+      const atEnd = catWrap.scrollLeft >= catWrap.scrollWidth - catWrap.clientWidth - 1;
+      prev.style.opacity = atStart ? '0.25' : '1';
+      prev.style.pointerEvents = atStart ? 'none' : 'auto';
+      next.style.opacity = atEnd ? '0.25' : '1';
+      next.style.pointerEvents = atEnd ? 'none' : 'auto';
+    };
+    prev.onclick = () => catWrap.scrollBy({ left: -STEP, behavior: 'smooth' });
+    next.onclick = () => catWrap.scrollBy({ left: STEP, behavior: 'smooth' });
+    catWrap.addEventListener('scroll', updateArrows);
+    updateArrows();
+  }
 }
 
 function loadShapesGrid() {

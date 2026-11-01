@@ -1136,20 +1136,43 @@ input.ec-num-input:focus {
 .icon-lib-tab.active      { background: var(--accent); color: var(--accent-fg); }
 .icon-lib-tab:not(.active):hover { background: var(--hover); }
 
-.icon-categories {
-  display: flex;
-  gap: 4px;
-  padding: 6px 8px 8px;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-  overflow-x: auto;
-  /* hide scrollbar on Firefox */
-  scrollbar-width: none;
-  /* Stick below the search bar (search = 8px margin + 7px pad + ~20px text + 7px pad + 8px margin = 50px) */
+.cat-scroll-wrap {
   position: sticky;
   top: 50px;
   z-index: 2;
   background: var(--panel-bg);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+.cat-arrow {
+  flex: none;
+  width: 22px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.1s, opacity 0.15s;
+  padding: 0;
+}
+.cat-arrow:hover { color: var(--text); background: var(--hover); }
+.icon-categories {
+  display: flex;
+  gap: 4px;
+  padding: 6px 4px 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
 }
 .icon-categories::-webkit-scrollbar { display: none; }
 .cat-btn {
@@ -2364,7 +2387,7 @@ body.dark-mode .icon-cell:hover svg {
   }
   /* On mobile, the panel itself scrolls — search/categories inherit sticky from desktop rules */
   #icons-panel #icon-search { z-index: 6; }
-  #icons-panel .icon-categories { z-index: 5; }
+  #icons-panel .cat-scroll-wrap { z-index: 5; }
   #layers-panel.panel-open,
   #icons-panel.panel-open {
     transform: translateY(0);
