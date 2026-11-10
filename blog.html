@@ -14,7 +14,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    html, body { overflow: auto; background: #0d0d0b; }
+    html, body { overflow: auto; background: #f9f8f6; }
 
     #site-nav {
       display: flex; align-items: center; gap: 20px;
@@ -57,17 +57,17 @@
     .masthead { padding: 64px 0 52px; text-align: center; }
     .masthead-eyebrow {
       font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
-      color: #c8973a; font-family: 'Cinzel', serif; margin-bottom: 14px;
+      color: #b07e28; font-family: 'Cinzel', serif; margin-bottom: 14px;
     }
     .masthead h1 {
       font-family: 'Cinzel', serif;
       font-size: clamp(1.9rem, 5vw, 3rem); font-weight: 700;
-      color: #f0ead8; letter-spacing: .03em;
+      color: #1a1917; letter-spacing: .03em;
       line-height: 1.15; margin-bottom: 16px; text-wrap: balance;
     }
     .masthead-lead {
       max-width: 540px; margin: 0 auto 28px;
-      color: #8a8880; font-size: .95rem; line-height: 1.65;
+      color: #5a5753; font-size: .95rem; line-height: 1.65;
     }
     .cta-btn {
       display: inline-block; padding: 11px 26px;
@@ -82,40 +82,40 @@
     }
     .feature-label span {
       font-size: .68rem; font-weight: 600; letter-spacing: .14em;
-      text-transform: uppercase; color: #666660; white-space: nowrap;
+      text-transform: uppercase; color: #9a9790; white-space: nowrap;
     }
     .feature-label::before, .feature-label::after {
-      content: ""; flex: 1; height: 1px; background: #2e2e2a;
+      content: ""; flex: 1; height: 1px; background: #e0ddd7;
     }
     .feature-label::before { max-width: 24px; }
 
     .feature-card {
-      background: #1c1c1a; border: 1px solid #2e2e2a;
+      background: #fff; border: 1px solid #e8e5df;
       border-radius: 12px; overflow: hidden;
       display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 36px;
     }
     .feature-card .fc-img {
       display: block; width: 100%; height: 100%;
       min-height: 260px; object-fit: contain;
-      background: #0a0a08; padding: 28px;
+      background: #f4f2ed; padding: 28px;
     }
     .fc-body { padding: 36px 30px; display: flex; flex-direction: column; justify-content: center; }
     .fc-kicker {
       font-size: .66rem; font-weight: 600; letter-spacing: .15em;
-      text-transform: uppercase; color: #666660; margin-bottom: 10px;
+      text-transform: uppercase; color: #9a9790; margin-bottom: 10px;
     }
     .fc-title {
       font-family: 'Cinzel', serif;
       font-size: clamp(1.1rem, 2vw, 1.65rem); font-weight: 700;
-      color: #f0ead8; line-height: 1.2; margin-bottom: 10px; text-wrap: balance;
+      color: #1a1917; line-height: 1.2; margin-bottom: 10px; text-wrap: balance;
     }
     .fc-tag {
       display: inline-block; padding: 3px 10px;
-      background: #1f1f1c; border: 1px solid #3a3a34;
+      background: #fdf4e7; border: 1px solid #e8c97a;
       border-radius: 20px; font-size: .68rem; font-weight: 600;
-      color: #c8973a; letter-spacing: .04em; margin-bottom: 16px;
+      color: #a67a1e; letter-spacing: .04em; margin-bottom: 16px;
     }
-    .fc-desc { font-size: .84rem; color: #8a8880; line-height: 1.72; min-width: 0; }
+    .fc-desc { font-size: .84rem; color: #5a5753; line-height: 1.72; min-width: 0; }
     .fc-desc p + p { margin-top: 10px; }
     @media (max-width: 600px) {
       .feature-card { grid-template-columns: 1fr; }
@@ -126,29 +126,29 @@
     .sec-head { display: flex; align-items: center; gap: 14px; margin: 48px 0 20px; }
     .sec-head h2 {
       font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase; color: #666660; white-space: nowrap;
+      letter-spacing: .1em; text-transform: uppercase; color: #9a9790; white-space: nowrap;
     }
-    .sec-head::after { content: ""; flex: 1; height: 1px; background: #2e2e2a; }
+    .sec-head::after { content: ""; flex: 1; height: 1px; background: #e0ddd7; }
 
     .flag-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
       gap: 18px; margin-bottom: 8px;
     }
-    .flag-card { background: #1c1c1a; border: 1px solid #2e2e2a; border-radius: 9px; overflow: hidden; transition: box-shadow .15s, transform .15s; }
-    .flag-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.35); transform: translateY(-2px); }
-    .flag-card img { display: block; width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #0a0a08; padding: 10px; }
-    .flag-card-body { padding: 13px 15px 17px; border-top: 1px solid #2e2e2a; }
-    .flag-name { font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600; color: #f0ede4; margin-bottom: 5px; }
-    .flag-tag { display: inline-block; padding: 2px 8px; background: #1e2235; color: #7ba0f0; border-radius: 20px; font-size: .67rem; font-weight: 600; margin-bottom: 8px; }
-    .flag-desc { font-size: .79rem; color: #9a9890; line-height: 1.6; }
+    .flag-card { background: #fff; border: 1px solid #e8e5df; border-radius: 9px; overflow: hidden; transition: box-shadow .15s, transform .15s; }
+    .flag-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+    .flag-card img { display: block; width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #f4f2ed; padding: 10px; }
+    .flag-card-body { padding: 13px 15px 17px; border-top: 1px solid #e8e5df; }
+    .flag-name { font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600; color: #1a1917; margin-bottom: 5px; }
+    .flag-tag { display: inline-block; padding: 2px 8px; background: #eef2fc; color: #2255cc; border-radius: 20px; font-size: .67rem; font-weight: 600; margin-bottom: 8px; }
+    .flag-desc { font-size: .79rem; color: #5a5753; line-height: 1.6; }
 
     .blog-footer {
       margin: 48px 0 0; padding: 24px 0 64px;
-      border-top: 1px solid #2e2e2a;
+      border-top: 1px solid #e0ddd7;
       display: flex; align-items: center;
       justify-content: space-between; gap: 14px; flex-wrap: wrap;
     }
-    .blog-footer p { font-size: .82rem; color: #666660; }
+    .blog-footer p { font-size: .82rem; color: #9a9790; }
     .blog-footer a { color: #2255cc; text-decoration: none; font-weight: 600; }
     .blog-footer a:hover { text-decoration: underline; }
   </style>
@@ -165,13 +165,13 @@
   <a class="nav-cta" href="/">Design a Flag →</a>
 </nav>
 
-<div style="background:#0d0d0b;">
+<div style="background:#f9f8f6;">
 <div class="blog-wrap">
 
   <div class="masthead">
     <div class="masthead-eyebrow">Quick Flags · Flag Design Studio</div>
     <h1>Flags Made in the Editor</h1>
-    <p class="masthead-lead">Every design below was built in Quick Flags — no Photoshop, no SVG coding. Medieval heraldry, fantasy battle standards, pastoral scenes, pirate colours.</p>
+    <p class="masthead-lead">Twelve flags made in Quick Flags — exploring heraldic traditions, pirate history, fantasy world-building, and regional symbolism. Each one shows what the editor can do, with tips on how to make your own.</p>
     <a class="cta-btn" href="/">Design Your Own Flag →</a>
   </div>
 
@@ -179,12 +179,12 @@
   <div class="feature-card">
     <img class="fc-img" src="gallery/pirate.jpg" alt="Red Jolly Roger — black flag with red skull and scimitar">
     <div class="fc-body">
-      <div class="fc-kicker">Featured Design</div>
+      <div class="fc-kicker">Pirate Flag Tradition</div>
       <div class="fc-title">The Red Jolly Roger</div>
       <div class="fc-tag">Pirate · Maritime</div>
       <div class="fc-desc">
-        <p>Most people picture white bones on black — but red-on-black was just as feared at sea. A red flag meant no quarter would be given, and swapping the crossbones for a curved scimitar nods to the North African and Caribbean pirates who flew crimson colours as a final, absolute warning.</p>
-        <p>The construction is as lean as the message. A solid black rectangle is the entire field. The skull and blade come straight from the heraldic library, scaled to roughly 60% of the flag width and dropped just below centre so the composition sits heavy at the bottom. Two shapes. Two minutes.</p>
+        <p>Pirate flags — called Jolly Rogers — emerged in the early 1700s as psychological weapons. The familiar white skull on black signalled that pirates would spare surrendering crews. A red flag meant the opposite: no quarter. Caribbean pirates and North African corsairs flew crimson to issue a final, absolute warning.</p>
+        <p>To make one: set a solid black background, open the Emblems panel and search "skull" in the Human category, then add a blade from Weapons. Set both emblems to red. Two shapes on a black field — that's the whole flag.</p>
       </div>
     </div>
   </div>
@@ -193,12 +193,12 @@
   <div class="feature-card">
     <img class="fc-img" src="gallery/warhammer.png" alt="Warhammer battle standard — black flanks, white centre, skull-and-laurels emblem">
     <div class="fc-body">
-      <div class="fc-kicker">Featured Design</div>
+      <div class="fc-kicker">Fantasy Battle Standard</div>
       <div class="fc-title">The Skull &amp; Laurels Standard</div>
       <div class="fc-tag">Fantasy · Warhammer-Style</div>
       <div class="fc-desc">
-        <p>Three vertical bands — jet black, white, jet black — with a single heraldic emblem centred on the pale: a grinning skull wreathed in laurels, pierced by four crossed arrows and an upward sword, suspended above a scroll banner. It is unmistakably Warhammer, the visual language of a galaxy-spanning theocratic empire rendered as a flat silhouette.</p>
-        <p>The restraint is what makes it work. The monochrome field strips everything back to pure form, so the complexity of the emblem carries all the weight. No colour, no gradient — just the shape against the light. Built entirely from the Warhammer section of the heraldic library.</p>
+        <p>Battle standards with a central pale — a wide vertical band flanked by darker outer bands — are a classic military flag structure. This one draws on the Warhammer universe, where Gothic skulls wreathed in Roman laurels represent the Imperium's theocratic power. The monochrome palette makes the emblem do all the work.</p>
+        <p>To make one: add a Stripes layer set to 3 vertical bands and colour them black, white, black. Open Emblems, browse the Warhammer category, and centre the skull-and-laurels badge on the white band.</p>
       </div>
     </div>
   </div>
@@ -207,19 +207,19 @@
   <div class="flag-grid">
     <div class="flag-card">
       <img src="gallery/lion.jpg" alt="Forest green triband with silver rampant lion" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">The Silver Lion</div><div class="flag-tag">Heraldic · Triband</div><p class="flag-desc">Deep forest green in two equal bars either side of a wider white centre, with a silver rampant lion placed on the pale stripe. Reads as a genuine medieval city standard.</p></div>
+      <div class="flag-card-body"><div class="flag-name">The Silver Lion</div><div class="flag-tag">Heraldic · Triband</div><p class="flag-desc">The rampant lion is the most common charge in European heraldry — it appears on the arms of Scotland, England, and Norway. Add a 3-band vertical Stripes layer (green–white–green), then search "lion" in Emblems → Animals and place it on the white centre pale.</p></div>
     </div>
     <div class="flag-card">
       <img src="gallery/crest.jpg" alt="Sky-blue flag with full heraldic coat of arms" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">City of Lions</div><div class="flag-tag">Heraldic · Full Arms</div><p class="flag-desc">A sky-blue field packed with civic heraldry: two winged guardian lions, a gilded portcullis, a radiant crown, and seven white stars. As complex as the editor gets — built in under ten minutes.</p></div>
+      <div class="flag-card-body"><div class="flag-name">City of Lions</div><div class="flag-tag">Heraldic · Full Arms</div><p class="flag-desc">City flags often carry a full coat of arms: a central charge flanked by animal supporters, topped by a crown. Set a blue background and stack multiple emblems — portcullis from Structures, winged lions from Animals, a crown from Regal — positioning each layer independently.</p></div>
     </div>
     <div class="flag-card">
       <img src="gallery/elephant.jpg" alt="Red white gold triband with elephant and castle emblem" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">Elephant &amp; Castle</div><div class="flag-tag">Heraldic · Triband</div><p class="flag-desc">Crimson, white and gold in equal thirds with a classic elephant-and-castle centred on the pale. The armoured elephant carrying a fortified tower has centuries of civic history behind it.</p></div>
+      <div class="flag-card-body"><div class="flag-name">Elephant &amp; Castle</div><div class="flag-tag">Heraldic · Triband</div><p class="flag-desc">The elephant carrying a fortified tower (called a howdah) has appeared in civic heraldry since the Middle Ages — found in the arms of Southwark, Coventry, and many English boroughs. Add a crimson–white–gold triband and search "elephant" in Emblems → Animals.</p></div>
     </div>
     <div class="flag-card">
       <img src="gallery/crown.jpg" alt="Amber white purple tricolor with gilded imperial crown" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">The Royal Standard</div><div class="flag-tag">Regal · Tricolor</div><p class="flag-desc">Amber and royal purple flank a white centre panel bearing a gilded imperial crown. Purple and gold are the colour vocabulary of monarchy — this flag leans into that completely.</p></div>
+      <div class="flag-card-body"><div class="flag-name">The Royal Standard</div><div class="flag-tag">Regal · Tricolor</div><p class="flag-desc">Royal standards traditionally use the dynasty's colours with a crown or cypher as the central charge. Purple has signified royalty since antiquity. Add an amber–white–purple triband, then browse Emblems → Regal and try different crown styles on the white centre.</p></div>
     </div>
   </div>
 
@@ -227,15 +227,15 @@
   <div class="flag-grid">
     <div class="flag-card">
       <img src="gallery/ouroboros.jpg" alt="Diagonal black and gold split with ouroboros snake eating its tail" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">The Ouroboros</div><div class="flag-tag">Fantasy · Diagonal Split</div><p class="flag-desc">A diagonal bisection of amber gold and jet black, with a snake eating its own tail sitting precisely on the divide. Perfect for an alchemist's guild or any faction that thinks in centuries rather than years.</p></div>
+      <div class="flag-card-body"><div class="flag-name">The Ouroboros</div><div class="flag-tag">Fantasy · Diagonal Split</div><p class="flag-desc">The ouroboros — a snake eating its own tail — appears in ancient Egyptian tombs, Greek alchemical texts, and Norse mythology. A diagonal split (called "per bend" in heraldry) creates dynamic tension. Add a diagonal Shapes layer, set it black and gold, then search "snake" in Emblems and place it on the divide.</p></div>
     </div>
     <div class="flag-card">
       <img src="gallery/beasts.jpg" alt="Four-quadrant flag with crossbow, lion, boar, stag" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">The Four Houses</div><div class="flag-tag">Fantasy · Quartered</div><p class="flag-desc">White and gold quarters, each holding a different emblem: a crossbow, a resting lion, a rearing boar, a recumbent stag. Four houses, four territories, four values.</p></div>
+      <div class="flag-card-body"><div class="flag-name">The Four Houses</div><div class="flag-tag">Fantasy · Quartered</div><p class="flag-desc">Quartering in heraldry combines multiple coats of arms into one shield — medieval dynasties used it to show inherited kingdoms. Add a 4-quadrant Stripes layer (white and gold), then place one emblem per quarter: a crossbow (Weapons), lion, boar, and stag (Animals).</p></div>
     </div>
     <div class="flag-card">
       <img src="gallery/lamp.jpg" alt="Deep terracotta field with single golden oil lamp" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">Lamp of Knowledge</div><div class="flag-tag">Symbolic · Minimalist</div><p class="flag-desc">A single terracotta-red field. One golden oil lamp at the visual centre. A flag for a scholarly order or nation that values wisdom above conquest.</p></div>
+      <div class="flag-card-body"><div class="flag-name">Lamp of Knowledge</div><div class="flag-tag">Symbolic · Minimalist</div><p class="flag-desc">Single-symbol flags follow a tradition used in many national flags — Lebanon's cedar, Japan's rising sun. Oil lamps have symbolised learning since ancient Greece. Set a terracotta background, open Emblems → Objects, search "lamp", and centre the emblem slightly above the mathematical middle for visual balance.</p></div>
     </div>
   </div>
 
@@ -243,15 +243,15 @@
   <div class="flag-grid">
     <div class="flag-card">
       <img src="gallery/shepherd.jpg" alt="White and green bicolor with black shepherd dog and sheep" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">The Shepherd's Standard</div><div class="flag-tag">Narrative · Pastoral</div><p class="flag-desc">A white upper half and grass-green lower, with a black dog seated at centre and four grey sheep arranged around it. A perfect regional flag for a farming county or a fictional pastoral nation.</p></div>
+      <div class="flag-card-body"><div class="flag-name">The Shepherd's Standard</div><div class="flag-tag">Narrative · Pastoral</div><p class="flag-desc">Regional flags often depict agriculture rather than heraldic symbols — Swiss cantonal and English county banners use the animals that defined local economies. Add a white–green horizontal bicolor, then search "dog" and "sheep" in Emblems → Animals and arrange them in a loose scene.</p></div>
     </div>
     <div class="flag-card">
       <img src="gallery/pennant.jpg" alt="Triangular green and red pennant with golden eagle stooping" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">The Eagle Pennant</div><div class="flag-tag">Pennant · Heraldic</div><p class="flag-desc">A triangular pennant in deep green with a central red bar, carrying a golden eagle stooping mid-flight. Pennants add dynamism that a rectangular flag never quite matches.</p></div>
+      <div class="flag-card-body"><div class="flag-name">The Eagle Pennant</div><div class="flag-tag">Pennant · Heraldic</div><p class="flag-desc">Pennants (triangular flags) were the standard medieval military banner — knights flew them on lances, regiments marched under pennon-tipped pikes. Change the flag shape to pennant using the Shape selector, add a green field with a red centre stripe, then search "eagle" in Emblems → Birds.</p></div>
     </div>
     <div class="flag-card">
       <img src="gallery/nordic.jpg" alt="Dark green field with offset golden nordic cross" loading="lazy">
-      <div class="flag-card-body"><div class="flag-name">The Forest Cross</div><div class="flag-tag">Nordic Cross</div><p class="flag-desc">Hunter green with an offset golden cross — the classic Nordic layout, left-weighted per centuries of Scandinavian tradition. Rooted in woodland and harvest rather than sea and snow.</p></div>
+      <div class="flag-card-body"><div class="flag-name">The Forest Cross</div><div class="flag-tag">Nordic Cross</div><p class="flag-desc">Every Nordic country uses the asymmetric cross with its vertical arm offset toward the hoist — a tradition dating back to Denmark's Dannebrog, the oldest continuously-used national flag. Add a Nordic Cross pattern layer, set the field to dark green and the cross to gold. The offset is built in.</p></div>
     </div>
   </div>
 
