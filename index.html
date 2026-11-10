@@ -792,6 +792,12 @@
     }
     .hg-card-desc { font-size: .79rem; color: #5a5753; line-height: 1.6; }
 
+    /* Section intro text */
+    .hg-sec-intro {
+      font-size: .88rem; color: #5a5753; line-height: 1.72;
+      margin: -10px 0 20px; max-width: 740px;
+    }
+
     /* Footer */
     .hg-footer {
       margin: 48px 0 0; padding: 24px 0 64px;
@@ -802,6 +808,13 @@
     .hg-footer p { font-size: .82rem; color: #9a9790; }
     .hg-footer a { color: #2255cc; text-decoration: none; font-weight: 600; }
     .hg-footer a:hover { text-decoration: underline; }
+
+    /* Gallery intro */
+    .hg-gallery-intro {
+      max-width: 740px; margin: 32px auto 0;
+      font-size: .88rem; color: #5a5753; line-height: 1.72;
+      padding-bottom: 32px; border-bottom: 1px solid #e0ddd7;
+    }
 
     /* Scroll hint above gallery */
     .hg-scroll-hint {
@@ -829,7 +842,11 @@
     <div class="hg-masthead">
       <div class="hg-eyebrow">Quick Flags · Flag Design Studio</div>
       <h2>Flags Made in the Editor</h2>
-      <p class="hg-lead">Twelve flags made in Quick Flags — exploring heraldic traditions, pirate history, fantasy world-building, and regional symbolism. Each one shows what the editor can do, with tips on how to make your own.</p>
+      <p class="hg-lead">Flags made in Quick Flags — exploring heraldic traditions, pirate history, Pan-African symbolism, fantasy world-building, nautical signal codes, political iconography, and oceanic island design. Every flag below was built entirely in the editor, no Photoshop or SVG coding required. Each entry explains the flag type's history and tradition, then gives you the steps to make your own.</p>
+    </div>
+
+    <div class="hg-gallery-intro">
+      <p>This gallery covers eight categories of flag design: pirate and maritime, fantasy battle standards, heraldic coat of arms, fantasy world-building, animal and pastoral, nautical signal flags, Pan-African and political traditions, and oceanic island republics. Each section explains what makes that style of flag distinctive — the history, the visual conventions, the symbolism — and then gives you the specific editor steps to recreate it. All flags were designed in Quick Flags in a single session, using only the built-in layer types and emblem library. No external assets, no coding, no design background required.</p>
     </div>
 
     <!-- Pirate Feature -->
@@ -864,6 +881,7 @@
 
     <!-- Heraldic -->
     <div class="hg-sec"><h3>Heraldic &amp; Coat of Arms</h3></div>
+    <p class="hg-sec-intro">European heraldry developed from the twelfth century as a system for identifying knights on the battlefield — when faces were hidden by visored helms, the charge on a shield was the only way to tell friend from enemy. Those visual conventions — a limited palette, bold simple shapes, and strict rules about which colours can appear together — produce flags that are immediately legible at a distance. The Quick Flags emblem library includes rampant lions, eagles, portcullises, crowns, and dozens of other traditional heraldic charges.</p>
     <div class="hg-grid">
       <div class="hg-card">
         <img src="gallery/lion.jpg" alt="Forest green triband with silver rampant lion" loading="lazy">
@@ -901,6 +919,7 @@
 
     <!-- Fantasy -->
     <div class="hg-sec"><h3>Fantasy &amp; World-Building</h3></div>
+    <p class="hg-sec-intro">Fantasy flags borrow from real heraldic traditions — diagonal splits, quartered fields, single bold symbols — but free themselves from the constraints of historical authenticity. World-builders use flags to establish a nation's character before a word of lore is written: a serpent eating its own tail tells you something very different about a faction than a crossed sword and shield. The editor's mythological and alchemical emblem categories were built for exactly this kind of work.</p>
     <div class="hg-grid">
       <div class="hg-card">
         <img src="gallery/ouroboros.jpg" alt="Diagonal black and gold split with ouroboros snake eating its tail" loading="lazy">
@@ -930,6 +949,7 @@
 
     <!-- Animal & Pastoral -->
     <div class="hg-sec"><h3>Animal &amp; Pastoral</h3></div>
+    <p class="hg-sec-intro">Animal flags tell a story about a place's relationship with the natural world. Coastal regions use fish and shells; farming counties use livestock and crops; forested kingdoms use deer, boars, and bears. The Quick Flags emblem library includes dozens of animals drawn in a consistent heraldic style, so a wolf and a stag placed on the same flag read as a unified design rather than a collage. The pennant shape — available as an alternative to the standard rectangle — adds a specifically medieval, campaign-standard feeling.</p>
     <div class="hg-grid">
       <div class="hg-card">
         <img src="gallery/shepherd.jpg" alt="White and green bicolor with black shepherd dog and four grey sheep" loading="lazy">
@@ -953,6 +973,108 @@
           <div class="hg-card-name">The Forest Cross</div>
           <div class="hg-card-tag">Nordic Cross</div>
           <p class="hg-card-desc">Every Nordic country uses the asymmetric cross with its vertical arm offset toward the hoist — a tradition dating back to Denmark's Dannebrog, the oldest continuously-used national flag. Add a Nordic Cross pattern layer, set the field to dark green and the cross to gold. The offset is built in.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nautical Signal Flags -->
+    <div class="hg-label"><span>Featured — Nautical &amp; Maritime Signal</span></div>
+    <div class="hg-feature">
+      <img src="gallery/nautical-signal.jpg" alt="Nautical signal flag — blue and white vertical stripes left, yellow field right with blue circle" loading="lazy">
+      <div class="hg-fc-body">
+        <div class="hg-kicker">Maritime Signal Tradition</div>
+        <div class="hg-fc-title">The Signal Code Flag</div>
+        <div class="hg-fc-tag">Nautical · Signal Flags</div>
+        <div class="hg-fc-desc">
+          <p>The International Code of Signals assigns a unique flag to every letter of the alphabet and every numeral, so ships at sea can spell out messages without speaking a common language. Each flag uses a bold, simple design — geometric shapes, strong contrasts, no fine detail — because they must be readable at a distance through spray and poor light. A single flag can also carry a complete meaning: "I" means "I am altering my course to port," "O" means "Man overboard."</p>
+          <p>To make a signal-style flag: use two layers — a Stripes layer for the left-side vertical bands (alternating blue and white), and a Shapes layer for the yellow right-hand field. Add a simple circle from Shapes in the yellow half. The key is bold, unambiguous contrast: naval flags were designed to be read, not admired up close.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- African Flags -->
+    <div class="hg-label"><span>Featured — African &amp; Pan-African</span></div>
+    <div class="hg-feature">
+      <img src="gallery/african-star.jpg" alt="African-style flag — large green field with black star, white and black stripes at base" loading="lazy">
+      <div class="hg-fc-body">
+        <div class="hg-kicker">Pan-African Flag Tradition</div>
+        <div class="hg-fc-title">The Black Star Republic</div>
+        <div class="hg-fc-tag">African · Pan-African</div>
+        <div class="hg-fc-desc">
+          <p>The colours of Pan-African flags — green for the land, black for the people, red for the blood of those who fought for freedom, and gold for mineral wealth — were defined by Marcus Garvey's Universal Negro Improvement Association in the early twentieth century. The black star specifically evokes his Black Star Line shipping company, a symbol of African economic self-determination. It was adopted by Ghana in 1957 as the continent's first sub-Saharan nation to gain independence, and it has influenced dozens of African national flags since.</p>
+          <p>To make one: set a large green background. Add a Stripes layer at the bottom with 4 narrow horizontal bands — white, black, white, green. Place a solid black five-pointed star from Emblems → Shapes in the upper field. The star sits large and unencumbered, letting the symbolism carry without ornamentation.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Political Flags -->
+    <div class="hg-label"><span>Featured — Political &amp; Revolutionary</span></div>
+    <div class="hg-feature">
+      <img src="gallery/political.jpg" alt="Political flag — large red field with hammer and sickle in canton, white, green and black stripes at base" loading="lazy">
+      <div class="hg-fc-body">
+        <div class="hg-kicker">Revolutionary Flag Tradition</div>
+        <div class="hg-fc-title">The Worker's Republic</div>
+        <div class="hg-fc-tag">Political · Socialist</div>
+        <div class="hg-fc-desc">
+          <p>Soviet-era republican flags followed a strict visual grammar: a dominant red field representing revolution and workers' solidarity, the hammer and sickle in the upper hoist canton (the hammer for industrial workers, the sickle for agricultural peasants), and horizontal bands of national colours at the base identifying each of the fifteen Soviet republics. The formula turned a political ideology into a family of flags that were immediately recognisable as related while remaining distinct. The Azerbaijani, Georgian, and Ukrainian SSR flags all followed this template before independence.</p>
+          <p>To make one: set a large red background. Open Emblems and search "hammer" or browse the Political or Tools categories — place the hammer and sickle emblem in the upper left corner of the flag and set it to black. Add a Stripes layer at the bottom with 3–4 horizontal bands in the national colours of your invented republic.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Oceanic Island Flags -->
+    <div class="hg-label"><span>Featured — Oceanic Island Republic</span></div>
+    <div class="hg-feature">
+      <img src="gallery/oceanic-island.jpg" alt="Oceanic island flag — yellow field with blue and white wavy stripes, shell emblem in canton" loading="lazy">
+      <div class="hg-fc-body">
+        <div class="hg-kicker">Pacific Island Flag Tradition</div>
+        <div class="hg-fc-title">The Conch Shell Republic</div>
+        <div class="hg-fc-tag">Oceanic · Island Republic</div>
+        <div class="hg-fc-desc">
+          <p>Pacific and Caribbean island-nation flags share a visual language built around the ocean they depend on. Blue and white wavy stripes represent the sea and surf; yellow or gold fields evoke tropical sunlight and prosperity; a central emblem in the canton carries the island's specific identity — a sea creature, a native plant, or a traditional object. Kiribati's flag features a frigate bird over a rising sun above wavy blue and white stripes. Tuvalu places stars on a blue field. The Cook Islands put fifteen stars on blue. The wave motif runs through nearly all of them.</p>
+          <p>To make one: set a yellow background. Add a Wavy Stripes layer at the base in deep blue and white — this is under Stripes in the layer panel. Place a shell emblem from Emblems → Animals → Sea in the upper-left canton, optionally inside a shield shape from Structures. Scale the emblem small relative to the flag field: island republic flags rarely crowd the design.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Symbolic / County / Regional -->
+    <div class="hg-sec"><h3>County &amp; Regional Flags</h3></div>
+    <p class="hg-sec-intro">County and regional flags across Europe tend to favour heraldic shields, agricultural symbols, and the region's traditional colours. They are modest in ambition but often striking in execution — the arms of a farming county can carry centuries of local history in a single emblem. In England, formal county flags have only been granted since 2003, when the Flag Institute began registering them; many English counties flew unofficial flags for generations before that. In Germany, Bundesland banners have used the county colours with the state arms for centuries. The pattern is consistent: colours from the ruling family's arms, a central charge from the region's economic identity.</p>
+    <div class="hg-grid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+      <div class="hg-card">
+        <img src="gallery/county-wheat.jpg" alt="County flag — yellow and black horizontal stripes with central wheat sheaf crest and gold star" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Wheat County Standard</div>
+          <div class="hg-card-tag">County · Regional</div>
+          <p class="hg-card-desc">The wheat sheaf — called a "garb" in heraldry — appears in the arms of Cheshire, several German Länder, and many agricultural counties. It signals that a region's identity is rooted in the land and harvest rather than trade or war. Add alternating yellow and black horizontal Stripes, place a shield shape from Structures at centre, then search "wheat" or "sheaf" in Emblems → Plants. A single star above marks the county seat or chief town.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flags with Symbols -->
+    <div class="hg-sec"><h3>Flags with Symbols</h3></div>
+    <p class="hg-sec-intro">Some of the most memorable flags in the world rely on a single bold symbol against a plain field — no stripes, no extra charges, just a colour and a shape. This is the hardest discipline in flag design: the symbol has to do everything. The best examples are instantly readable, deeply meaningful, and impossible to mistake.</p>
+    <div class="hg-grid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+      <div class="hg-card">
+        <img src="gallery/genie-lamp.jpg" alt="Symbolic flag — terracotta red field with single golden genie lamp centred" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Genie Lamp</div>
+          <div class="hg-card-tag">Symbolic · Single Charge</div>
+          <p class="hg-card-desc">The oil lamp — from Aladdin's lamp to Diogenes searching for an honest man — has been a universal symbol of knowledge, magic, and hidden power for millennia. On a flag, a single symbol on a plain field follows the design tradition of Japan (the rising sun disc), Canada (the maple leaf), and Lebanon (the cedar). Set a deep terracotta background, then find the lamp in Emblems → Objects. Centre it with a slight upward offset for visual balance — the eye naturally reads low, so a mathematically centred emblem looks slightly dropped.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vertical Banners -->
+    <div class="hg-sec"><h3>Vertical Banners</h3></div>
+    <p class="hg-sec-intro">Not all flags are landscape rectangles. The vertical banner format — taller than it is wide — has a long history in civic, religious, and military contexts. German town banners, Swiss cantonal flags displayed indoors, Japanese temple banners, and medieval tournament pennons all use the portrait orientation. Quick Flags supports vertical format: switch the shape in the editor to get the full canvas.</p>
+    <div class="hg-grid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+      <div class="hg-card">
+        <img src="gallery/vertical-banner.jpg" alt="Vertical banner — portrait orientation, red and white horizontal stripes top half, three red circles on white lower field" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Three Roundels Banner</div>
+          <div class="hg-card-tag">Vertical · Banner Format</div>
+          <p class="hg-card-desc">A roundel (a filled circle) is one of the simplest charges in heraldry and one of the most graphically powerful — Japan's flag is built on one. Three roundels arranged in a triangle is a common heraldic motif, appearing in the arms of several English families and German towns. Switch the flag to portrait orientation in the Shape selector. Add red and white horizontal Stripes to the upper half, then place three large circles from Shapes in the lower white field — arranged with two on the bottom, one above.</p>
         </div>
       </div>
     </div>
