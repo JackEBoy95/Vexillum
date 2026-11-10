@@ -96,6 +96,9 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Export
     </button>
+    <button class="dark-mode-toggle" id="btn-canvas-lock" title="Lock canvas (scroll to gallery)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </button>
     <button class="dark-mode-toggle" id="btn-dark-mode" title="Dark mode">☾</button>
     <!-- Mobile hamburger — hidden on desktop -->
     <button id="btn-menu" class="header-btn mobile-menu-btn" title="Menu" aria-label="Open menu" aria-expanded="false">
@@ -637,6 +640,330 @@
   </button>
 </div>
 <div id="header-menu-backdrop" class="header-menu-backdrop"></div>
+
+<!-- ============================================================
+     HOMEPAGE GALLERY
+     ============================================================ -->
+<section id="homepage-gallery">
+  <style>
+    /* Canvas lock overlay */
+    #canvas-lock-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      backdrop-filter: blur(1px);
+    }
+    body.canvas-locked #canvas-lock-overlay { display: flex; }
+    body.canvas-locked #canvas-area { pointer-events: none; }
+    body.canvas-locked #canvas-area > *:not(#canvas-lock-overlay) { pointer-events: none; }
+    #canvas-lock-overlay span {
+      color: #fff; font-size: 13px; font-weight: 500;
+      background: rgba(0,0,0,0.5); padding: 6px 14px;
+      border-radius: 20px; letter-spacing: .02em;
+    }
+    #btn-canvas-lock.lock-active svg { stroke: var(--accent); }
+
+    /* Gallery section */
+    #homepage-gallery {
+      background: #0d0d0b;
+      padding-left: max(24px, env(safe-area-inset-left,0px));
+      padding-right: max(24px, env(safe-area-inset-right,0px));
+    }
+    .hg-wrap { max-width: 940px; margin: 0 auto; }
+
+    /* Masthead */
+    .hg-masthead {
+      padding: 72px 0 56px; text-align: center;
+      border-bottom: 1px solid #252522;
+    }
+    .hg-eyebrow {
+      font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
+      color: #c8973a; font-family: 'Cinzel', serif; margin-bottom: 14px;
+    }
+    .hg-masthead h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700;
+      color: #f0ead8; letter-spacing: .03em;
+      line-height: 1.15; margin-bottom: 16px; text-wrap: balance;
+    }
+    .hg-lead {
+      max-width: 540px; margin: 0 auto;
+      color: #8a8880; font-size: .95rem; line-height: 1.65;
+    }
+
+    /* Feature label */
+    .hg-label {
+      display: flex; align-items: center; gap: 12px; margin: 48px 0 18px;
+    }
+    .hg-label span {
+      font-size: .68rem; font-weight: 600; letter-spacing: .14em;
+      text-transform: uppercase; color: #666660; white-space: nowrap;
+    }
+    .hg-label::before, .hg-label::after {
+      content: ""; flex: 1; height: 1px; background: #2e2e2a;
+    }
+    .hg-label::before { max-width: 24px; }
+
+    /* Feature card */
+    .hg-feature {
+      background: #1c1c1a; border: 1px solid #2e2e2a;
+      border-radius: 12px; overflow: hidden;
+      display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 36px;
+    }
+    .hg-feature img {
+      display: block; width: 100%; height: 100%;
+      min-height: 260px; object-fit: contain;
+      background: #0a0a08; padding: 28px;
+    }
+    .hg-fc-body {
+      padding: 36px 30px; display: flex;
+      flex-direction: column; justify-content: center;
+    }
+    .hg-kicker {
+      font-size: .66rem; font-weight: 600; letter-spacing: .15em;
+      text-transform: uppercase; color: #666660; margin-bottom: 10px;
+    }
+    .hg-fc-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.1rem, 2vw, 1.6rem); font-weight: 700;
+      color: #f0ead8; line-height: 1.2;
+      margin-bottom: 10px; text-wrap: balance;
+    }
+    .hg-fc-tag {
+      display: inline-block; padding: 3px 10px;
+      background: #1f1f1c; border: 1px solid #3a3a34;
+      border-radius: 20px; font-size: .68rem; font-weight: 600;
+      color: #c8973a; letter-spacing: .04em; margin-bottom: 16px;
+    }
+    .hg-fc-desc {
+      font-size: .84rem; color: #8a8880; line-height: 1.72; min-width: 0;
+    }
+    .hg-fc-desc p + p { margin-top: 10px; }
+    @media (max-width: 600px) {
+      .hg-feature { grid-template-columns: 1fr; }
+      .hg-feature img { min-height: 180px; }
+      .hg-fc-body { padding: 24px 20px; }
+    }
+
+    /* Section header */
+    .hg-sec {
+      display: flex; align-items: center; gap: 14px; margin: 48px 0 20px;
+    }
+    .hg-sec h3 {
+      font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: #666660; white-space: nowrap;
+    }
+    .hg-sec::after { content: ""; flex: 1; height: 1px; background: #2e2e2a; }
+
+    /* Flag grid */
+    .hg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 18px; margin-bottom: 8px;
+    }
+    .hg-card {
+      background: #1c1c1a; border: 1px solid #2e2e2a;
+      border-radius: 9px; overflow: hidden;
+      transition: box-shadow .15s, transform .15s;
+    }
+    .hg-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.4); transform: translateY(-2px); }
+    .hg-card img {
+      display: block; width: 100%; aspect-ratio: 4/3;
+      object-fit: contain; background: #0a0a08; padding: 10px;
+    }
+    .hg-card-body { padding: 13px 15px 17px; border-top: 1px solid #2e2e2a; }
+    .hg-card-name {
+      font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+      color: #f0ede4; margin-bottom: 5px; letter-spacing: .01em;
+    }
+    .hg-card-tag {
+      display: inline-block; padding: 2px 8px;
+      background: #1e2235; color: #7ba0f0;
+      border-radius: 20px; font-size: .67rem; font-weight: 600;
+      letter-spacing: .03em; margin-bottom: 8px;
+    }
+    .hg-card-desc { font-size: .79rem; color: #9a9890; line-height: 1.6; }
+
+    /* Footer */
+    .hg-footer {
+      margin: 48px 0 0; padding: 24px 0 64px;
+      border-top: 1px solid #2e2e2a;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    }
+    .hg-footer p { font-size: .82rem; color: #666660; }
+    .hg-footer a { color: #2255cc; text-decoration: none; font-weight: 600; }
+    .hg-footer a:hover { text-decoration: underline; }
+
+    /* Scroll hint above gallery */
+    .hg-scroll-hint {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 18px 0 0;
+      font-size: .78rem; color: #555552;
+    }
+    .hg-scroll-hint svg { opacity: .5; animation: bounce 1.8s infinite; }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(4px); }
+    }
+  </style>
+
+  <!-- Canvas lock overlay (sits inside canvas-area, injected by JS) -->
+
+  <div class="hg-wrap">
+
+    <div class="hg-scroll-hint">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      <span>Scroll down to browse flags made with Quick Flags</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <div class="hg-masthead">
+      <div class="hg-eyebrow">Quick Flags · Flag Design Studio</div>
+      <h2>Flags Made in the Editor</h2>
+      <p class="hg-lead">Every design below was built in Quick Flags — no Photoshop, no SVG coding required. Medieval heraldry, fantasy battle standards, pastoral scenes, pirate colours.</p>
+    </div>
+
+    <!-- Pirate Feature -->
+    <div class="hg-label"><span>Featured — Pirate &amp; Maritime</span></div>
+    <div class="hg-feature">
+      <img src="gallery/pirate.jpg" alt="Red Jolly Roger — black flag with red skull and scimitar" loading="lazy">
+      <div class="hg-fc-body">
+        <div class="hg-kicker">Featured Design</div>
+        <div class="hg-fc-title">The Red Jolly Roger</div>
+        <div class="hg-fc-tag">Pirate · Maritime</div>
+        <div class="hg-fc-desc">
+          <p>Most people picture white bones on black — but red-on-black was just as feared at sea. A red flag meant no quarter would be given, and swapping the crossbones for a curved scimitar nods to the North African and Caribbean pirates who flew crimson colours as a final, absolute warning.</p>
+          <p>The construction is as lean as the message. A solid black rectangle is the entire field. The skull and blade come straight from the heraldic library, scaled to roughly 60% of the flag width and dropped just below centre so the composition sits heavy at the bottom. Two shapes. Two minutes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warhammer Feature -->
+    <div class="hg-label"><span>Featured — Fantasy Battle Standard</span></div>
+    <div class="hg-feature">
+      <img src="gallery/warhammer.png" alt="Warhammer battle standard — black flanks, white centre, skull-and-laurels emblem" loading="lazy">
+      <div class="hg-fc-body">
+        <div class="hg-kicker">Featured Design</div>
+        <div class="hg-fc-title">The Skull &amp; Laurels Standard</div>
+        <div class="hg-fc-tag">Fantasy · Warhammer-Style</div>
+        <div class="hg-fc-desc">
+          <p>Three vertical bands — jet black, white, jet black — with a single heraldic emblem centred on the pale: a grinning skull wreathed in laurels, pierced by four crossed arrows and an upward sword, suspended above a scroll banner. It is unmistakably Warhammer, the visual language of a galaxy-spanning theocratic empire rendered as a flat silhouette.</p>
+          <p>The restraint is what makes it work. The monochrome field strips everything back to pure form, so the complexity of the emblem carries all the weight. No colour, no gradient — just the shape against the light. Built entirely from the Warhammer section of the heraldic library.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heraldic -->
+    <div class="hg-sec"><h3>Heraldic &amp; Coat of Arms</h3></div>
+    <div class="hg-grid">
+      <div class="hg-card">
+        <img src="gallery/lion.jpg" alt="Forest green triband with silver rampant lion" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Silver Lion</div>
+          <div class="hg-card-tag">Heraldic · Triband</div>
+          <p class="hg-card-desc">Deep forest green in two equal bars either side of a wider white centre, with a silver rampant lion placed on the pale stripe. Reads as a genuine medieval city standard.</p>
+        </div>
+      </div>
+      <div class="hg-card">
+        <img src="gallery/crest.jpg" alt="Sky-blue flag with full heraldic coat of arms — winged lions, crown, portcullis, stars" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">City of Lions</div>
+          <div class="hg-card-tag">Heraldic · Full Arms</div>
+          <p class="hg-card-desc">A sky-blue field with two winged guardian lions flanking a gilded portcullis, topped by a radiant crown and ringed by seven white stars. As complex as the editor gets — built in under ten minutes.</p>
+        </div>
+      </div>
+      <div class="hg-card">
+        <img src="gallery/elephant.jpg" alt="Red white gold triband with elephant and castle emblem" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">Elephant &amp; Castle</div>
+          <div class="hg-card-tag">Heraldic · Triband</div>
+          <p class="hg-card-desc">Crimson, white and gold in equal thirds with a classic elephant-and-castle centred on the pale. The armoured elephant carrying a fortified tower has centuries of civic history.</p>
+        </div>
+      </div>
+      <div class="hg-card">
+        <img src="gallery/crown.jpg" alt="Amber white purple tricolor with gilded imperial crown" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Royal Standard</div>
+          <div class="hg-card-tag">Regal · Tricolor</div>
+          <p class="hg-card-desc">Amber and royal purple flank a white centre panel bearing a gilded imperial crown. Purple and gold are the colour vocabulary of monarchy — this flag leans into that completely.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fantasy -->
+    <div class="hg-sec"><h3>Fantasy &amp; World-Building</h3></div>
+    <div class="hg-grid">
+      <div class="hg-card">
+        <img src="gallery/ouroboros.jpg" alt="Diagonal black and gold split with ouroboros snake eating its tail" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Ouroboros</div>
+          <div class="hg-card-tag">Fantasy · Diagonal Split</div>
+          <p class="hg-card-desc">A diagonal bisection of amber gold and jet black, with a snake eating its own tail sitting precisely on the divide. Perfect for an alchemist's guild or any faction that thinks in centuries.</p>
+        </div>
+      </div>
+      <div class="hg-card">
+        <img src="gallery/beasts.jpg" alt="Four-quadrant flag with crossbow, lion, boar, stag" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Four Houses</div>
+          <div class="hg-card-tag">Fantasy · Quartered</div>
+          <p class="hg-card-desc">White and gold quarters, each holding a different emblem: a crossbow, a resting lion, a rearing boar, a recumbent stag. Four houses, four territories, four values.</p>
+        </div>
+      </div>
+      <div class="hg-card">
+        <img src="gallery/lamp.jpg" alt="Deep terracotta field with single golden oil lamp" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">Lamp of Knowledge</div>
+          <div class="hg-card-tag">Symbolic · Minimalist</div>
+          <p class="hg-card-desc">A single terracotta-red field. One golden oil lamp at the visual centre. The restraint is the point — a powerful symbol on a commanding ground. A flag for a scholarly order or nation that values wisdom above conquest.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Animal & Pastoral -->
+    <div class="hg-sec"><h3>Animal &amp; Pastoral</h3></div>
+    <div class="hg-grid">
+      <div class="hg-card">
+        <img src="gallery/shepherd.jpg" alt="White and green bicolor with black shepherd dog and four grey sheep" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Shepherd's Standard</div>
+          <div class="hg-card-tag">Narrative · Pastoral</div>
+          <p class="hg-card-desc">A white upper half and grass-green lower, with a black dog seated at centre and four grey sheep arranged around it. A perfect regional flag for a farming county or a fictional pastoral nation.</p>
+        </div>
+      </div>
+      <div class="hg-card">
+        <img src="gallery/pennant.jpg" alt="Triangular green and red pennant with golden eagle stooping" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Eagle Pennant</div>
+          <div class="hg-card-tag">Pennant · Heraldic</div>
+          <p class="hg-card-desc">A triangular pennant in deep green with a central red bar, carrying a golden eagle stooping mid-flight. Pennants are perfect for military campaign standards — the tapered form adds dynamism that a rectangular flag never quite matches.</p>
+        </div>
+      </div>
+      <div class="hg-card">
+        <img src="gallery/nordic.jpg" alt="Dark green field with offset golden nordic cross" loading="lazy">
+        <div class="hg-card-body">
+          <div class="hg-card-name">The Forest Cross</div>
+          <div class="hg-card-tag">Nordic Cross</div>
+          <p class="hg-card-desc">Hunter green with an offset golden cross — the classic Nordic cross layout, left-weighted per centuries of Scandinavian tradition. Rooted in woodland and harvest rather than sea and snow.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hg-footer">
+      <p>All flags made with <a href="/">Quick Flags</a> — free flag design studio, no account needed.</p>
+      <a href="blog.html">See full gallery →</a>
+    </div>
+
+  </div>
+</section>
 
 <!-- ============================================================
      SCRIPTS

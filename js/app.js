@@ -2594,6 +2594,7 @@ function bindHeaderButtons() {
   bindFlagShapePicker();
   bindRandomFlag();
   bindDarkMode();
+  bindCanvasLock();
   bindTemplatesModal();
   bindVexChecker();
   bindExportModal();
@@ -4092,6 +4093,41 @@ function bindDarkMode() {
     btn.textContent = isDark ? '☀' : '☾';
     btn.title = isDark ? 'Light mode' : 'Dark mode';
     localStorage.setItem('vexillum_dark', isDark ? '1' : '0');
+  });
+}
+
+// ============================================================
+// CANVAS LOCK
+// ============================================================
+
+function bindCanvasLock() {
+  const btn = document.getElementById('btn-canvas-lock');
+  const canvasArea = document.getElementById('canvas-area');
+  if (!btn || !canvasArea) return;
+
+  // Inject overlay into canvas-area
+  const overlay = document.createElement('div');
+  overlay.id = 'canvas-lock-overlay';
+  overlay.innerHTML = '<span>🔒 Canvas locked — scroll to gallery</span>';
+  overlay.addEventListener('click', () => unlock());
+  canvasArea.style.position = 'relative';
+  canvasArea.appendChild(overlay);
+
+  const unlock = () => {
+    document.body.classList.remove('canvas-locked');
+    btn.classList.remove('lock-active');
+    btn.title = 'Lock canvas (scroll to gallery)';
+    localStorage.setItem('vexillum_canvas_lock', '0');
+  };
+
+  btn.addEventListener('click', () => {
+    const locked = document.body.classList.toggle('canvas-locked');
+    btn.classList.toggle('lock-active', locked);
+    btn.title = locked ? 'Unlock canvas' : 'Lock canvas (scroll to gallery)';
+    localStorage.setItem('vexillum_canvas_lock', locked ? '1' : '0');
+    if (locked) {
+      document.getElementById('homepage-gallery')?.scrollIntoView({ behavior: 'smooth' });
+    }
   });
 }
 
