@@ -3120,7 +3120,7 @@ function _activateKey() {}
 // EXPORT
 // ============================================================
 
-function getSvgString(scale = 1) {
+function getSvgString(scale = 1, includeWatermark = true) {
   const W = CANVAS_W * scale, H = CANVAS_H * scale;
   const tempSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   tempSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -3163,7 +3163,7 @@ function getSvgString(scale = 1) {
   tempSvg.appendChild(group);
 
   // Watermark text element (inside clip group so it stays within flag bounds)
-  const watermarkOn = document.getElementById('export-watermark')?.checked ?? true;
+  const watermarkOn = includeWatermark && (document.getElementById('export-watermark')?.checked ?? true);
   if (watermarkOn) {
     const fontSize = Math.max(10, Math.round(CANVAS_H * 0.034));
     const padding  = Math.round(CANVAS_H * 0.022);
@@ -3201,7 +3201,9 @@ function exportSvg() {
 // Returns a Promise<string> data URL for a PNG at the given pixel scale
 function _makePngDataUrl(scale) {
   return new Promise((resolve, reject) => {
-    const svgStr = getSvgString(scale);
+    // Pass false so the SVG has no watermark — canvas draws it cleanly on top,
+    // avoiding the blurred double-render that happens when both layers overlap.
+    const svgStr = getSvgString(scale, false);
     const W = CANVAS_W * scale, H = CANVAS_H * scale;
     const blob = new Blob([svgStr], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
