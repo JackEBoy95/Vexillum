@@ -3235,12 +3235,34 @@ function _makePngDataUrl(scale) {
   });
 }
 
+function _dataUrlToBlob(dataUrl) {
+  const [header, data] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(data);
+  const arr = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
 function exportPng(scale = 2) {
   _makePngDataUrl(scale).then(dataUrl => {
+    const filename = `${sanitizeFilename(design.name)}.png`;
+    // iOS Safari ignores <a download> — use Web Share API instead
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS && navigator.canShare) {
+      const file = new File([_dataUrlToBlob(dataUrl)], filename, { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file] }).catch(() => {});
+        showToast('PNG exported', 'success');
+        return;
+      }
+    }
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = `${sanitizeFilename(design.name)}.png`;
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     showToast('PNG exported', 'success');
   }).catch(() => showToast('Export failed', 'error'));
 }

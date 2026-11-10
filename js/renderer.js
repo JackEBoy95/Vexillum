@@ -924,7 +924,7 @@ function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
 
   // Icon content (inline SVG)
   if (emblem._svgContent) {
-    let svgSrc = emblem._svgContent;
+    let svgSrc = _sanitizeHeraldicSvg(emblem._svgContent);
     // Legacy per-colour remap (still honoured for old saved designs)
     if (emblem.heraldic && emblem.heraldColours && Object.keys(emblem.heraldColours).length > 0 && !emblem.tintColor) {
       svgSrc = _applyHeraldicColourMap(svgSrc, emblem.heraldColours);
@@ -933,9 +933,6 @@ function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
     div.innerHTML = svgSrc;
     const inner = div.querySelector('svg');
     if (inner) {
-      // Strip Inkscape/RDF metadata — it contains undeclared namespace prefixes
-      // (rdf:RDF, dc:, cc:) that break XMLSerializer → DOMParser round-trips
-      inner.querySelectorAll('metadata, sodipodi\\:namedview').forEach(el => el.remove());
       const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       icon.setAttribute('x', -halfW); icon.setAttribute('y', -halfH);
       icon.setAttribute('width', w); icon.setAttribute('height', h);
@@ -982,6 +979,23 @@ function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
   }
   if (selected) _appendEmblemHandles(g, halfW, halfH);
   svgEl.appendChild(g);
+}
+
+// ---- Strip undeclared XML namespace prefixes from heraldic SVG source ----
+// XMLSerializer will error if elements carry inkscape:/sodipodi:/rdf: attributes
+// whose namespaces aren't declared on the outer SVG. Strip them pre-parse.
+function _sanitizeHeraldicSvg(svgStr) {
+  return svgStr
+    .replace(/<metadata[\s\S]*?<\/metadata>/gi, '')
+    .replace(/<sodipodi:namedview[\s\S]*?<\/sodipodi:namedview>/gi, '')
+    .replace(/<sodipodi:namedview[^>]*\/>/gi, '')
+    .replace(/\s+inkscape:[a-zA-Z\-]+="[^"]*"/g, '')
+    .replace(/\s+sodipodi:[a-zA-Z\-]+="[^"]*"/g, '')
+    .replace(/\s+xmlns:inkscape="[^"]*"/g, '')
+    .replace(/\s+xmlns:sodipodi="[^"]*"/g, '')
+    .replace(/\s+xmlns:rdf="[^"]*"/g, '')
+    .replace(/\s+xmlns:dc="[^"]*"/g, '')
+    .replace(/\s+xmlns:cc="[^"]*"/g, '');
 }
 
 // ---- Transparent hitbox for mouse events ----
@@ -1031,7 +1045,7 @@ function _renderGroupChild(parentG, child) {
       cg.appendChild(bg);
     }
     if (child._svgContent) {
-      let svgSrc = child._svgContent;
+      let svgSrc = _sanitizeHeraldicSvg(child._svgContent);
       if (child.heraldic && child.heraldColours && Object.keys(child.heraldColours).length > 0 && !child.tintColor) {
         svgSrc = _applyHeraldicColourMap(svgSrc, child.heraldColours);
       }
@@ -1039,7 +1053,6 @@ function _renderGroupChild(parentG, child) {
       div.innerHTML = svgSrc;
       const inner = div.querySelector('svg');
       if (inner) {
-        inner.querySelectorAll('metadata, sodipodi\\:namedview').forEach(el => el.remove());
         const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         icon.setAttribute('x', -half); icon.setAttribute('y', -half);
         icon.setAttribute('width', sz); icon.setAttribute('height', sz);
@@ -1152,6 +1165,7 @@ function makeThumbnail(des) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', `0 0 ${shape.w} ${shape.h}`);
   svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  let container;
   if (shape.clip || shape.clipD) {
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     if (shape.clip) {
@@ -1169,12 +1183,21 @@ function makeThumbnail(des) {
       g.appendChild(lg);
     });
     svg.appendChild(g);
+    container = g;
   } else {
     des.layers.forEach(layer => {
       if (!layer.visible) return;
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.innerHTML = renderLayer(layer);
       svg.appendChild(g);
+    });
+    container = svg;
+  }
+
+  // Render emblems on top of layers (best-effort; only works if _svgContent is loaded)
+  if (Array.isArray(des.emblems)) {
+    des.emblems.forEach(emblem => {
+      if (!emblem.hidden) renderEmblemEl(container, emblem, false, false);
     });
   }
 
