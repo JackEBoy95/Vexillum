@@ -945,9 +945,11 @@ function renderEmblemEl(svgEl, emblem, selected, multiSelected) {
       icon.innerHTML = inner.innerHTML;
       if (emblem.heraldic && emblem.tintColor) {
         const tc = /^#[0-9a-fA-F]{6}$/.test(emblem.tintColor) ? emblem.tintColor : '#c8960c';
+        const r = parseInt(tc.slice(1,3),16)/255, g2 = parseInt(tc.slice(3,5),16)/255, b = parseInt(tc.slice(5,7),16)/255;
+        const m = `${.299*r} ${.587*r} ${.114*r} 0 0  ${.299*g2} ${.587*g2} ${.114*g2} 0 0  ${.299*b} ${.587*b} ${.114*b} 0 0  0 0 0 1 0`;
         const fid = `ht${emblem.id.replace(/-/g,'')}`;
         const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-        defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB"><feFlood flood-color="${tc}" flood-opacity="1" result="color"/><feComposite in="color" in2="SourceAlpha" operator="in"/></filter>`;
+        defs.innerHTML = `<filter id="${fid}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${m}"/></filter>`;
         icon.insertBefore(defs, icon.firstChild);
         icon.setAttribute('filter', `url(#${fid})`);
       } else if (!emblem.heraldic) {
