@@ -240,14 +240,19 @@ function buildEmblemRow(emblem) {
   lbl.className = 'emblem-row-label';
   lbl.textContent = emblem.label || 'Icon';
 
-  // Colour swatch (fg colour picker for non-heraldic, non-group emblems)
-  if (!emblem.heraldic && emblem.type !== 'group') {
-    const colorWrap = buildColorPicker(emblem.fg || '#ffffff', val => {
-      emblem.fg = val;
-      // Update the swatch fill in the row preview (dark bg so white shows)
-      if (emblem.type === 'shape') {
-        const previewSvg = preview.querySelector('svg');
-        if (previewSvg) previewSvg.setAttribute('fill', val);
+  // Colour swatch — all non-group emblems: fg for regular, tintColor for heraldic
+  if (emblem.type !== 'group') {
+    const isHeraldic = !!emblem.heraldic;
+    const colorVal = isHeraldic ? (emblem.tintColor || '#c8960c') : (emblem.fg || '#ffffff');
+    const colorWrap = buildColorPicker(colorVal, val => {
+      if (isHeraldic) {
+        emblem.tintColor = val;
+      } else {
+        emblem.fg = val;
+        if (emblem.type === 'shape') {
+          const previewSvg = preview.querySelector('svg');
+          if (previewSvg) previewSvg.setAttribute('fill', val);
+        }
       }
       onChange();
     });
@@ -433,12 +438,14 @@ function buildColorPicker(initialValue, onChangeCallback) {
 
   let _currentHex = initialValue;
   let _shadesExpanded = false;
+  let hexInput = null;
 
   function _pick(hex) {
     _currentHex = hex;
     swatch.style.background = hex;
     nativeSwatch.style.background = hex;
     native.value = hex;
+    if (hexInput) hexInput.value = hex;
     popover.querySelectorAll('[data-hex]').forEach(c => {
       c.classList.toggle('selected', c.dataset.hex.toLowerCase() === hex.toLowerCase());
     });
@@ -538,12 +545,22 @@ function buildColorPicker(initialValue, onChangeCallback) {
   nativeWrap.appendChild(nativeSwatch);
   nativeWrap.appendChild(native);
 
-  const customLabel = document.createElement('span');
-  customLabel.className = 'cp-custom-label';
-  customLabel.textContent = 'Custom';
+  hexInput = document.createElement('input');
+  hexInput.type = 'text';
+  hexInput.className = 'cp-hex-input';
+  hexInput.value = initialValue;
+  hexInput.maxLength = 7;
+  hexInput.placeholder = '#ffffff';
+  hexInput.spellcheck = false;
+  hexInput.addEventListener('input', e => {
+    const val = e.target.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) { _pick(val); }
+  });
+  hexInput.addEventListener('keydown', e => e.stopPropagation());
+  hexInput.addEventListener('click', e => e.stopPropagation());
 
   bottomRow.appendChild(expandBtn);
-  bottomRow.appendChild(customLabel);
+  bottomRow.appendChild(hexInput);
   bottomRow.appendChild(nativeWrap);
 
   popover.appendChild(chipRow);

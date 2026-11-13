@@ -837,12 +837,20 @@ body.dark-mode .emblem-row.multi-selected { background: #0C4A6E; }
   padding-top: 8px;
   border-top: 1px solid var(--border);
 }
-.cp-custom-label {
+.cp-hex-input {
+  width: 68px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text-2);
-  flex: 1;
+  font-family: 'JetBrains Mono', 'Fira Mono', monospace;
+  background: var(--surface);
+  color: var(--text);
+  flex-shrink: 0;
+  outline: none;
 }
+.cp-hex-input:focus { border-color: var(--accent); }
 .cp-native-wrap {
   position: relative;
   width: 28px;
